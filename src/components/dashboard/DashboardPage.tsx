@@ -58,9 +58,15 @@ export default function DashboardPage({
     },
   }
 
+  const getTagNumber = (tag: string) => {
+    const match = tag.match(/(\d+)/)
+    return match ? parseInt(match[1], 10) : 0
+  }
+  const sortedVehicles = [...vehicles].sort((a, b) => getTagNumber(a.tag) - getTagNumber(b.tag))
+
   const filteredVehicles = currentFilter === 'all'
-    ? vehicles
-    : vehicles.filter(v => v.status === currentFilter)
+    ? sortedVehicles
+    : sortedVehicles.filter(v => v.status === currentFilter)
 
   const counts = {
     all: vehicles.length,

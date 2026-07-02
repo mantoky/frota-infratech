@@ -9,34 +9,14 @@ import { useFleetData } from '@/lib/hooks/useFleetData'
 import { generateFleetReport } from '@/lib/pdf'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
+import DashboardPage from '@/components/dashboard/DashboardPage'
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>
   return translationsData[key]?.[lang] || translationsData[key]?.['pt'] || key
 }
 
-// Cores dos status
-const STATUS_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  disp: { bg: 'rgba(39, 174, 96, 0.15)', border: '#27ae60', text: '#27ae60' },
-  uso: { bg: 'rgba(52, 152, 219, 0.15)', border: '#3498db', text: '#3498db' },
-  lav: { bg: 'rgba(241, 196, 15, 0.15)', border: '#f1c40f', text: '#d4a00a' },
-  man: { bg: 'rgba(231, 76, 60, 0.15)', border: '#e74c3c', text: '#e74c3c' },
-  mobilizacao: { bg: 'rgba(155, 89, 182, 0.15)', border: '#9b59b6', text: '#9b59b6' }
-}
-
 const BLOCKED_COLOR = { bg: 'rgba(255, 20, 147, 0.2)', border: '#ff1493', text: '#ff1493' } // Vermelho neon
-
-// Ícones de veículos baseados no modelo
-const getVehicleIcon = (model: string): string => {
-  const m = model.toLowerCase()
-  if (m.includes('hilux') || m.includes('pickup') || m.includes('caminhonete')) return '🛻'
-  if (m.includes('s10') || m.includes('silverado')) return '🛻'
-  if (m.includes('ranger') || m.includes('pickup')) return '🛻'
-  if (m.includes('nivus') || m.includes('suv') || m.includes('crossover')) return '🚙'
-  if (m.includes('van') || m.includes('transporter') || m.includes('kombi')) return '🚐'
-  if (m.includes('onibus') || m.includes('bus')) return '🚌'
-  return '🚗' // Padrão para carros
-}
 
 export default function FrotaInfratech() {
   const { vehicles, setVehicles, history, loading, saveData, addToHistory } = useFleetData()
@@ -242,21 +222,6 @@ export default function FrotaInfratech() {
 
   const downloadPDF = () => generateFleetReport(vehicles, history)
 
-  // Sort vehicles by tag (TN-01, TN-02, etc.)
-  const sortedVehicles = [...vehicles].sort((a, b) => {
-    // Extract number from tag (e.g., "TN-01" -> 1, "TN-73" -> 73)
-    const getTagNumber = (tag: string) => {
-      const match = tag.match(/(\d+)/)
-      return match ? parseInt(match[1], 10) : 0
-    }
-    return getTagNumber(a.tag) - getTagNumber(b.tag)
-  })
-  
-  const filteredVehicles = currentFilter === 'all' ? sortedVehicles : sortedVehicles.filter(v => v.status === currentFilter)
-  const counts = { all: vehicles.length, disp: vehicles.filter(v => v.status === 'disp').length, uso: vehicles.filter(v => v.status === 'uso').length, lav: vehicles.filter(v => v.status === 'lav').length, man: vehicles.filter(v => v.status === 'man').length }
-  const maintenanceAlerts = vehicles.filter(v => { const remaining = v.maintenance - v.km; return remaining >= 0 && remaining <= 1000 })
-  const blockedAlerts = vehicles.filter(v => v.blocked)
-
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg-main)' }}>
@@ -293,160 +258,17 @@ export default function FrotaInfratech() {
 
         {/* Dashboard */}
         {currentPage === 'dashboard' && (
-          <div style={{ padding: '25px', maxWidth: '1400px', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '1.8rem', marginBottom: '10px' }}>{t('dashboardTitle', currentLang)}</h1>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>{t('dashboardSubtitle', currentLang)}</p>
-
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
-              {maintenanceAlerts.length > 0 && (
-                <div style={{ flex: 1, minWidth: '250px', backgroundColor: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', padding: '15px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: '5px solid #e74c3c', fontWeight: 600 }}>
-                  <span>⚠️</span><span>{maintenanceAlerts.length} {t('maintenanceAlert', currentLang)}</span>
-                </div>
-              )}
-              {blockedAlerts.length > 0 && (
-                <div style={{ flex: 1, minWidth: '250px', backgroundColor: BLOCKED_COLOR.bg, color: BLOCKED_COLOR.text, padding: '15px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: `5px solid ${BLOCKED_COLOR.border}`, fontWeight: 600 }}>
-                  <span>🚫</span><span>{blockedAlerts.length} {currentLang === 'pt' ? 'veículo(s) bloqueado(s)' : currentLang === 'en' ? 'vehicle(s) blocked' : 'vehículo(s) bloqueado(s)'}</span>
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-              {(['all', 'disp', 'uso', 'lav', 'man'] as FilterType[]).map(filter => (
-                <div key={filter} onClick={() => setCurrentFilter(filter)} style={{
-                  backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', cursor: 'pointer', transition: 'transform 0.3s',
-                  border: currentFilter === filter ? '3px solid #009688' : '3px solid transparent',
-                  borderTop: `5px solid ${filter === 'all' ? '#34495e' : filter === 'disp' ? '#27ae60' : filter === 'uso' ? '#3498db' : filter === 'lav' ? '#f1c40f' : '#e74c3c'}`,
-                  transform: currentFilter === filter ? 'scale(1.05)' : 'none'
-                }}>
-                  <h3 style={{ fontSize: '2rem', marginBottom: '5px', color: filter === 'all' ? '#34495e' : filter === 'disp' ? '#27ae60' : filter === 'uso' ? '#3498db' : filter === 'lav' ? '#f1c40f' : '#e74c3c' }}>
-                    {counts[filter as keyof typeof counts]}
-                  </h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
-                    {filter === 'all' ? t('statAll', currentLang) : filter === 'disp' ? t('statAvailable', currentLang) : filter === 'uso' ? t('statInUse', currentLang) : filter === 'lav' ? t('statWash', currentLang) : t('statMaintenance', currentLang)}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '20px' }}>
-              {filteredVehicles.map(vehicle => {
-                const fuelClass = vehicle.fuel >= 75 ? 'high' : vehicle.fuel >= 30 ? 'medium' : 'low'
-                const remainingKm = vehicle.maintenance - vehicle.km
-                const isMaintAlert = remainingKm >= 0 && remainingKm <= 1000
-                const isBlocked = vehicle.blocked
-                const isMobilization = vehicle.status === 'mobilizacao'
-                const statusColor = vehicle.blocked ? BLOCKED_COLOR : STATUS_COLORS[vehicle.status] || STATUS_COLORS.disp
-
-                return (
-                  <div key={vehicle.id} style={{
-                    backgroundColor: statusColor.bg, borderRadius: '12px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                    borderLeft: `5px solid ${statusColor.border}`, border: isMaintAlert ? '2px solid #e74c3c' : isBlocked ? `2px solid ${BLOCKED_COLOR.border}` : `2px solid ${statusColor.border}`,
-                    opacity: isBlocked ? 0.85 : 1, position: 'relative', transition: 'transform 0.2s, box-shadow 0.2s'
-                  }}>
-                    {isMobilization && (
-                      <div style={{ backgroundColor: STATUS_COLORS.mobilizacao.bg, border: `1px solid ${STATUS_COLORS.mobilizacao.border}`, borderRadius: '8px', padding: '10px', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>🚚</span>
-                        <span style={{ color: STATUS_COLORS.mobilizacao.text, fontWeight: 600, fontSize: '0.85rem' }}>{t('vehicleMobilization', currentLang)}</span>
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '55px', height: '55px', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 3px 10px rgba(0,0,0,0.15)', border: '2px solid var(--border)', filter: isBlocked ? 'grayscale(100%)' : 'none', backgroundColor: statusColor.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <span style={{ fontSize: '1.8rem', filter: 'grayscale(100%) brightness(2)' }}>{getVehicleIcon(vehicle.model)}</span>
-                        </div>
-                        <div>
-                          <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{vehicle.tag}</h3>
-                          <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: 0 }}>{vehicle.model}</p>
-                        </div>
-                      </div>
-                      <span style={{ padding: '4px 10px', borderRadius: '15px', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', backgroundColor: isBlocked ? BLOCKED_COLOR.bg : statusColor.bg, color: isBlocked ? BLOCKED_COLOR.text : statusColor.text, border: `1px solid ${isBlocked ? BLOCKED_COLOR.border : statusColor.border}` }}>
-                        {isBlocked ? (currentLang === 'pt' ? 'VEÍCULO BLOQUEADO' : currentLang === 'en' ? 'VEHICLE BLOCKED' : 'VEHÍCULO BLOQUEADO') : vehicle.status === 'disp' ? t('statusAvailable', currentLang) : vehicle.status === 'uso' ? t('statusInUse', currentLang) : vehicle.status === 'lav' ? t('statusWash', currentLang) : vehicle.status === 'man' ? t('statusMaintenance', currentLang) : t('statusMobilization', currentLang)}
-                      </span>
-                    </div>
-
-                    {/* Aviso de manutenção - apenas para veículos normais */}
-                    {isMaintAlert && !isBlocked && !isMobilization && (
-                      <div style={{ marginBottom: '10px', backgroundColor: 'rgba(231, 76, 60, 0.1)', border: '1px solid #e74c3c', borderRadius: '4px', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ color: '#e74c3c', fontSize: '0.85rem' }}>⚠️</span>
-                        <span style={{ color: '#e74c3c', fontWeight: 700, fontSize: '0.75rem' }}>{remainingKm}km</span>
-                      </div>
-                    )}
-
-                    {/* Grid de Informações - Simplificado para bloqueados/mobilização */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '12px', fontSize: '0.75rem' }}>
-                      <div style={{ backgroundColor: 'var(--bg-main)', padding: '6px 8px', borderRadius: '6px' }}>
-                        <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>{t('lblMileage', currentLang)}</span>
-                        <span style={{ fontWeight: 600 }}>{vehicle.km.toLocaleString()} km</span>
-                      </div>
-                      <div style={{ backgroundColor: 'var(--bg-main)', padding: '6px 8px', borderRadius: '6px' }}>
-                        <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>{t('lblPlateLabel', currentLang)}</span>
-                        <span style={{ fontWeight: 600 }}>{vehicle.plate}</span>
-                      </div>
-                      {!isBlocked && !isMobilization && (
-                        <>
-                          <div style={{ backgroundColor: 'var(--bg-main)', padding: '6px 8px', borderRadius: '6px' }}>
-                            <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>{t('lblNextMaintLabel', currentLang)}</span>
-                            <span style={{ fontWeight: 600, color: isMaintAlert ? '#e74c3c' : 'var(--text-primary)' }}>{vehicle.maintenance ? vehicle.maintenance.toLocaleString() + ' km' : '-'}</span>
-                          </div>
-                          <div style={{ backgroundColor: 'var(--bg-main)', padding: '6px 8px', borderRadius: '6px' }}>
-                            <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>{t('lblDriverLabel', currentLang)}</span>
-                            <span style={{ fontWeight: 600 }}>{vehicle.driver || '-'}</span>
-                          </div>
-                          <div style={{ backgroundColor: 'var(--bg-main)', padding: '6px 8px', borderRadius: '6px', gridColumn: '1 / -1' }}>
-                            <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>{t('lblLastLocation', currentLang)}</span>
-                            <span style={{ fontWeight: 600 }}>{vehicle.lastLocation || '-'}</span>
-                          </div>
-                        </>
-                      )}
-                      {isBlocked && vehicle.blockedReason && (
-                        <div style={{ backgroundColor: 'var(--bg-main)', padding: '6px 8px', borderRadius: '6px', gridColumn: '1 / -1' }}>
-                          <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>{currentLang === 'pt' ? 'MOTIVO' : currentLang === 'en' ? 'REASON' : 'MOTIVO'}</span>
-                          <span style={{ fontWeight: 600, fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', wordBreak: 'break-word' }}>{vehicle.blockedReason}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {!isBlocked && !isMobilization && (
-                      <>
-                        <div style={{ backgroundColor: 'var(--border)', height: '6px', borderRadius: '3px', overflow: 'hidden', marginBottom: '10px' }}>
-                          <div style={{ height: '100%', borderRadius: '3px', width: `${vehicle.fuel}%`, backgroundColor: fuelClass === 'high' ? '#27ae60' : fuelClass === 'medium' ? '#f39c12' : '#e74c3c' }} />
-                        </div>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>{t('lblFuelLabel', currentLang)} {vehicle.fuelText}</p>
-                      </>
-                    )}
-
-                    {/* Botões - bloqueados só mostram Editar */}
-                    {isBlocked ? (
-                      <button onClick={() => openManageModal(vehicle)} style={{ width: '100%', padding: '10px 6px', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', backgroundColor: '#e74c3c', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', fontSize: '0.85rem' }}>
-                        🔓 {currentLang === 'pt' ? 'Desbloquear' : currentLang === 'en' ? 'Unblock' : 'Desbloquear'}
-                      </button>
-                    ) : (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        {vehicle.status === 'disp' ? (
-                          <>
-                            <button onClick={() => openWithdrawModal(vehicle)} style={{ padding: '12px 6px', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', backgroundColor: '#3498db', color: 'white', fontSize: '0.8rem', lineHeight: 1.2 }}>
-                              🔑 {t('btnWithdraw', currentLang)}
-                            </button>
-                            <button onClick={() => openServiceModal('man', vehicle)} style={{ padding: '12px 6px', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', backgroundColor: '#f39c12', color: 'white', fontSize: '0.8rem', lineHeight: 1.2 }}>
-                              🔧 {t('btnMaint', currentLang)}
-                            </button>
-                          </>
-                        ) : (
-                          <button onClick={() => openReturnModal(vehicle)} style={{ gridColumn: '1 / -1', padding: '12px 6px', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', backgroundColor: '#9b59b6', color: 'white', fontSize: '0.85rem' }}>
-                            ↩️ {t('btnReturn', currentLang)}
-                          </button>
-                        )}
-                        <button onClick={() => openManageModal(vehicle)} style={{ gridColumn: '1 / -1', padding: '10px 6px', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', backgroundColor: '#34495e', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', fontSize: '0.85rem' }}>
-                          ✏️ {t('btnEdit', currentLang)}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+          <DashboardPage
+            vehicles={vehicles}
+            currentFilter={currentFilter}
+            currentLang={currentLang}
+            isAdmin={isAdmin}
+            onFilterChange={setCurrentFilter}
+            onWithdraw={openWithdrawModal}
+            onReturn={openReturnModal}
+            onService={openServiceModal}
+            onManage={openManageModal}
+          />
         )}
 
         {/* Drivers */}
