@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react'
 
-import { Vehicle, PageType } from '@/types'
+import { Vehicle, PageType, FilterType } from '@/types'
 import translations from '@/lib/translations.json'
 import { getFuelPercent, calculateDriverKm, getDriverStats, generateVehicleId } from '@/lib/helpers'
 import { useFleetData } from '@/lib/hooks/useFleetData'
 import { generateFleetReport } from '@/lib/pdf'
+import Sidebar from '@/components/layout/Sidebar'
+import TopBar from '@/components/layout/TopBar'
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>
@@ -38,7 +40,7 @@ const getVehicleIcon = (model: string): string => {
 
 export default function FrotaInfratech() {
   const { vehicles, setVehicles, history, loading, saveData, addToHistory } = useFleetData()
-  const [currentFilter, setCurrentFilter] = useState<string>('all')
+  const [currentFilter, setCurrentFilter] = useState<FilterType>('all')
   const [isAdmin, setIsAdmin] = useState(false)
   const [currentLang, setCurrentLang] = useState('pt')
   const [theme, setTheme] = useState('light')
@@ -265,70 +267,29 @@ export default function FrotaInfratech() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)' }}>
-      {/* Sidebar */}
-      <aside style={{ position: 'fixed', left: sidebarOpen ? 0 : '-280px', top: 0, height: '100vh', width: 'min(280px, 85vw)', backgroundColor: 'var(--bg-sidebar)', color: 'var(--text-light)', zIndex: 1000, transition: 'left 0.3s ease', overflowY: 'auto' }}>
-        <div style={{ padding: '15px', background: 'linear-gradient(135deg, #009688, #00796b)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', height: '60px' }}>
-          <span style={{ fontSize: '1.5rem' }}>🚚</span>
-          <h1 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{t('sidebarTitle', currentLang)}</h1>
-        </div>
-        <nav style={{ padding: '20px 0' }}>
-          <div style={{ padding: '10px 20px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>{t('menuMain', currentLang)}</div>
-          <div style={{ padding: '12px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: currentPage === 'dashboard' ? 'rgba(255,255,255,0.1)' : 'transparent', borderLeft: currentPage === 'dashboard' ? '4px solid #009688' : 'none' }} onClick={() => { setCurrentPage('dashboard'); setSidebarOpen(false) }}>
-            <span>📊</span><span>{t('menuDashboard', currentLang)}</span>
-          </div>
-          <div style={{ padding: '10px 20px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '15px' }}>{t('menuFilters', currentLang)}</div>
-          {['disp', 'uso', 'lav', 'man'].map(filter => (
-            <div key={filter} style={{ padding: '12px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: currentFilter === filter ? 'rgba(255,255,255,0.1)' : 'transparent', borderLeft: currentFilter === filter ? '4px solid #009688' : 'none' }} onClick={() => { setCurrentFilter(filter); setSidebarOpen(false) }}>
-              <span>{filter === 'disp' ? '✅' : filter === 'uso' ? '🚗' : filter === 'lav' ? '🧹' : '🔧'}</span>
-              <span>{filter === 'disp' ? t('statAvailable', currentLang) : filter === 'uso' ? t('statInUse', currentLang) : filter === 'lav' ? t('statWash', currentLang) : t('statMaintenance', currentLang)}</span>
-            </div>
-          ))}
-          <div style={{ padding: '10px 20px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '15px' }}>{t('menuReports', currentLang)}</div>
-          <div style={{ padding: '12px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: currentPage === 'drivers' ? 'rgba(255,255,255,0.1)' : 'transparent', borderLeft: currentPage === 'drivers' ? '4px solid #009688' : 'none' }} onClick={() => { setCurrentPage('drivers'); setSidebarOpen(false) }}>
-            <span>👥</span><span>{t('menuDrivers', currentLang)}</span>
-          </div>
-          <div style={{ padding: '12px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }} onClick={() => { setHistoryPanelOpen(true); setSidebarOpen(false) }}>
-            <span>📜</span><span>{t('menuHistory', currentLang)}</span>
-          </div>
-          <div style={{ padding: '10px 20px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '15px' }}>{t('menuSystem', currentLang)}</div>
-          <div style={{ padding: '12px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: currentPage === 'settings' ? 'rgba(255,255,255,0.1)' : 'transparent', borderLeft: currentPage === 'settings' ? '4px solid #009688' : 'none' }} onClick={() => { setCurrentPage('settings'); setSidebarOpen(false) }}>
-            <span>⚙️</span><span>{t('menuSettings', currentLang)}</span>
-          </div>
-        </nav>
-      </aside>
-
-      {sidebarOpen && <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999 }} onClick={() => setSidebarOpen(false)} />}
+      <Sidebar
+        currentPage={currentPage}
+        currentFilter={currentFilter}
+        sidebarOpen={sidebarOpen}
+        currentLang={currentLang}
+        onNavigate={setCurrentPage}
+        onFilterChange={setCurrentFilter}
+        onHistoryOpen={() => setHistoryPanelOpen(true)}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <main style={{ marginLeft: 0, minHeight: '100vh' }}>
-        {/* Top Bar */}
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '15px 25px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100, flexWrap: 'wrap', gap: '10px' }}>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'linear-gradient(135deg, #009688, #00796b)', border: 'none', color: 'white', padding: '10px 18px', borderRadius: '12px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', height: '45px' }}>
-            <span>☰</span><span>Menu</span>
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 15px', background: 'linear-gradient(135deg, #009688, #00796b)', borderRadius: '8px', color: 'white', height: '45px' }}>
-            <span style={{ fontSize: '1.3rem' }}>🚚</span>
-            <h1 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Frota Infratech</h1>
-          </div>
-          <div style={{ background: 'linear-gradient(90deg, #f39c12, #e74c3c)', color: 'white', padding: '8px 20px', borderRadius: '20px', fontWeight: 800, fontSize: '1rem', textTransform: 'uppercase' }}>
-            {t('prontosPhrase', currentLang)}
-          </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <select value={currentLang} onChange={(e) => changeLanguage(e.target.value)} style={{ height: '45px', borderRadius: '25px', border: '2px solid #009688', background: 'var(--bg-card)', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', padding: '0 15px' }}>
-              <option value="pt">BR PORT</option><option value="en">US ING</option><option value="es">ES ESP</option>
-            </select>
-            <button onClick={toggleTheme} style={{ background: 'var(--bg-card)', border: '2px solid #009688', color: '#009688', borderRadius: '50%', cursor: 'pointer', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
-            <button onClick={toggleAdmin} style={{ background: isAdmin ? '#27ae60' : 'var(--bg-card)', border: `2px solid ${isAdmin ? '#27ae60' : '#009688'}`, color: isAdmin ? 'white' : '#009688', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}>
-              <span>👤</span><span>{isAdmin ? t('adminActive', currentLang) : t('adminInactive', currentLang)}</span>
-            </button>
-            {isAdmin && (
-              <button onClick={() => setAddModal(true)} style={{ background: '#009688', border: '2px solid #009688', color: 'white', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}>
-                <span>➕</span><span>{t('btnAdd', currentLang)}</span>
-              </button>
-            )}
-          </div>
-        </div>
+        <TopBar
+          sidebarOpen={sidebarOpen}
+          currentLang={currentLang}
+          theme={theme}
+          isAdmin={isAdmin}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onLanguageChange={changeLanguage}
+          onToggleTheme={toggleTheme}
+          onToggleAdmin={toggleAdmin}
+          onAddVehicle={() => setAddModal(true)}
+        />
 
         {/* Dashboard */}
         {currentPage === 'dashboard' && (
@@ -350,7 +311,7 @@ export default function FrotaInfratech() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-              {['all', 'disp', 'uso', 'lav', 'man'].map(filter => (
+              {(['all', 'disp', 'uso', 'lav', 'man'] as FilterType[]).map(filter => (
                 <div key={filter} onClick={() => setCurrentFilter(filter)} style={{
                   backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', cursor: 'pointer', transition: 'transform 0.3s',
                   border: currentFilter === filter ? '3px solid #009688' : '3px solid transparent',
