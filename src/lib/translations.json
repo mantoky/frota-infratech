@@ -519,10 +519,10 @@
     "en": "Administrator access",
     "es": "Acceso administrativo"
   },
-  "btnLogoutAdmin": {
-    "pt": "Sair do modo Admin",
-    "en": "Exit Admin mode",
-    "es": "Salir del modo Admin"
+  "btnLogout": {
+    "pt": "Sair",
+    "en": "Log Out",
+    "es": "Salir"
   },
   "setTheme": {
     "pt": "Tema",

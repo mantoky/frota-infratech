@@ -35,6 +35,7 @@ export default function FrotaInfratech() {
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard')
   const [appEntered, setAppEntered] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
   const [loginPinError, setLoginPinError] = useState(false)
 
   const [withdrawModal, setWithdrawModal] = useState(false)
@@ -61,6 +62,7 @@ export default function FrotaInfratech() {
     if (storedTheme) setTheme(storedTheme)
     if (storedAdmin === 'true') setIsAdmin(true)
     if (storedEntered === 'true') setAppEntered(true)
+    setAuthChecked(true)
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
 
@@ -83,7 +85,10 @@ export default function FrotaInfratech() {
       setLoginPinError(true)
     }
   }
-  const logoutAdmin = () => { setIsAdmin(false); localStorage.removeItem('isAdmin') }
+  const logout = () => {
+    setIsAdmin(false); localStorage.removeItem('isAdmin')
+    setAppEntered(false); localStorage.removeItem('frota_entered')
+  }
 
   const verifyPin = (pin: string) => {
     if (isValidAdminPin(pin)) {
@@ -188,6 +193,10 @@ export default function FrotaInfratech() {
   }
 
   const downloadPDF = () => generateFleetReport(vehicles, history)
+
+  if (!authChecked) {
+    return <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-main)' }} />
+  }
 
   if (!appEntered) {
     return (
@@ -299,13 +308,11 @@ export default function FrotaInfratech() {
                 </button>
               </div>
 
-              {isAdmin && (
-                <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
-                  <button onClick={logoutAdmin} style={{ padding: '10px 16px', borderRadius: '5px', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
-                    {t('btnLogoutAdmin', currentLang)}
-                  </button>
-                </div>
-              )}
+              <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
+                <button onClick={logout} style={{ padding: '10px 16px', borderRadius: '5px', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+                  {t('btnLogout', currentLang)}
+                </button>
+              </div>
             </div>
           </div>
         )}
