@@ -6,42 +6,111 @@ import { doc, setDoc, onSnapshot } from 'firebase/firestore'
 import { Vehicle, HistoryItem } from '@/types'
 import { initialVehicles } from '@/lib/constants'
 
+const BACKUP_KEY = 'frota_backup'
+
+interface LocalBackup {
+  vehicles: Vehicle[]
+  history: HistoryItem[]
+  lastUpdated: string
+  synced: boolean
+}
+
+function readBackup(): LocalBackup | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(BACKUP_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch (e) {
+    console.error('Error loading local backup:', e)
+    return null
+  }
+}
+
+function writeBackup(vehicles: Vehicle[], history: HistoryItem[], synced: boolean, lastUpdated?: string) {
+  const backup: LocalBackup = { vehicles, history, lastUpdated: lastUpdated || new Date().toISOString(), synced }
+  localStorage.setItem(BACKUP_KEY, JSON.stringify(backup))
+  return backup
+}
+
+// Camada de dados offline-first: o localStorage e a fonte primaria, sempre
+// disponivel mesmo sem rede nenhuma (ex: rede corporativa que bloqueia o
+// Firestore). O Firestore vira uma sincronizacao best-effort em segundo
+// plano - tenta escrever, e se falhar so tenta de novo quando detectar que
+// voltou a rede. Nao ha fila de multiplas pendencias porque cada escrita ja
+// contem o estado completo (vehicles+history), entao a mais recente sempre
+// supera qualquer tentativa anterior que ainda nao tenha sincronizado.
 export function useFleetData() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [history, setHistory] = useState<HistoryItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const initialBackup = readBackup()
 
-  const vehiclesRef = useRef(vehicles)
+  const [vehicles, setVehicles] = useState<Vehicle[]>(initialBackup?.vehicles || [])
+  const [history, setHistory] = useState<HistoryItem[]>(initialBackup?.history || [])
+  const [loading, setLoading] = useState(!initialBackup)
+
   const historyRef = useRef(history)
-  vehiclesRef.current = vehicles
-  historyRef.current = history
-
+  const lastUpdatedRef = useRef(initialBackup?.lastUpdated || '')
   useEffect(() => {
-    const localBackup = localStorage.getItem('frota_backup')
-    if (localBackup) {
-      try {
-        const backup = JSON.parse(localBackup)
-        if (backup.vehicles) setVehicles(backup.vehicles)
-        if (backup.history) setHistory(backup.history)
-      } catch (e) {
-        console.error('Error loading local backup:', e)
+    historyRef.current = history
+  }, [history])
+
+  const pushToFirestore = useCallback(async (newVehicles: Vehicle[], newHistory: HistoryItem[], lastUpdated: string) => {
+    try {
+      await setDoc(doc(db, 'frota', 'data'), {
+        vehicles: newVehicles, history: newHistory, lastUpdated, version: '2.0'
+      }, { merge: true })
+      writeBackup(newVehicles, newHistory, true, lastUpdated)
+    } catch (e) {
+      console.error('Sincronizacao com Firestore falhou, tentando de novo quando a rede voltar', e)
+    }
+  }, [])
+
+  const saveData = useCallback(async (newVehicles: Vehicle[], newHistory: HistoryItem[]) => {
+    const lastUpdated = new Date().toISOString()
+    lastUpdatedRef.current = lastUpdated
+    // Grava local primeiro e sempre - o app funciona mesmo sem rede nenhuma.
+    writeBackup(newVehicles, newHistory, false, lastUpdated)
+    await pushToFirestore(newVehicles, newHistory, lastUpdated)
+  }, [pushToFirestore])
+
+  // Tenta sincronizar o que ficou pendente: ao montar, e sempre que o
+  // navegador detectar que a rede voltou.
+  useEffect(() => {
+    const retryPendingSync = () => {
+      const backup = readBackup()
+      if (backup && !backup.synced) {
+        pushToFirestore(backup.vehicles, backup.history, backup.lastUpdated)
       }
     }
+    retryPendingSync()
+    window.addEventListener('online', retryPendingSync)
+    return () => window.removeEventListener('online', retryPendingSync)
+  }, [pushToFirestore])
+
+  useEffect(() => {
+    const localBackup = readBackup()
 
     const unsub = onSnapshot(doc(db, 'frota', 'data'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data()
         const firestoreVehicles: Vehicle[] = data.vehicles || []
         const firestoreHistory: HistoryItem[] = data.history || []
+        const firestoreLastUpdated: string = data.lastUpdated || ''
 
-        if (firestoreVehicles.length > 0) setVehicles(firestoreVehicles)
-        if (firestoreHistory.length > 0 || !localBackup) setHistory(firestoreHistory)
+        // So aceita o dado remoto se for mais novo que o que ja temos local
+        // - evita que um eco atrasado do Firestore sobrescreva uma edicao
+        // offline mais recente.
+        const isNewer = !lastUpdatedRef.current || (firestoreLastUpdated && firestoreLastUpdated > lastUpdatedRef.current)
 
-        localStorage.setItem('frota_backup', JSON.stringify({
-          vehicles: firestoreVehicles.length > 0 ? firestoreVehicles : vehiclesRef.current,
-          history: firestoreHistory.length > 0 ? firestoreHistory : historyRef.current,
-          backupDate: new Date().toISOString()
-        }))
+        if (isNewer && (firestoreVehicles.length > 0 || firestoreHistory.length > 0)) {
+          setVehicles(firestoreVehicles)
+          setHistory(firestoreHistory)
+          lastUpdatedRef.current = firestoreLastUpdated || new Date().toISOString()
+          writeBackup(firestoreVehicles, firestoreHistory, true, lastUpdatedRef.current)
+        } else if (!localBackup && firestoreVehicles.length === 0) {
+          setVehicles(initialVehicles)
+          setDoc(doc(db, 'frota', 'data'), {
+            vehicles: initialVehicles, history: [], createdAt: new Date().toISOString(), version: '2.0'
+          }, { merge: true })
+        }
       } else if (!localBackup) {
         setVehicles(initialVehicles)
         setDoc(doc(db, 'frota', 'data'), {
@@ -55,20 +124,6 @@ export function useFleetData() {
     })
 
     return () => unsub()
-  }, [])
-
-  const saveData = useCallback(async (newVehicles: Vehicle[], newHistory: HistoryItem[]) => {
-    try {
-      await setDoc(doc(db, 'frota', 'data'), {
-        vehicles: newVehicles, history: newHistory, lastUpdated: new Date().toISOString(), version: '2.0'
-      }, { merge: true })
-    } catch (e) {
-      console.error('Error saving data to Firestore', e)
-    } finally {
-      localStorage.setItem('frota_backup', JSON.stringify({
-        vehicles: newVehicles, history: newHistory, backupDate: new Date().toISOString()
-      }))
-    }
   }, [])
 
   const addToHistory = useCallback((vehicle: Vehicle, action: string, driver: string, km: number, extra: string, currentVehicles: Vehicle[]) => {
