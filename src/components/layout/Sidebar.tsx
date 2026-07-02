@@ -49,7 +49,7 @@ export default function Sidebar({
     },
     sidebarHeader: {
       padding: '15px',
-      background: 'linear-gradient(135deg, #009688, #00796b)',
+      background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))',
       textAlign: 'center',
       display: 'flex',
       alignItems: 'center',
@@ -85,7 +85,7 @@ export default function Sidebar({
               style={{ 
                 ...styles.menuItem, 
                 backgroundColor: currentPage === 'dashboard' ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                borderLeft: currentPage === 'dashboard' ? '4px solid #009688' : 'none' 
+                borderLeft: currentPage === 'dashboard' ? '4px solid var(--brand-primary)' : 'none' 
               }}
               onClick={() => { onNavigate('dashboard'); onClose(); }}
             >
@@ -106,7 +106,7 @@ export default function Sidebar({
                   style={{
                     ...styles.menuItem,
                     backgroundColor: currentFilter === filter ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    borderLeft: currentFilter === filter ? '4px solid #009688' : 'none'
+                    borderLeft: currentFilter === filter ? '4px solid var(--brand-primary)' : 'none'
                   }}
                   onClick={() => { onFilterChange(filter); onClose(); }}
                 >
@@ -125,7 +125,7 @@ export default function Sidebar({
               style={{ 
                 ...styles.menuItem, 
                 backgroundColor: currentPage === 'drivers' ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                borderLeft: currentPage === 'drivers' ? '4px solid #009688' : 'none' 
+                borderLeft: currentPage === 'drivers' ? '4px solid var(--brand-primary)' : 'none' 
               }}
               onClick={() => { onNavigate('drivers'); onClose(); }}
             >
@@ -149,7 +149,7 @@ export default function Sidebar({
               style={{ 
                 ...styles.menuItem, 
                 backgroundColor: currentPage === 'settings' ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                borderLeft: currentPage === 'settings' ? '4px solid #009688' : 'none' 
+                borderLeft: currentPage === 'settings' ? '4px solid var(--brand-primary)' : 'none' 
               }}
               onClick={() => { onNavigate('settings'); onClose(); }}
             >

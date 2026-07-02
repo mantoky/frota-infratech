@@ -231,7 +231,7 @@ export default function FrotaInfratech() {
                 <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{t('noRecords', currentLang)}</p>
               ) : (
                 getDriverStats(history).map((driver, index) => (
-                  <div key={driver[0]} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', marginBottom: '8px', backgroundColor: 'var(--bg-main)', borderRadius: '8px', borderLeft: '4px solid #009688' }}>
+                  <div key={driver[0]} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', marginBottom: '8px', backgroundColor: 'var(--bg-main)', borderRadius: '8px', borderLeft: '4px solid var(--brand-primary)' }}>
                     <span>
                       <span style={{ marginRight: '10px' }}>{index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅'}</span>
                       {driver[0]}

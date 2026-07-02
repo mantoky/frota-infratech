@@ -116,7 +116,7 @@ export default function DashboardPage({
             onClick={() => onFilterChange(filter)}
             style={{
               ...styles.statCard,
-              borderColor: currentFilter === filter ? '#009688' : 'transparent',
+              borderColor: currentFilter === filter ? 'var(--brand-primary)' : 'transparent',
               transform: currentFilter === filter ? 'scale(1.05)' : 'none',
               borderTopColor: filter === 'all' ? '#34495e' : filter === 'disp' ? '#27ae60' : filter === 'uso' ? '#3498db' : filter === 'lav' ? '#f39c12' : '#e74c3c',
             }}

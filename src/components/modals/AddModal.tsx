@@ -75,7 +75,7 @@ export default function AddModal({
       transition: 'all 0.3s',
     },
     confirmButton: {
-      backgroundColor: '#009688',
+      backgroundColor: 'var(--brand-primary)',
       color: 'white',
     },
     cancelButton: {

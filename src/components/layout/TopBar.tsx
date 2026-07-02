@@ -46,7 +46,7 @@ export default function TopBar({
       alignItems: 'center',
       gap: '10px',
       padding: '8px 15px',
-      background: 'linear-gradient(135deg, #009688, #00796b)',
+      background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))',
       borderRadius: '8px',
       color: 'white',
       height: '45px',
@@ -71,7 +71,7 @@ export default function TopBar({
         onClick={onToggleSidebar}
         className="menu-toggle-btn"
         style={{
-          background: 'linear-gradient(135deg, #009688, #00796b)',
+          background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))',
           border: 'none',
           color: 'white',
           padding: '10px 18px',
@@ -82,7 +82,7 @@ export default function TopBar({
           alignItems: 'center',
           gap: '10px',
           height: '45px',
-          boxShadow: '0 4px 15px rgba(0, 150, 136, 0.4)',
+          boxShadow: '0 4px 15px rgba(0, 46, 77, 0.4)',
           transition: 'all 0.3s ease',
         }}
       >
@@ -103,7 +103,7 @@ export default function TopBar({
         <select
           value={currentLang}
           onChange={(e) => onLanguageChange(e.target.value)}
-          style={{ height: '45px', borderRadius: '25px', border: '2px solid #009688', background: 'var(--bg-card)', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', padding: '0 15px' }}
+          style={{ height: '45px', borderRadius: '25px', border: '2px solid var(--brand-primary)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', padding: '0 15px' }}
         >
           <option value="pt">🇧🇷 PT</option>
           <option value="en">🇺🇸 EN</option>
@@ -112,7 +112,7 @@ export default function TopBar({
 
         <button
           onClick={onToggleTheme}
-          style={{ background: 'none', border: '2px solid #009688', color: '#009688', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
+          style={{ background: 'none', border: '2px solid var(--brand-primary)', color: 'var(--brand-primary)', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
         >
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           <span>{theme === 'dark' ? t('themeLight', currentLang) : t('themeDark', currentLang)}</span>
@@ -120,7 +120,7 @@ export default function TopBar({
 
         <button
           onClick={onToggleAdmin}
-          style={{ background: isAdmin ? '#27ae60' : 'none', border: `2px solid ${isAdmin ? '#27ae60' : '#009688'}`, color: isAdmin ? 'white' : '#009688', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
+          style={{ background: isAdmin ? '#27ae60' : 'none', border: `2px solid ${isAdmin ? '#27ae60' : 'var(--brand-primary)'}`, color: isAdmin ? 'white' : 'var(--brand-primary)', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
         >
           {isAdmin && <span style={{ width: '8px', height: '8px', backgroundColor: 'white', borderRadius: '50%', animation: 'pulse 2s infinite' }} />}
           <ShieldCheck size={16} />
@@ -130,7 +130,7 @@ export default function TopBar({
         {isAdmin && (
           <button
             onClick={onAddVehicle}
-            style={{ background: '#009688', border: '2px solid #009688', color: 'white', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
+            style={{ background: 'var(--brand-primary)', border: '2px solid var(--brand-primary)', color: 'white', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
           >
             <Plus size={16} />
             <span>{t('btnAdd', currentLang)}</span>
