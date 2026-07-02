@@ -81,3 +81,6 @@ nul
 
 # dev output
 dev_output.log
+
+# Local Netlify folder
+.netlify

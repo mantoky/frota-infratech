@@ -508,5 +508,35 @@
     "pt": "Apenas Admin",
     "en": "Admin Only",
     "es": "Solo Admin"
+  },
+  "loginSubtitle": {
+    "pt": "Gestão de Frota",
+    "en": "Fleet Management",
+    "es": "Gestión de Flota"
+  },
+  "btnAdminAccess": {
+    "pt": "Acesso administrativo",
+    "en": "Administrator access",
+    "es": "Acceso administrativo"
+  },
+  "btnLogoutAdmin": {
+    "pt": "Sair do modo Admin",
+    "en": "Exit Admin mode",
+    "es": "Salir del modo Admin"
+  },
+  "setTheme": {
+    "pt": "Tema",
+    "en": "Theme",
+    "es": "Tema"
+  },
+  "setThemeLight": {
+    "pt": "Claro",
+    "en": "Light",
+    "es": "Claro"
+  },
+  "setThemeDark": {
+    "pt": "Escuro",
+    "en": "Dark",
+    "es": "Oscuro"
   }
 }

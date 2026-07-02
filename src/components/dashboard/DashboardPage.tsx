@@ -35,21 +35,22 @@ export default function DashboardPage({
       maxWidth: '1400px',
       margin: '0 auto',
     },
-    statsGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-      gap: '20px',
-      marginBottom: '30px',
+    filterBar: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '8px',
+      marginBottom: '25px',
     },
-    statCard: {
+    filterPill: {
       backgroundColor: 'var(--bg-card)',
-      padding: '20px',
-      borderRadius: '12px',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+      padding: '8px 16px',
+      borderRadius: '20px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
       cursor: 'pointer',
-      transition: 'transform 0.3s',
-      border: '3px solid transparent',
-      borderTop: '5px solid',
+      border: '2px solid transparent',
+      fontSize: '0.9rem',
+      fontWeight: 600,
+      whiteSpace: 'nowrap',
     },
     vehiclesGrid: {
       display: 'grid',
@@ -108,27 +109,24 @@ export default function DashboardPage({
         </div>
       )}
 
-      {/* Stats Grid */}
-      <div style={styles.statsGrid}>
-        {filterOptions.map(filter => (
-          <div
-            key={filter}
-            onClick={() => onFilterChange(filter)}
-            style={{
-              ...styles.statCard,
-              borderColor: currentFilter === filter ? 'var(--brand-primary)' : 'transparent',
-              transform: currentFilter === filter ? 'scale(1.05)' : 'none',
-              borderTopColor: filter === 'all' ? '#34495e' : filter === 'disp' ? '#27ae60' : filter === 'uso' ? '#3498db' : filter === 'lav' ? '#f39c12' : '#e74c3c',
-            }}
-          >
-            <h3 style={{ fontSize: '2rem', marginBottom: '5px', color: filter === 'all' ? '#34495e' : filter === 'disp' ? '#27ae60' : filter === 'uso' ? '#3498db' : filter === 'lav' ? '#f39c12' : '#e74c3c' }}>
-              {counts[filter as keyof typeof counts]}
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
-              {t(filter === 'all' ? 'statAll' : filter === 'disp' ? 'statAvailable' : filter === 'uso' ? 'statInUse' : filter === 'lav' ? 'statWash' : 'statMaintenance', currentLang)}
-            </p>
-          </div>
-        ))}
+      {/* Filter Bar */}
+      <div style={styles.filterBar}>
+        {filterOptions.map(filter => {
+          const color = filter === 'all' ? '#34495e' : filter === 'disp' ? '#27ae60' : filter === 'uso' ? '#3498db' : filter === 'lav' ? '#f39c12' : '#e74c3c'
+          return (
+            <div
+              key={filter}
+              onClick={() => onFilterChange(filter)}
+              style={{
+                ...styles.filterPill,
+                borderColor: currentFilter === filter ? color : 'transparent',
+                color: currentFilter === filter ? color : 'var(--text-secondary)',
+              }}
+            >
+              {t(filter === 'all' ? 'statAll' : filter === 'disp' ? 'statAvailable' : filter === 'uso' ? 'statInUse' : filter === 'lav' ? 'statWash' : 'statMaintenance', currentLang)} ({counts[filter as keyof typeof counts]})
+            </div>
+          )
+        })}
       </div>
 
       {/* Vehicles Grid */}

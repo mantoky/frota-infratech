@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 
 import { Vehicle, PageType, FilterType } from '@/types'
 import translations from '@/lib/translations.json'
-import { calculateDriverKm, getDriverStats, generateVehicleId, findLastWithdrawal, haversineKm, parseDateTime } from '@/lib/helpers'
+import { calculateDriverKm, getDriverStats, generateVehicleId, findLastWithdrawal, haversineKm, parseDateTime, isValidAdminPin } from '@/lib/helpers'
 import { GeoPoint } from '@/lib/geolocation'
 import { useFleetData } from '@/lib/hooks/useFleetData'
 import { generateFleetReport } from '@/lib/pdf'
@@ -18,6 +18,7 @@ import ServiceModal from '@/components/modals/ServiceModal'
 import ManageModal from '@/components/modals/ManageModal'
 import AddModal from '@/components/modals/AddModal'
 import PinModal from '@/components/modals/PinModal'
+import LoginScreen from '@/components/auth/LoginScreen'
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>
@@ -33,6 +34,8 @@ export default function FrotaInfratech() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard')
+  const [appEntered, setAppEntered] = useState(false)
+  const [loginPinError, setLoginPinError] = useState(false)
 
   const [withdrawModal, setWithdrawModal] = useState(false)
   const [returnModal, setReturnModal] = useState(false)
@@ -52,10 +55,12 @@ export default function FrotaInfratech() {
     const storedLang = localStorage.getItem('frota_lang')
     const storedTheme = localStorage.getItem('theme')
     const storedAdmin = localStorage.getItem('isAdmin')
+    const storedEntered = localStorage.getItem('frota_entered')
 
     if (storedLang) setCurrentLang(storedLang)
     if (storedTheme) setTheme(storedTheme)
     if (storedAdmin === 'true') setIsAdmin(true)
+    if (storedEntered === 'true') setAppEntered(true)
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
 
@@ -67,22 +72,21 @@ export default function FrotaInfratech() {
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
   const changeLanguage = (lang: string) => { setCurrentLang(lang); localStorage.setItem('frota_lang', lang) }
-  const toggleAdmin = () => {
-    if (isAdmin) { setIsAdmin(false); localStorage.removeItem('isAdmin') }
-    else { setPendingAction('login'); setPinModal(true) }
+
+  const enterCommon = () => { setAppEntered(true); localStorage.setItem('frota_entered', 'true') }
+  const enterAdmin = (pin: string) => {
+    if (isValidAdminPin(pin)) {
+      setLoginPinError(false)
+      setIsAdmin(true); localStorage.setItem('isAdmin', 'true')
+      setAppEntered(true); localStorage.setItem('frota_entered', 'true')
+    } else {
+      setLoginPinError(true)
+    }
   }
+  const logoutAdmin = () => { setIsAdmin(false); localStorage.removeItem('isAdmin') }
 
   const verifyPin = (pin: string) => {
-    // Get valid PINs from environment variables (for static deployment)
-    const validPins = [
-      process.env.NEXT_PUBLIC_ADMIN_PIN_1,
-      process.env.NEXT_PUBLIC_ADMIN_PIN_2,
-      process.env.NEXT_PUBLIC_ADMIN_PIN_3
-    ].filter(Boolean)
-
-    const isValid = validPins.includes(pin)
-
-    if (isValid) {
+    if (isValidAdminPin(pin)) {
       setPinError(false); setPinModal(false)
       if (pendingAction === 'login') { setIsAdmin(true); localStorage.setItem('isAdmin', 'true') }
       else if (pendingAction === 'delete' && selectedVehicle) deleteVehicle()
@@ -185,6 +189,17 @@ export default function FrotaInfratech() {
 
   const downloadPDF = () => generateFleetReport(vehicles, history)
 
+  if (!appEntered) {
+    return (
+      <LoginScreen
+        currentLang={currentLang}
+        error={loginPinError}
+        onEnterCommon={enterCommon}
+        onEnterAdmin={enterAdmin}
+      />
+    )
+  }
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg-main)' }}>
@@ -210,12 +225,9 @@ export default function FrotaInfratech() {
         <TopBar
           sidebarOpen={sidebarOpen}
           currentLang={currentLang}
-          theme={theme}
           isAdmin={isAdmin}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          onLanguageChange={changeLanguage}
-          onToggleTheme={toggleTheme}
-          onToggleAdmin={toggleAdmin}
+          onNavigate={setCurrentPage}
           onAddVehicle={() => setAddModal(true)}
         />
 
@@ -276,6 +288,24 @@ export default function FrotaInfratech() {
                   <option value="pt">Portugues</option><option value="en">English</option><option value="es">Espanol</option>
                 </select>
               </div>
+
+              <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
+                <div>
+                  <h3 style={{ marginBottom: '5px' }}>{t('setTheme', currentLang)}</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{theme === 'dark' ? t('setThemeDark', currentLang) : t('setThemeLight', currentLang)}</p>
+                </div>
+                <button onClick={toggleTheme} style={{ padding: '8px 16px', borderRadius: '5px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}>
+                  {theme === 'dark' ? `🌙 ${t('setThemeDark', currentLang)}` : `☀️ ${t('setThemeLight', currentLang)}`}
+                </button>
+              </div>
+
+              {isAdmin && (
+                <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
+                  <button onClick={logoutAdmin} style={{ padding: '10px 16px', borderRadius: '5px', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+                    {t('btnLogoutAdmin', currentLang)}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

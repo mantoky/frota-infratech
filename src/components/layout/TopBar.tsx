@@ -1,30 +1,25 @@
 'use client'
 
-import { t } from '@/lib/hooks/useTranslations'
 import { CSSProperties } from 'react'
-import { Menu, Truck, Sun, Moon, ShieldCheck, Plus } from 'lucide-react'
+import { Menu, Settings, Plus } from 'lucide-react'
+import { PageType } from '@/types'
+import { t } from '@/lib/hooks/useTranslations'
 
 interface TopBarProps {
   sidebarOpen: boolean
   currentLang: string
-  theme: string
   isAdmin: boolean
   onToggleSidebar: () => void
-  onLanguageChange: (lang: string) => void
-  onToggleTheme: () => void
-  onToggleAdmin: () => void
+  onNavigate: (page: PageType) => void
   onAddVehicle: () => void
 }
 
 export default function TopBar({
   sidebarOpen,
   currentLang,
-  theme,
   isAdmin,
   onToggleSidebar,
-  onLanguageChange,
-  onToggleTheme,
-  onToggleAdmin,
+  onNavigate,
   onAddVehicle
 }: TopBarProps) {
   const styles: { [key: string]: CSSProperties } = {
@@ -40,28 +35,6 @@ export default function TopBar({
       zIndex: 100,
       flexWrap: 'wrap',
       gap: '10px',
-    },
-    logoSection: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-      padding: '8px 15px',
-      background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))',
-      borderRadius: '8px',
-      color: 'white',
-      height: '45px',
-    },
-    prontosPhrase: {
-      background: 'linear-gradient(90deg, #f39c12, #e74c3c)',
-      color: 'white',
-      padding: '8px 20px',
-      borderRadius: '20px',
-      fontWeight: 800,
-      fontSize: '1rem',
-      textTransform: 'uppercase',
-      letterSpacing: '1px',
-      boxShadow: '0 4px 10px rgba(243, 156, 18, 0.4)',
-      whiteSpace: 'nowrap',
     },
   }
 
@@ -90,41 +63,13 @@ export default function TopBar({
         <span style={{ fontSize: '0.9rem' }}>Menu</span>
       </button>
 
-      <div style={styles.logoSection}>
-        <Truck size={20} />
-        <h1 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Frota Infratech</h1>
-      </div>
-
-      <div style={styles.prontosPhrase}>
-        {t('prontosPhrase', currentLang)}
-      </div>
-
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-        <select
-          value={currentLang}
-          onChange={(e) => onLanguageChange(e.target.value)}
-          style={{ height: '45px', borderRadius: '25px', border: '2px solid var(--brand-primary)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', padding: '0 15px' }}
-        >
-          <option value="pt">🇧🇷 PT</option>
-          <option value="en">🇺🇸 EN</option>
-          <option value="es">🇪🇸 ES</option>
-        </select>
-
         <button
-          onClick={onToggleTheme}
-          style={{ background: 'none', border: '2px solid var(--brand-primary)', color: 'var(--brand-primary)', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
+          onClick={() => onNavigate('settings')}
+          aria-label={t('menuSettings', currentLang)}
+          style={{ background: 'none', border: '2px solid var(--brand-primary)', color: 'var(--brand-primary)', padding: '8px', borderRadius: '25px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '45px', width: '45px' }}
         >
-          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          <span>{theme === 'dark' ? t('themeLight', currentLang) : t('themeDark', currentLang)}</span>
-        </button>
-
-        <button
-          onClick={onToggleAdmin}
-          style={{ background: isAdmin ? '#27ae60' : 'none', border: `2px solid ${isAdmin ? '#27ae60' : 'var(--brand-primary)'}`, color: isAdmin ? 'white' : 'var(--brand-primary)', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
-        >
-          {isAdmin && <span style={{ width: '8px', height: '8px', backgroundColor: 'white', borderRadius: '50%', animation: 'pulse 2s infinite' }} />}
-          <ShieldCheck size={16} />
-          <span>{isAdmin ? t('adminActive', currentLang) : t('adminInactive', currentLang)}</span>
+          <Settings size={18} />
         </button>
 
         {isAdmin && (

@@ -2,6 +2,15 @@ import { HistoryItem } from '@/types'
 
 export const generateVehicleId = (): number => Date.now()
 
+export const isValidAdminPin = (pin: string): boolean => {
+  const validPins = [
+    process.env.NEXT_PUBLIC_ADMIN_PIN_1,
+    process.env.NEXT_PUBLIC_ADMIN_PIN_2,
+    process.env.NEXT_PUBLIC_ADMIN_PIN_3
+  ].filter(Boolean)
+  return validPins.includes(pin)
+}
+
 export const getFuelPercent = (text: string): number => {
   const map: { [key: string]: number } = {
     'Reserva': 10,
