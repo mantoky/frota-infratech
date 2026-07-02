@@ -3,6 +3,7 @@
 import { t } from '@/lib/hooks/useTranslations'
 import { HistoryItem } from '@/types'
 import { CSSProperties } from 'react'
+import { History, Inbox } from 'lucide-react'
 
 interface HistoryPanelProps {
   isOpen: boolean
@@ -148,7 +149,7 @@ export default function HistoryPanel({
       <div style={styles.panel} onClick={e => e.stopPropagation()}>
         <div style={styles.header}>
           <h2 style={styles.title}>
-            <i className="fas fa-history"></i>
+            <History size={20} />
             {t('historyTitle', currentLang)}
           </h2>
           <button onClick={onClose} style={styles.closeButton}>
@@ -159,8 +160,8 @@ export default function HistoryPanel({
         <div style={styles.content}>
           {sortedHistory.length === 0 ? (
             <div style={styles.emptyState}>
-              <div style={styles.emptyIcon}>
-                <i className="fas fa-inbox"></i>
+              <div style={{ ...styles.emptyIcon, display: 'flex', justifyContent: 'center' }}>
+                <Inbox size={48} />
               </div>
               <p>{t('noRecords', currentLang)}</p>
             </div>

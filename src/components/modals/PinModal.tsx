@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react'
 import { t } from '@/lib/hooks/useTranslations'
 import Modal from './Modal'
 import { CSSProperties } from 'react'
+import { Lock } from 'lucide-react'
 
 interface PinModalProps {
   isOpen: boolean
@@ -96,8 +97,8 @@ export default function PinModal({
       title={t('modalAdmin', currentLang)}
       maxWidth="400px"
     >
-      <div style={styles.icon}>
-        <i className="fas fa-lock"></i>
+      <div style={{ ...styles.icon, display: 'flex', justifyContent: 'center' }}>
+        <Lock size={48} />
       </div>
       
       <form onSubmit={handleSubmit}>

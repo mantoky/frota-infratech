@@ -3,6 +3,7 @@
 import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
 import { CSSProperties } from 'react'
+import { Ban, Truck, AlertCircle, Key, Wrench, Droplet, Undo2, Lock, Pencil } from 'lucide-react'
 
 interface VehicleCardProps {
   vehicle: Vehicle
@@ -125,7 +126,7 @@ export default function VehicleCard({
           alignItems: 'center',
           gap: '8px',
         }}>
-          <i className="fas fa-ban" style={{ color: '#e74c3c' }}></i>
+          <Ban size={16} style={{ color: '#e74c3c' }} />
           <div>
             <span style={{ color: '#e74c3c', fontWeight: 600, fontSize: '0.85rem' }}>
               Veículo Bloqueado
@@ -151,7 +152,7 @@ export default function VehicleCard({
           alignItems: 'center',
           gap: '8px',
         }}>
-          <i className="fas fa-truck-loading" style={{ color: '#9b59b6' }}></i>
+          <Truck size={16} style={{ color: '#9b59b6' }} />
           <span style={{ color: '#9b59b6', fontWeight: 600, fontSize: '0.85rem' }}>
             Veículo em Processo de Mobilização
           </span>
@@ -224,8 +225,8 @@ export default function VehicleCard({
       )}
 
       {isMaintAlert && (
-        <div style={{ color: '#e74c3c', fontWeight: 'bold', marginBottom: '10px', fontSize: '0.9rem' }}>
-          <i className="fas fa-exclamation-circle"></i> {t('maintIn', currentLang)} {remainingKm}km
+        <div style={{ color: '#e74c3c', fontWeight: 'bold', marginBottom: '10px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <AlertCircle size={16} /> {t('maintIn', currentLang)} {remainingKm}km
         </div>
       )}
 
@@ -247,30 +248,30 @@ export default function VehicleCard({
                 style={{ ...btnStyle, backgroundColor: '#3498db', color: 'white' }}
                 disabled={isBlocked}
               >
-                <i className="fas fa-key"></i> {t('btnWithdraw', currentLang)}
+                <Key size={16} /> {t('btnWithdraw', currentLang)}
               </button>
-              <button 
-                onClick={() => !isBlocked && onService('man', vehicle)} 
+              <button
+                onClick={() => !isBlocked && onService('man', vehicle)}
                 style={{ ...btnStyle, backgroundColor: '#f39c12', color: 'white' }}
                 disabled={isBlocked}
               >
-                <i className="fas fa-wrench"></i> {t('btnMaint', currentLang)}
+                <Wrench size={16} /> {t('btnMaint', currentLang)}
               </button>
-              <button 
-                onClick={() => !isBlocked && onService('lav', vehicle)} 
+              <button
+                onClick={() => !isBlocked && onService('lav', vehicle)}
                 style={{ ...btnStyle, backgroundColor: '#f39c12', color: 'white' }}
                 disabled={isBlocked}
               >
-                <i className="fas fa-soap"></i> {t('btnWash', currentLang)}
+                <Droplet size={16} /> {t('btnWash', currentLang)}
               </button>
             </>
           ) : (
-            <button 
-              onClick={() => !isBlocked && onReturn(vehicle)} 
+            <button
+              onClick={() => !isBlocked && onReturn(vehicle)}
               style={{ ...btnStyle, backgroundColor: '#9b59b6', color: 'white' }}
               disabled={isBlocked}
             >
-              <i className="fas fa-undo"></i> {t('btnReturn', currentLang)}
+              <Undo2 size={16} /> {t('btnReturn', currentLang)}
             </button>
           )
         ) : (
@@ -280,7 +281,7 @@ export default function VehicleCard({
             color: '#e74c3c',
             cursor: 'not-allowed',
           }}>
-            <i className="fas fa-lock"></i> Bloqueado
+            <Lock size={16} /> Bloqueado
           </div>
         )}
         <button 
@@ -295,7 +296,7 @@ export default function VehicleCard({
             position: 'relative',
           }}
         >
-          <i className="fas fa-edit"></i>
+          <Pencil size={16} />
           <span>{t('btnEdit', currentLang)}</span>
           {isBlocked && (
             <span style={{
@@ -312,7 +313,7 @@ export default function VehicleCard({
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <i className="fas fa-lock" style={{ fontSize: '0.6rem' }}></i>
+              <Lock size={10} />
             </span>
           )}
         </button>

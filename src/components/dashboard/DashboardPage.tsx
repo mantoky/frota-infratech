@@ -4,6 +4,7 @@ import { t } from '@/lib/hooks/useTranslations'
 import { FilterType, Vehicle } from '@/types'
 import { CSSProperties } from 'react'
 import VehicleCard from '@/components/vehicles/VehicleCard'
+import { AlertTriangle, Ban } from 'lucide-react'
 
 interface DashboardPageProps {
   vehicles: Vehicle[]
@@ -76,6 +77,8 @@ export default function DashboardPage({
     return remaining >= 0 && remaining <= 1000
   })
 
+  const blockedAlerts = vehicles.filter(v => v.blocked)
+
   const filterOptions: FilterType[] = ['all', 'disp', 'uso', 'lav', 'man']
 
   return (
@@ -86,8 +89,16 @@ export default function DashboardPage({
       {/* Maintenance Alert Banner */}
       {maintenanceAlerts.length > 0 && (
         <div style={{ backgroundColor: 'var(--alert-bg)', color: 'var(--alert-text)', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: '5px solid #e74c3c', fontWeight: 600 }}>
-          <i className="fas fa-exclamation-triangle"></i>
+          <AlertTriangle size={18} />
           <span>{t('maintenanceAlert', currentLang)}</span>
+        </div>
+      )}
+
+      {/* Blocked Alert Banner */}
+      {blockedAlerts.length > 0 && (
+        <div style={{ backgroundColor: 'rgba(255, 20, 147, 0.15)', color: '#ff1493', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: '5px solid #ff1493', fontWeight: 600 }}>
+          <Ban size={18} />
+          <span>{blockedAlerts.length} {currentLang === 'pt' ? 'veículo(s) bloqueado(s)' : currentLang === 'en' ? 'vehicle(s) blocked' : 'vehículo(s) bloqueado(s)'}</span>
         </div>
       )}
 

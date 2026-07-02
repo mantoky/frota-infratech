@@ -3,6 +3,15 @@
 import { t } from '@/lib/hooks/useTranslations'
 import { FilterType, PageType } from '@/types'
 import { CSSProperties } from 'react'
+import { Truck, LayoutGrid, Check, Clock, Droplet, Wrench, Users, History, Settings } from 'lucide-react'
+
+const FILTER_ICONS: Record<FilterType, typeof Check> = {
+  all: LayoutGrid,
+  disp: Check,
+  uso: Clock,
+  lav: Droplet,
+  man: Wrench,
+}
 
 interface SidebarProps {
   currentPage: PageType
@@ -64,7 +73,7 @@ export default function Sidebar({
     <>
       <aside style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <i className="fas fa-truck" style={{ fontSize: '1.5rem' }}></i>
+          <Truck size={24} />
           <h1 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{t('sidebarTitle', currentLang)}</h1>
         </div>
         <nav style={{ padding: '20px 0' }}>
@@ -80,7 +89,7 @@ export default function Sidebar({
               }}
               onClick={() => { onNavigate('dashboard'); onClose(); }}
             >
-              <i className="fas fa-th-large" style={{ width: '24px', textAlign: 'center' }}></i>
+              <LayoutGrid size={18} style={{ width: '24px' }} />
               <span>{t('menuDashboard', currentLang)}</span>
             </div>
           </div>
@@ -89,20 +98,23 @@ export default function Sidebar({
             <div style={{ padding: '10px 20px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '1px' }}>
               {t('menuFilters', currentLang)}
             </div>
-            {filters.map(filter => (
-              <div
-                key={filter}
-                style={{ 
-                  ...styles.menuItem, 
-                  backgroundColor: currentFilter === filter ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                  borderLeft: currentFilter === filter ? '4px solid #009688' : 'none' 
-                }}
-                onClick={() => { onFilterChange(filter); onClose(); }}
-              >
-                <i className={`fas fa-${filter === 'disp' ? 'check' : filter === 'uso' ? 'clock' : filter === 'lav' ? 'soap' : 'wrench'}`} style={{ width: '24px', textAlign: 'center' }}></i>
-                <span>{t(`stat${filter.charAt(0).toUpperCase() + filter.slice(1) === 'Available' ? 'Available' : filter === 'disp' ? 'Available' : filter === 'uso' ? 'InUse' : filter === 'lav' ? 'Wash' : 'Maintenance'}`, currentLang)}</span>
-              </div>
-            ))}
+            {filters.map(filter => {
+              const FilterIcon = FILTER_ICONS[filter]
+              return (
+                <div
+                  key={filter}
+                  style={{
+                    ...styles.menuItem,
+                    backgroundColor: currentFilter === filter ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    borderLeft: currentFilter === filter ? '4px solid #009688' : 'none'
+                  }}
+                  onClick={() => { onFilterChange(filter); onClose(); }}
+                >
+                  <FilterIcon size={18} style={{ width: '24px' }} />
+                  <span>{t(`stat${filter === 'disp' ? 'Available' : filter === 'uso' ? 'InUse' : filter === 'lav' ? 'Wash' : 'Maintenance'}`, currentLang)}</span>
+                </div>
+              )
+            })}
           </div>
 
           <div style={{ marginBottom: '25px' }}>
@@ -117,14 +129,14 @@ export default function Sidebar({
               }}
               onClick={() => { onNavigate('drivers'); onClose(); }}
             >
-              <i className="fas fa-users" style={{ width: '24px', textAlign: 'center' }}></i>
+              <Users size={18} style={{ width: '24px' }} />
               <span>{t('menuDrivers', currentLang)}</span>
             </div>
             <div
               style={styles.menuItem}
               onClick={() => { onHistoryOpen(); onClose(); }}
             >
-              <i className="fas fa-history" style={{ width: '24px', textAlign: 'center' }}></i>
+              <History size={18} style={{ width: '24px' }} />
               <span>{t('menuHistory', currentLang)}</span>
             </div>
           </div>
@@ -141,7 +153,7 @@ export default function Sidebar({
               }}
               onClick={() => { onNavigate('settings'); onClose(); }}
             >
-              <i className="fas fa-cog" style={{ width: '24px', textAlign: 'center' }}></i>
+              <Settings size={18} style={{ width: '24px' }} />
               <span>{t('menuSettings', currentLang)}</span>
             </div>
           </div>

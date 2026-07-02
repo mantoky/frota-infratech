@@ -2,6 +2,7 @@
 
 import { t } from '@/lib/hooks/useTranslations'
 import { CSSProperties } from 'react'
+import { Menu, Truck, Sun, Moon, ShieldCheck, Plus } from 'lucide-react'
 
 interface TopBarProps {
   sidebarOpen: boolean
@@ -85,12 +86,12 @@ export default function TopBar({
           transition: 'all 0.3s ease',
         }}
       >
-        <i className="fas fa-bars" style={{ fontSize: '1.1rem' }}></i>
+        <Menu size={18} />
         <span style={{ fontSize: '0.9rem' }}>Menu</span>
       </button>
 
       <div style={styles.logoSection}>
-        <i className="fas fa-truck" style={{ fontSize: '1.3rem' }}></i>
+        <Truck size={20} />
         <h1 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Frota Infratech</h1>
       </div>
 
@@ -113,7 +114,7 @@ export default function TopBar({
           onClick={onToggleTheme}
           style={{ background: 'none', border: '2px solid #009688', color: '#009688', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
         >
-          <i className={`fas fa-${theme === 'dark' ? 'sun' : 'moon'}`}></i>
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           <span>{theme === 'dark' ? t('themeLight', currentLang) : t('themeDark', currentLang)}</span>
         </button>
 
@@ -122,7 +123,7 @@ export default function TopBar({
           style={{ background: isAdmin ? '#27ae60' : 'none', border: `2px solid ${isAdmin ? '#27ae60' : '#009688'}`, color: isAdmin ? 'white' : '#009688', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
         >
           {isAdmin && <span style={{ width: '8px', height: '8px', backgroundColor: 'white', borderRadius: '50%', animation: 'pulse 2s infinite' }} />}
-          <i className="fas fa-user-shield"></i>
+          <ShieldCheck size={16} />
           <span>{isAdmin ? t('adminActive', currentLang) : t('adminInactive', currentLang)}</span>
         </button>
 
@@ -131,7 +132,7 @@ export default function TopBar({
             onClick={onAddVehicle}
             style={{ background: '#009688', border: '2px solid #009688', color: 'white', padding: '8px 15px', borderRadius: '25px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', height: '45px' }}
           >
-            <i className="fas fa-plus"></i>
+            <Plus size={16} />
             <span>{t('btnAdd', currentLang)}</span>
           </button>
         )}

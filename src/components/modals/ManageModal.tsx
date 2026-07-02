@@ -5,6 +5,7 @@ import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
 import Modal from './Modal'
 import { CSSProperties } from 'react'
+import { Ban, Truck, Unlock, Lock, AlertTriangle } from 'lucide-react'
 
 interface ManageModalProps {
   isOpen: boolean
@@ -270,7 +271,7 @@ export default function ManageModal({
       {isBlocked && (
         <div style={styles.blockedAlert}>
           <div style={styles.blockedTitle}>
-            <i className="fas fa-ban"></i>
+            <Ban size={18} />
             Veículo Bloqueado para Uso
           </div>
           <div style={styles.blockedReason}>
@@ -283,8 +284,8 @@ export default function ManageModal({
 
       {/* Mobilization Alert */}
       {isMobilization && (
-        <div style={styles.mobilizationBadge}>
-          <i className="fas fa-truck-loading" style={{ marginRight: '8px' }}></i>
+        <div style={{ ...styles.mobilizationBadge, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <Truck size={18} />
           Veículo em Processo de Mobilização
         </div>
       )}
@@ -297,7 +298,7 @@ export default function ManageModal({
             onClick={handleBlock}
             style={{ ...styles.button, ...styles.blockButton, flex: 'none' }}
           >
-            <i className="fas fa-ban" style={{ marginRight: '8px' }}></i>
+            <Ban size={16} style={{ marginRight: '8px' }} />
             Bloquear Veículo
           </button>
         ) : (
@@ -306,7 +307,7 @@ export default function ManageModal({
             onClick={handleUnblock}
             style={{ ...styles.button, ...styles.unblockButton, flex: 'none' }}
           >
-            <i className="fas fa-unlock" style={{ marginRight: '8px' }}></i>
+            <Unlock size={16} style={{ marginRight: '8px' }} />
             Desbloquear Veículo
             {!isAdmin && <span style={styles.adminOnlyBadge}>ADMIN</span>}
           </button>
@@ -364,8 +365,8 @@ export default function ManageModal({
               <option value="mobilizacao">Em Processo de Mobilização</option>
             </select>
             {isBlocked && (
-              <p style={{ fontSize: '0.75rem', color: '#e74c3c', marginTop: '5px' }}>
-                <i className="fas fa-ban" style={{ marginRight: '4px' }}></i>
+              <p style={{ fontSize: '0.75rem', color: '#e74c3c', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Ban size={12} />
                 Veículo bloqueado - desbloqueie para alterar o status
               </p>
             )}
@@ -424,8 +425,8 @@ export default function ManageModal({
               title={!isAdmin ? "Apenas administradores podem alterar este campo" : ""}
             />
             {!isAdmin && (
-              <p style={{ fontSize: '0.75rem', color: '#f39c12', marginTop: '5px' }}>
-                <i className="fas fa-lock" style={{ marginRight: '4px' }}></i>
+              <p style={{ fontSize: '0.75rem', color: '#f39c12', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Lock size={12} />
                 Apenas administradores podem alterar a próxima manutenção
               </p>
             )}
@@ -488,8 +489,8 @@ export default function ManageModal({
             width: '400px',
             maxWidth: '90%',
           }}>
-            <h3 style={{ marginBottom: '15px', color: '#e74c3c' }}>
-              <i className="fas fa-exclamation-triangle" style={{ marginRight: '10px' }}></i>
+            <h3 style={{ marginBottom: '15px', color: '#e74c3c', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <AlertTriangle size={20} />
               Bloquear Veículo
             </h3>
             <p style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>
