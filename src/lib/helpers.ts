@@ -1,5 +1,7 @@
 import { HistoryItem } from '@/types'
 
+export const generateVehicleId = (): number => Date.now()
+
 export const getFuelPercent = (text: string): number => {
   const map: { [key: string]: number } = {
     'Reserva': 10,

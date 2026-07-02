@@ -35,16 +35,16 @@ Após o deploy:
 4. Adicione estas variáveis:
 
 ```
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyDhyrufiZ8AaSJkfXDwG7mkjq9coLqfgRE
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=gestao-de-frota-v1.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=gestao-de-frota-v1
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=gestao-de-frota-v1.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=983800480319
-NEXT_PUBLIC_FIREBASE_APP_ID=1:983800480319:web:d666165752f8e619daae8a
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-HE7VFMVYDG
-NEXT_PUBLIC_ADMIN_PIN_1=3577
-NEXT_PUBLIC_ADMIN_PIN_2=1521
-NEXT_PUBLIC_ADMIN_PIN_3=0274
+NEXT_PUBLIC_FIREBASE_API_KEY=<pegue no console do Firebase>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<pegue no console do Firebase>
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=<pegue no console do Firebase>
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<pegue no console do Firebase>
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<pegue no console do Firebase>
+NEXT_PUBLIC_FIREBASE_APP_ID=<pegue no console do Firebase>
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=<pegue no console do Firebase>
+NEXT_PUBLIC_ADMIN_PIN_1=<defina no painel do Netlify, não commitar valor real>
+NEXT_PUBLIC_ADMIN_PIN_2=<defina no painel do Netlify, não commitar valor real>
+NEXT_PUBLIC_ADMIN_PIN_3=<defina no painel do Netlify, não commitar valor real>
 ```
 
 5. Clique em **Deploy** → **Trigger deploy** → **Deploy site**
@@ -55,9 +55,7 @@ Após o deploy, acesse o link fornecido pelo Netlify.
 
 ## PINs de Acesso Admin
 
-- **PIN 1:** 3577
-- **PIN 2:** 1521
-- **PIN 3:** 0274
+Os PINs reais ficam configurados como variáveis de ambiente no painel do Netlify — nunca commitar os valores em texto no repositório.
 
 ## Comandos Úteis
 

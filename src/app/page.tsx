@@ -9,7 +9,7 @@ import autoTable from 'jspdf-autotable'
 import { Vehicle, HistoryItem, PageType } from '@/types'
 import translations from '@/lib/translations.json'
 import { initialVehicles } from '@/lib/constants'
-import { getFuelPercent, calculateDriverKm, getDriverStats, getDriverKmDetails } from '@/lib/helpers'
+import { getFuelPercent, calculateDriverKm, getDriverStats, getDriverKmDetails, generateVehicleId } from '@/lib/helpers'
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>
@@ -104,6 +104,7 @@ export default function FrotaInfratech() {
   const [addMaintenance, setAddMaintenance] = useState('')
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- restaura preferências e backup do localStorage após a montagem; o HTML estático é pré-renderizado sem acesso ao localStorage, então isso precisa acontecer no cliente, depois do primeiro paint */
     const storedLang = localStorage.getItem('frota_lang')
     const storedTheme = localStorage.getItem('theme')
     const storedAdmin = localStorage.getItem('isAdmin')
@@ -122,6 +123,7 @@ export default function FrotaInfratech() {
         console.error('Error loading local backup:', e)
       }
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     const unsub = onSnapshot(doc(db, 'frota', 'data'), (docSnap) => {
       if (docSnap.exists()) {
@@ -225,7 +227,7 @@ export default function FrotaInfratech() {
 
   const addNewVehicle = (data: Partial<Vehicle>) => {
     const newVehicle: Vehicle = {
-      id: Date.now(), tag: data.tag || '', plate: data.plate || '', model: data.model || '',
+      id: generateVehicleId(), tag: data.tag || '', plate: data.plate || '', model: data.model || '',
       status: data.status || 'disp', km: data.km || 0, fuel: data.fuel || 50, fuelText: data.fuelText || '50%',
       maintenance: data.maintenance || 10000, driver: '', lastLocation: '', obs: ''
     }

@@ -15,9 +15,7 @@ Sistema completo para gerenciamento de frotas de veículos, desenvolvido em Next
 
 ## 🔐 PINs de Administrador
 
-- `1234`
-- `2024`
-- `9999`
+Configurados via variáveis de ambiente (`NEXT_PUBLIC_ADMIN_PIN_1/2/3`) — nunca documentar os valores reais aqui. Veja `.env.example`.
 
 ## 📦 Deploy no Netlify
 

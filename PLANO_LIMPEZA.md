@@ -1,6 +1,8 @@
 # Plano de Limpeza e Reorganização — Frota Infratech
 
 > Documento de referência para a faxina do projeto. Gerado a partir de auditoria real do código-fonte e do `node_modules` (não são suposições — cada item abaixo foi confirmado via grep no `src/`).
+>
+> **Status: Fases 0 a 3 executadas e validadas** (build, lint e testes passando, servidor local testado no navegador). Ver seção 7 para o resultado real.
 
 ## 1. Diagnóstico: por que o projeto pesa 1.3GB
 
@@ -120,3 +122,33 @@ Removendo esses arquivos, as seguintes dependências ficam órfãs e caem junto:
 - `npm run build` e `npm run test` passam sem erros
 - App funciona identicamente no `npm run dev` local (mesmas telas, mesmos fluxos de retirada/devolução/manutenção)
 - Nenhuma mudança publicada/deployada sem autorização explícita
+
+## 7. Resultado real da execução (Fases 0–3)
+
+| Métrica | Antes | Depois (real) |
+|---|---|---|
+| `node_modules` | 1.07 GB | **642 MB** (-40%, 480 pacotes removidos) |
+| Dependências em `package.json` | 60 | 18 |
+| Arquivos em `src/components/ui/` | 61 | 11 |
+| Arquivos em `src/` (total) | ~85 | 38 |
+| `npm run build` | passava com `ignoreBuildErrors: true` mascarando erros | passa limpo, sem a flag |
+| `npm run lint` | **quebrado** (ESLint 9 exigia flat config, só existia `.eslintrc.json`) | migrado para `eslint.config.mjs`, 0 erros, 9 warnings pré-existentes |
+| `npm run test` | **5 de 12 testes falhando** (`setupFilesAfterSetup` era um typo; deveria ser `setupFilesAfterEnv`, então os matchers do `jest-dom` nunca carregavam) | 12/12 passando |
+| Git | inexistente | inicializado, com histórico da faxina |
+
+O número final (642 MB) ficou acima da estimativa inicial (250–350 MB) porque Next.js + Firebase sozinhos já somam ~380 MB — peso legítimo do framework/backend em uso, não gordura.
+
+### Achado crítico de segurança (fora do escopo original, descoberto durante a Fase 3)
+`DEPLOY.md`, `DEPLOY_RAPIDO.md` e `NETLIFY_ENV_VARS.txt` continham a config real do Firebase e os **PINs de administrador reais em produção** (`3577`, `1521`, `0274`) em texto puro. Os três arquivos foram sanitizados (valores reais removidos). **Pendência do usuário**: trocar os PINs reais no painel do Netlify, já que a troca em produção exige deploy e não foi feita aqui.
+
+### Bugs de código corrigidos (fora do escopo original, descobertos pelo lint depois de consertado)
+1. `Date.now()` chamado de forma impura dentro do componente (`page.tsx`) — extraído para `generateVehicleId()` em `helpers.ts`.
+2. `ManageModal.tsx` sincronizava props para state via `useEffect` (anti-padrão) — trocado por ajuste de state durante o render (padrão oficial do React para esse caso), validado no navegador trocando entre veículos diferentes.
+3. `src/lib/hooks/useFirebase.ts` — outro arquivo órfão (nunca importado, duplicava lógica que já existia inline em `page.tsx`, e tinha um bug real de closure obsoleta no array de dependências). Removido.
+4. `jest.config.js` tinha `setupFilesAfterSetup` (chave inválida) em vez de `setupFilesAfterEnv` — corrigido, restaurando os 5 testes que falhavam silenciosamente.
+
+### Pendências em aberto (não executadas nesta rodada)
+- Fase 4 (segurança dos PINs): sanitização de texto feita; troca dos PINs reais em produção depende de ação do usuário no painel do Netlify.
+- Fase 5 (organização para trabalho em equipe): quebrar `page.tsx` (ainda ~1120 linhas) em componentes/hooks menores — não iniciado, escopo maior que o desta rodada.
+- Warnings de lint remanescentes (tipos `any`, variável não usada, uso de `<img>` em vez de `next/image`) — cosméticos, não bloqueiam.
+- Um console warning pré-existente de CSS (mistura de `border`/`borderTop` shorthand) nos cards de filtro do dashboard — cosmético, não corrigido nesta rodada.

@@ -20,16 +20,16 @@ npm run build
 
 | Chave | Valor |
 |-------|-------|
-| NEXT_PUBLIC_FIREBASE_API_KEY | AIzaSyDhyrufiZ8AaSJkfXDwG7mkjq9coLqfgRE |
-| NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN | gestao-de-frota-v1.firebaseapp.com |
-| NEXT_PUBLIC_FIREBASE_PROJECT_ID | gestao-de-frota-v1 |
-| NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET | gestao-de-frota-v1.firebasestorage.app |
-| NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID | 983800480319 |
-| NEXT_PUBLIC_FIREBASE_APP_ID | 1:983800480319:web:d666165752f8e619daae8a |
-| NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID | G-HE7VFMVYDG |
-| NEXT_PUBLIC_ADMIN_PIN_1 | 3577 |
-| NEXT_PUBLIC_ADMIN_PIN_2 | 1521 |
-| NEXT_PUBLIC_ADMIN_PIN_3 | 0274 |
+| NEXT_PUBLIC_FIREBASE_API_KEY | <pegue no console do Firebase> |
+| NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN | <pegue no console do Firebase> |
+| NEXT_PUBLIC_FIREBASE_PROJECT_ID | <pegue no console do Firebase> |
+| NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET | <pegue no console do Firebase> |
+| NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID | <pegue no console do Firebase> |
+| NEXT_PUBLIC_FIREBASE_APP_ID | <pegue no console do Firebase> |
+| NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID | <pegue no console do Firebase> |
+| NEXT_PUBLIC_ADMIN_PIN_1 | <defina no painel do Netlify, não commitar valor real> |
+| NEXT_PUBLIC_ADMIN_PIN_2 | <defina no painel do Netlify, não commitar valor real> |
+| NEXT_PUBLIC_ADMIN_PIN_3 | <defina no painel do Netlify, não commitar valor real> |
 
 ## PASSO 4: Atualizar o site
 1. No painel do Netlify → **Deploys**
@@ -40,6 +40,4 @@ npm run build
 Acesse o link do seu site!
 
 ## PINs de Admin
-- 3577
-- 1521
-- 0274
+Ficam configurados como variáveis de ambiente no painel do Netlify — nunca commitar os valores reais no repositório.
