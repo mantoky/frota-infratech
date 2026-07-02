@@ -1,0 +1,512 @@
+{
+  "sidebarTitle": {
+    "pt": "Frota Infratech",
+    "en": "Infratech Fleet",
+    "es": "Flota Infratech"
+  },
+  "menuMain": {
+    "pt": "Principal",
+    "en": "Main",
+    "es": "Principal"
+  },
+  "menuDashboard": {
+    "pt": "Painel de Veículos",
+    "en": "Vehicle Dashboard",
+    "es": "Panel de Vehículos"
+  },
+  "menuFilters": {
+    "pt": "Filtros",
+    "en": "Filters",
+    "es": "Filtros"
+  },
+  "menuAvailable": {
+    "pt": "Disponíveis",
+    "en": "Available",
+    "es": "Disponibles"
+  },
+  "menuInUse": {
+    "pt": "Em Uso",
+    "en": "In Use",
+    "es": "En Uso"
+  },
+  "menuWash": {
+    "pt": "Lavador",
+    "en": "Wash",
+    "es": "Lavado"
+  },
+  "menuMaintenance": {
+    "pt": "Manutenção",
+    "en": "Maintenance",
+    "es": "Mantenimiento"
+  },
+  "menuReports": {
+    "pt": "Relatórios",
+    "en": "Reports",
+    "es": "Informes"
+  },
+  "menuDrivers": {
+    "pt": "Motoristas",
+    "en": "Drivers",
+    "es": "Conductores"
+  },
+  "menuHistory": {
+    "pt": "Histórico Completo",
+    "en": "Full History",
+    "es": "Historial Completo"
+  },
+  "menuSystem": {
+    "pt": "Sistema",
+    "en": "System",
+    "es": "Sistema"
+  },
+  "menuSettings": {
+    "pt": "Configurações",
+    "en": "Settings",
+    "es": "Configuraciones"
+  },
+  "prontosPhrase": {
+    "pt": "Já Fez seu Prontos Hoje?",
+    "en": "Did You Do Your Checklists Today?",
+    "es": "¿Ya Hiciste Tus Listas Hoy?"
+  },
+  "dashboardTitle": {
+    "pt": "Painel de Veículos",
+    "en": "Vehicle Dashboard",
+    "es": "Panel de Vehículos"
+  },
+  "dashboardSubtitle": {
+    "pt": "Toque em um veículo para gerenciar",
+    "en": "Tap a vehicle to manage",
+    "es": "Toque un vehículo para gestionar"
+  },
+  "maintenanceAlert": {
+    "pt": "Atenção: Veículos com manutenção próxima!",
+    "en": "Alert: Vehicles with upcoming maintenance!",
+    "es": "Atención: ¡Vehículos con mantenimiento próximo!"
+  },
+  "statAll": {
+    "pt": "Todos",
+    "en": "All",
+    "es": "Todos"
+  },
+  "statAvailable": {
+    "pt": "Disponíveis",
+    "en": "Available",
+    "es": "Disponibles"
+  },
+  "statInUse": {
+    "pt": "Em Uso",
+    "en": "In Use",
+    "es": "En Uso"
+  },
+  "statWash": {
+    "pt": "Lavador",
+    "en": "Wash",
+    "es": "Lavado"
+  },
+  "statMaintenance": {
+    "pt": "Manutenção",
+    "en": "Maintenance",
+    "es": "Mantenimiento"
+  },
+  "driversTitle": {
+    "pt": "Motoristas",
+    "en": "Drivers",
+    "es": "Conductores"
+  },
+  "driversSubtitle": {
+    "pt": "Estatísticas dos motoristas",
+    "en": "Driver Statistics",
+    "es": "Estadísticas de conductores"
+  },
+  "settingsTitle": {
+    "pt": "Configurações",
+    "en": "Settings",
+    "es": "Configuraciones"
+  },
+  "settingsSubtitle": {
+    "pt": "Ajustes do sistema",
+    "en": "System Adjustments",
+    "es": "Ajustes del sistema"
+  },
+  "setNotifications": {
+    "pt": "Notificações",
+    "en": "Notifications",
+    "es": "Notificaciones"
+  },
+  "setNotificationsDesc": {
+    "pt": "Receber alertas sobre manutenção",
+    "en": "Receive maintenance alerts",
+    "es": "Recibir alertas de mantenimiento"
+  },
+  "setBackup": {
+    "pt": "Backup Automático",
+    "en": "Auto Backup",
+    "es": "Copia Aut."
+  },
+  "setBackupDesc": {
+    "pt": "Salvar dados automaticamente",
+    "en": "Save data automatically",
+    "es": "Guardar datos automáticamente"
+  },
+  "setEco": {
+    "pt": "Modo Econômico",
+    "en": "Eco Mode",
+    "es": "Modo Eco"
+  },
+  "setEcoDesc": {
+    "pt": "Reduzir consumo de dados",
+    "en": "Reduce data usage",
+    "es": "Reducir uso de datos"
+  },
+  "setLang": {
+    "pt": "Idioma",
+    "en": "Language",
+    "es": "Idioma"
+  },
+  "setLangDesc": {
+    "pt": "Português (Brasil)",
+    "en": "Portuguese (Brazil)",
+    "es": "Portugués (Brasil)"
+  },
+  "historyTitle": {
+    "pt": "Histórico Completo",
+    "en": "Full History",
+    "es": "Historial Completo"
+  },
+  "topDrivers": {
+    "pt": "Top Motoristas - Últimos 30 Dias",
+    "en": "Top Drivers - Last 30 Days",
+    "es": "Top Conductores - Últimos 30 Días"
+  },
+  "btnDownload": {
+    "pt": "Baixar Relatório PDF",
+    "en": "Download PDF Report",
+    "es": "Descargar Informe PDF"
+  },
+  "btnDownloadHistory": {
+    "pt": "Baixar Histórico em PDF",
+    "en": "Download History as PDF",
+    "es": "Descargar Historial en PDF"
+  },
+  "allMovements": {
+    "pt": "Todas as Movimentações",
+    "en": "All Movements",
+    "es": "Todos los Movimientos"
+  },
+  "thDate": {
+    "pt": "Data/Hora",
+    "en": "Date/Time",
+    "es": "Fecha/Hora"
+  },
+  "thVehicle": {
+    "pt": "Veículo",
+    "en": "Vehicle",
+    "es": "Vehículo"
+  },
+  "thDriver": {
+    "pt": "Motorista",
+    "en": "Driver",
+    "es": "Conductor"
+  },
+  "thAction": {
+    "pt": "Ação",
+    "en": "Action",
+    "es": "Acción"
+  },
+  "thKM": {
+    "pt": "KM",
+    "en": "KM",
+    "es": "KM"
+  },
+  "modalWithdraw": {
+    "pt": "Retirar Veículo",
+    "en": "Withdraw Vehicle",
+    "es": "Retirar Vehículo"
+  },
+  "lblVehicle": {
+    "pt": "Veículo:",
+    "en": "Vehicle:",
+    "es": "Vehículo:"
+  },
+  "lblDriver": {
+    "pt": "Nome do Motorista *",
+    "en": "Driver Name *",
+    "es": "Nombre del Conductor *"
+  },
+  "lblKm": {
+    "pt": "Quilometragem Atual *",
+    "en": "Current Mileage *",
+    "es": "Kilometraje Actual *"
+  },
+  "errorKm": {
+    "pt": "KM não pode ser menor que o registrado!",
+    "en": "KM cannot be less than recorded!",
+    "es": "¡KM no puede ser menor al registrado!"
+  },
+  "lblFuel": {
+    "pt": "Combustível *",
+    "en": "Fuel *",
+    "es": "Combustible *"
+  },
+  "lblProntos": {
+    "pt": "Já Fez Seu Prontos? (Sim)",
+    "en": "Did You Do Your Checklists? (Yes)",
+    "es": "¿Hiciste Tus Listas? (Sí)"
+  },
+  "lblObs": {
+    "pt": "Observações",
+    "en": "Observations",
+    "es": "Observaciones"
+  },
+  "btnConfirm": {
+    "pt": "Confirmar Retirada",
+    "en": "Confirm Withdrawal",
+    "es": "Confirmar Retirada"
+  },
+  "btnCancel": {
+    "pt": "Cancelar",
+    "en": "Cancel",
+    "es": "Cancelar"
+  },
+  "modalReturn": {
+    "pt": "Devolver Veículo",
+    "en": "Return Vehicle",
+    "es": "Devolver Vehículo"
+  },
+  "lblLocation": {
+    "pt": "Local de Devolução *",
+    "en": "Return Location *",
+    "es": "Lugar de Devolución *"
+  },
+  "lblSpecify": {
+    "pt": "Especifique o local *",
+    "en": "Specify Location *",
+    "es": "Especifique el lugar *"
+  },
+  "btnConfirmReturn": {
+    "pt": "Confirmar Devolução",
+    "en": "Confirm Return",
+    "es": "Confirmar Devolución"
+  },
+  "modalManage": {
+    "pt": "Gerenciar Veículo",
+    "en": "Manage Vehicle",
+    "es": "Gestionar Vehículo"
+  },
+  "lblTag": {
+    "pt": "Tag",
+    "en": "Tag",
+    "es": "Etiqueta"
+  },
+  "lblPlate": {
+    "pt": "Placa",
+    "en": "Plate",
+    "es": "Placa"
+  },
+  "lblModel": {
+    "pt": "Modelo",
+    "en": "Model",
+    "es": "Modelo"
+  },
+  "lblStatus": {
+    "pt": "Status",
+    "en": "Status",
+    "es": "Estado"
+  },
+  "lblNextMaint": {
+    "pt": "Próx. Manutenção (km)",
+    "en": "Next Maintenance (km)",
+    "es": "Próx. Mantenimiento (km)"
+  },
+  "btnSave": {
+    "pt": "Salvar Alterações",
+    "en": "Save Changes",
+    "es": "Guardar Cambios"
+  },
+  "btnDelete": {
+    "pt": "Excluir Veículo",
+    "en": "Delete Vehicle",
+    "es": "Eliminar Vehículo"
+  },
+  "modalAdd": {
+    "pt": "Adicionar Veículo",
+    "en": "Add Vehicle",
+    "es": "Añadir Vehículo"
+  },
+  "btnAdd": {
+    "pt": "Adicionar Veículo",
+    "en": "Add Vehicle",
+    "es": "Añadir Vehículo"
+  },
+  "modalAdmin": {
+    "pt": "Acesso Administrativo",
+    "en": "Admin Access",
+    "es": "Acceso Administrativo"
+  },
+  "pinMsg": {
+    "pt": "Digite um dos 3 PINs de administrador:",
+    "en": "Enter one of the 3 admin PINs:",
+    "es": "Ingrese uno de los 3 PINs de administrador:"
+  },
+  "pinError": {
+    "pt": "PIN incorreto!",
+    "en": "Incorrect PIN!",
+    "es": "¡PIN incorrecto!"
+  },
+  "btnEnter": {
+    "pt": "Entrar",
+    "en": "Enter",
+    "es": "Entrar"
+  },
+  "btnConfirmService": {
+    "pt": "Confirmar Envio",
+    "en": "Confirm Send",
+    "es": "Confirmar Envío"
+  },
+  "serviceTitleMaint": {
+    "pt": "Enviar para Manutenção",
+    "en": "Send to Maintenance",
+    "es": "Enviar a Mantenimiento"
+  },
+  "serviceTitleWash": {
+    "pt": "Enviar para Lavador",
+    "en": "Send to Wash",
+    "es": "Enviar a Lavado"
+  },
+  "lblMileage": {
+    "pt": "Quilometragem",
+    "en": "Mileage",
+    "es": "Kilometraje"
+  },
+  "lblPlateLabel": {
+    "pt": "Placa",
+    "en": "Plate",
+    "es": "Placa"
+  },
+  "lblNextMaintLabel": {
+    "pt": "Próx. Manutenção",
+    "en": "Next Maint.",
+    "es": "Próx. Mant."
+  },
+  "lblDriverLabel": {
+    "pt": "Motorista",
+    "en": "Driver",
+    "es": "Conductor"
+  },
+  "lblLastLocation": {
+    "pt": "Último Local",
+    "en": "Last Location",
+    "es": "Último Lugar"
+  },
+  "lblFuelLabel": {
+    "pt": "COMBUSTÍVEL:",
+    "en": "FUEL:",
+    "es": "COMBUSTIBLE:"
+  },
+  "btnWithdraw": {
+    "pt": "Retirar",
+    "en": "Withdraw",
+    "es": "Retirar"
+  },
+  "btnMaint": {
+    "pt": "Manut.",
+    "en": "Maint.",
+    "es": "Mant."
+  },
+  "btnWash": {
+    "pt": "Lavador",
+    "en": "Wash",
+    "es": "Lavado"
+  },
+  "btnReturn": {
+    "pt": "Devolver",
+    "en": "Return",
+    "es": "Devolver"
+  },
+  "btnEdit": {
+    "pt": "Editar",
+    "en": "Edit",
+    "es": "Editar"
+  },
+  "maintIn": {
+    "pt": "Manut. em",
+    "en": "Maint. in",
+    "es": "Mant. en"
+  },
+  "withdrawals": {
+    "pt": "retiradas",
+    "en": "withdrawals",
+    "es": "retiradas"
+  },
+  "noRecords": {
+    "pt": "Nenhum registro nos últimos 30 dias",
+    "en": "No records in last 30 days",
+    "es": "Sin registros en los últimos 30 días"
+  },
+  "themeLight": {
+    "pt": "Claro",
+    "en": "Light",
+    "es": "Claro"
+  },
+  "themeDark": {
+    "pt": "Escuro",
+    "en": "Dark",
+    "es": "Oscuro"
+  },
+  "adminActive": {
+    "pt": "Admin Ativo",
+    "en": "Admin Active",
+    "es": "Admin Activo"
+  },
+  "adminInactive": {
+    "pt": "Admin",
+    "en": "Admin",
+    "es": "Admin"
+  },
+  "none": {
+    "pt": "Nenhum",
+    "en": "None",
+    "es": "Ninguno"
+  },
+  "statusAvailable": {
+    "pt": "DISPONÍVEL",
+    "en": "AVAILABLE",
+    "es": "DISPONIBLE"
+  },
+  "statusInUse": {
+    "pt": "EM USO",
+    "en": "IN USE",
+    "es": "EN USO"
+  },
+  "statusWash": {
+    "pt": "LAVADOR",
+    "en": "WASH",
+    "es": "LAVADO"
+  },
+  "statusMaintenance": {
+    "pt": "MANUTENÇÃO",
+    "en": "MAINTENANCE",
+    "es": "MANTENIMIENTO"
+  },
+  "statusMobilization": {
+    "pt": "MOBILIZAÇÃO",
+    "en": "MOBILIZATION",
+    "es": "MOVILIZACION"
+  },
+  "vehicleBlocked": {
+    "pt": "Veículo Bloqueado",
+    "en": "Vehicle Blocked",
+    "es": "Vehículo Bloqueado"
+  },
+  "vehicleMobilization": {
+    "pt": "Veículo em Mobilização",
+    "en": "Vehicle in Mobilization",
+    "es": "Vehículo en Movilización"
+  },
+  "adminOnly": {
+    "pt": "Apenas Admin",
+    "en": "Admin Only",
+    "es": "Solo Admin"
+  }
+}

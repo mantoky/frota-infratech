@@ -1,0 +1,83 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# testing
+coverage/
+
+# next.js
+.next/
+out/
+build/
+dist/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# firestore emulators
+*.log
+firestore_export/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# next.js standalone output
+.next/standalone/
+.next/static/
+
+# dev logs
+dev.log
+server.log
+
+# firebase
+/firebase/firestore_export/
+/firebase/*.log
+
+# turbo
+.turbo/
+
+# panic logs
+next-panic-*.log
+
+# temp files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# port logs
+3002
+3003
+
+# null files
+nul
+
+# dev output
+dev_output.log
