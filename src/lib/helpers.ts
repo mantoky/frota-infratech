@@ -57,28 +57,6 @@ export const findLastWithdrawal = (vehicleLabel: string, history: HistoryItem[])
   return undefined
 }
 
-export const getStatusColor = (status: string): string => {
-  const colors: Record<string, string> = {
-    disp: '#27ae60',
-    uso: '#3498db',
-    lav: '#f39c12',
-    man: '#e74c3c',
-    mobilizacao: '#9b59b6'
-  }
-  return colors[status] || '#95a5a6'
-}
-
-export const getStatusBg = (status: string): string => {
-  const colors: Record<string, string> = {
-    disp: 'rgba(39, 174, 96, 0.2)',
-    uso: 'rgba(52, 152, 219, 0.2)',
-    lav: 'rgba(243, 156, 18, 0.2)',
-    man: 'rgba(231, 76, 60, 0.2)',
-    mobilizacao: 'rgba(155, 89, 182, 0.2)'
-  }
-  return colors[status] || 'rgba(149, 165, 166, 0.2)'
-}
-
 export const getVehicleImage = (model: string): string => {
   const modelLower = model.toLowerCase()
   if (modelLower.includes('hilux')) {

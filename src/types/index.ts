@@ -37,4 +37,4 @@ export interface Translations {
 
 export type ModalType = 'withdraw' | 'return' | 'service' | 'manage' | 'add' | 'pin'
 export type FilterType = 'all' | 'disp' | 'uso' | 'lav' | 'man'
-export type PageType = 'dashboard' | 'drivers' | 'settings'
+export type PageType = 'dashboard' | 'drivers' | 'settings' | 'admin'

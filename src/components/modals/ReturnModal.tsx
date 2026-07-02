@@ -90,11 +90,11 @@ export default function ReturnModal({
       transition: 'all 0.3s',
     },
     confirmButton: {
-      backgroundColor: '#9b59b6',
+      backgroundColor: 'var(--brand-secondary)',
       color: 'white',
     },
     cancelButton: {
-      backgroundColor: '#95a5a6',
+      backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
   }

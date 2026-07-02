@@ -5,6 +5,7 @@ import { t } from '@/lib/hooks/useTranslations'
 import Modal from './Modal'
 import { CSSProperties } from 'react'
 import { Lock } from 'lucide-react'
+import { SEMANTIC_COLORS } from '@/lib/statusColor'
 
 interface PinModalProps {
   isOpen: boolean
@@ -37,7 +38,7 @@ export default function PinModal({
     input: {
       width: '100%',
       padding: '16px',
-      border: `2px solid ${error ? '#e74c3c' : 'var(--border)'}`,
+      border: `2px solid ${error ? SEMANTIC_COLORS.anormal : 'var(--border)'}`,
       borderRadius: '8px',
       backgroundColor: 'var(--bg-card)',
       color: 'var(--text-primary)',
@@ -47,7 +48,7 @@ export default function PinModal({
       fontWeight: 700,
     },
     error: {
-      color: '#e74c3c',
+      color: SEMANTIC_COLORS.anormal,
       textAlign: 'center',
       marginTop: '10px',
       fontWeight: 600,
@@ -67,11 +68,11 @@ export default function PinModal({
       transition: 'all 0.3s',
     },
     confirmButton: {
-      backgroundColor: '#27ae60',
+      backgroundColor: 'var(--brand-primary)',
       color: 'white',
     },
     cancelButton: {
-      backgroundColor: '#95a5a6',
+      backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
     icon: {

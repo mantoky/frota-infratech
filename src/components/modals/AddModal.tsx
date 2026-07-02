@@ -79,7 +79,7 @@ export default function AddModal({
       color: 'white',
     },
     cancelButton: {
-      backgroundColor: '#95a5a6',
+      backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
   }

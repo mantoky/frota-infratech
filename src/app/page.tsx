@@ -19,6 +19,7 @@ import ManageModal from '@/components/modals/ManageModal'
 import AddModal from '@/components/modals/AddModal'
 import PinModal from '@/components/modals/PinModal'
 import LoginScreen from '@/components/auth/LoginScreen'
+import AdminPage from '@/components/admin/AdminPage'
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>
@@ -26,7 +27,7 @@ const t = (key: string, lang: string): string => {
 }
 
 export default function FrotaInfratech() {
-  const { vehicles, setVehicles, history, loading, saveData, addToHistory } = useFleetData()
+  const { vehicles, setVehicles, history, drivers, saveDrivers, loading, saveData, addToHistory } = useFleetData()
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all')
   const [isAdmin, setIsAdmin] = useState(false)
   const [currentLang, setCurrentLang] = useState('pt')
@@ -224,6 +225,7 @@ export default function FrotaInfratech() {
         currentFilter={currentFilter}
         sidebarOpen={sidebarOpen}
         currentLang={currentLang}
+        isAdmin={isAdmin}
         onNavigate={setCurrentPage}
         onFilterChange={setCurrentFilter}
         onHistoryOpen={() => setHistoryPanelOpen(true)}
@@ -255,10 +257,22 @@ export default function FrotaInfratech() {
           />
         )}
 
+        {/* Admin */}
+        {currentPage === 'admin' && isAdmin && (
+          <AdminPage
+            vehicles={vehicles}
+            drivers={drivers}
+            currentLang={currentLang}
+            onManage={openManageModal}
+            onAddVehicle={() => setAddModal(true)}
+            onSaveDrivers={saveDrivers}
+          />
+        )}
+
         {/* Drivers */}
         {currentPage === 'drivers' && (
           <div style={{ padding: '25px', maxWidth: '1400px', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '1.8rem', marginBottom: '10px' }}>{t('driversTitle', currentLang)}</h1>
+            <h1 className="page-title">{t('driversTitle', currentLang)}</h1>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>{t('driversSubtitle', currentLang)}</p>
             <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
               <h3 style={{ marginBottom: '15px' }}>🏆 {t('topDrivers', currentLang)}</h3>
@@ -275,7 +289,7 @@ export default function FrotaInfratech() {
                   </div>
                 ))
               )}
-              <button onClick={downloadPDF} style={{ backgroundColor: '#e74c3c', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginTop: '15px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button onClick={downloadPDF} style={{ backgroundColor: 'var(--brand-primary)', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginTop: '15px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 📄 {t('btnDownloadHistory', currentLang)}
               </button>
             </div>
@@ -285,7 +299,7 @@ export default function FrotaInfratech() {
         {/* Settings */}
         {currentPage === 'settings' && (
           <div style={{ padding: '25px', maxWidth: '1400px', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '1.8rem', marginBottom: '10px' }}>{t('settingsTitle', currentLang)}</h1>
+            <h1 className="page-title">{t('settingsTitle', currentLang)}</h1>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>{t('settingsSubtitle', currentLang)}</p>
             <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '12px', padding: '30px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
               <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -309,7 +323,7 @@ export default function FrotaInfratech() {
               </div>
 
               <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
-                <button onClick={logout} style={{ padding: '10px 16px', borderRadius: '5px', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+                <button onClick={logout} style={{ padding: '10px 16px', borderRadius: '5px', border: 'none', background: 'var(--brand-gray)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
                   {t('btnLogout', currentLang)}
                 </button>
               </div>
@@ -331,6 +345,7 @@ export default function FrotaInfratech() {
         onClose={() => setWithdrawModal(false)}
         vehicle={selectedVehicle}
         currentLang={currentLang}
+        drivers={drivers}
         onConfirm={handleWithdrawConfirm}
       />
 

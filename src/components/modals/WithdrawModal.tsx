@@ -6,12 +6,14 @@ import { Vehicle } from '@/types'
 import Modal from './Modal'
 import { CSSProperties } from 'react'
 import { captureLocation, GeoPoint } from '@/lib/geolocation'
+import { SEMANTIC_COLORS } from '@/lib/statusColor'
 
 interface WithdrawModalProps {
   isOpen: boolean
   onClose: () => void
   vehicle: Vehicle | null
   currentLang: string
+  drivers: string[]
   onConfirm: (data: {
     driver: string
     km: number
@@ -28,6 +30,7 @@ export default function WithdrawModal({
   onClose,
   vehicle,
   currentLang,
+  drivers,
   onConfirm
 }: WithdrawModalProps) {
   const [driver, setDriver] = useState('')
@@ -83,7 +86,7 @@ export default function WithdrawModal({
       cursor: 'pointer',
     },
     error: {
-      color: '#e74c3c',
+      color: SEMANTIC_COLORS.anormal,
       fontSize: '0.875rem',
       marginTop: '5px',
     },
@@ -102,11 +105,11 @@ export default function WithdrawModal({
       transition: 'all 0.3s',
     },
     confirmButton: {
-      backgroundColor: '#3498db',
+      backgroundColor: 'var(--brand-primary)',
       color: 'white',
     },
     cancelButton: {
-      backgroundColor: '#95a5a6',
+      backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
   }
@@ -174,8 +177,12 @@ export default function WithdrawModal({
             value={driver}
             onChange={(e) => setDriver(e.target.value)}
             style={styles.input}
+            list="drivers-datalist"
             required
           />
+          <datalist id="drivers-datalist">
+            {drivers.map(name => <option key={name} value={name} />)}
+          </datalist>
         </div>
 
         <div style={styles.formGroup}>

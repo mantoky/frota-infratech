@@ -6,6 +6,7 @@ import { Vehicle } from '@/types'
 import Modal from './Modal'
 import { CSSProperties } from 'react'
 import { Ban, Truck, Unlock, Lock, AlertTriangle } from 'lucide-react'
+import { SEMANTIC_COLORS } from '@/lib/statusColor'
 
 interface ManageModalProps {
   isOpen: boolean
@@ -134,34 +135,33 @@ export default function ManageModal({
       transition: 'all 0.3s',
     },
     saveButton: {
-      backgroundColor: '#27ae60',
+      backgroundColor: 'var(--brand-primary)',
       color: 'white',
     },
     deleteButton: {
-      backgroundColor: '#e74c3c',
+      backgroundColor: SEMANTIC_COLORS.anormal,
       color: 'white',
     },
     cancelButton: {
-      backgroundColor: '#95a5a6',
+      backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
     blockButton: {
-      backgroundColor: '#e67e22',
+      backgroundColor: SEMANTIC_COLORS.anormal,
       color: 'white',
     },
     unblockButton: {
-      backgroundColor: '#27ae60',
+      backgroundColor: SEMANTIC_COLORS.ok,
       color: 'white',
     },
     blockedAlert: {
-      backgroundColor: '#ffeaea',
-      border: '2px solid #e74c3c',
+      backgroundColor: SEMANTIC_COLORS.anormal,
       borderRadius: '8px',
       padding: '15px',
       marginBottom: '20px',
     },
     blockedTitle: {
-      color: '#e74c3c',
+      color: '#fff',
       fontWeight: 700,
       marginBottom: '5px',
       display: 'flex',
@@ -169,11 +169,12 @@ export default function ManageModal({
       gap: '8px',
     },
     blockedReason: {
-      color: '#666',
+      color: '#fff',
       fontSize: '0.9rem',
+      opacity: 0.9,
     },
     adminOnlyBadge: {
-      backgroundColor: '#f39c12',
+      backgroundColor: SEMANTIC_COLORS.alerta,
       color: 'white',
       padding: '2px 8px',
       borderRadius: '12px',
@@ -181,7 +182,7 @@ export default function ManageModal({
       marginLeft: '8px',
     },
     mobilizationBadge: {
-      backgroundColor: '#9b59b6',
+      backgroundColor: SEMANTIC_COLORS.alerta,
       color: 'white',
       padding: '8px 16px',
       borderRadius: '8px',
@@ -368,7 +369,7 @@ export default function ManageModal({
               <option value="mobilizacao">Em Processo de Mobilização</option>
             </select>
             {isBlocked && (
-              <p style={{ fontSize: '0.75rem', color: '#e74c3c', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <p style={{ fontSize: '0.75rem', color: SEMANTIC_COLORS.anormal, marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Ban size={12} />
                 Veículo bloqueado - desbloqueie para alterar o status
               </p>
@@ -428,7 +429,7 @@ export default function ManageModal({
               title={!isAdmin ? "Apenas administradores podem alterar este campo" : ""}
             />
             {!isAdmin && (
-              <p style={{ fontSize: '0.75rem', color: '#f39c12', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <p style={{ fontSize: '0.75rem', color: SEMANTIC_COLORS.alerta, marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Lock size={12} />
                 Apenas administradores podem alterar a próxima manutenção
               </p>
@@ -492,7 +493,7 @@ export default function ManageModal({
             width: '400px',
             maxWidth: '90%',
           }}>
-            <h3 style={{ marginBottom: '15px', color: '#e74c3c', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h3 style={{ marginBottom: '15px', color: SEMANTIC_COLORS.anormal, display: 'flex', alignItems: 'center', gap: '10px' }}>
               <AlertTriangle size={20} />
               Bloquear Veículo
             </h3>
@@ -506,7 +507,7 @@ export default function ManageModal({
               style={{
                 width: '100%',
                 padding: '12px',
-                border: '2px solid #e74c3c',
+                border: `2px solid ${SEMANTIC_COLORS.anormal}`,
                 borderRadius: '8px',
                 minHeight: '100px',
                 marginBottom: '15px',

@@ -4,6 +4,7 @@ import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
 import { CSSProperties } from 'react'
 import { Ban, Truck, AlertCircle, Key, Wrench, Droplet, Undo2, Lock, Pencil } from 'lucide-react'
+import { SEMANTIC_COLORS, getVehicleSemanticStatus } from '@/lib/statusColor'
 
 interface VehicleCardProps {
   vehicle: Vehicle
@@ -30,7 +31,7 @@ export default function VehicleCard({
       borderRadius: '12px',
       padding: '20px',
       boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-      borderLeft: '5px solid #27ae60',
+      borderLeft: `5px solid ${SEMANTIC_COLORS.ok}`,
       transition: 'transform 0.3s',
     },
   }
@@ -44,28 +45,6 @@ export default function VehicleCard({
       'mobilizacao': 'Mobilização'
     }
     return statusNames[status] || status
-  }
-
-  const getStatusColor = (status: string): string => {
-    const colors: { [key: string]: string } = {
-      'disp': '#27ae60',
-      'uso': '#3498db',
-      'lav': '#f39c12',
-      'man': '#e74c3c',
-      'mobilizacao': '#9b59b6'
-    }
-    return colors[status] || '#95a5a6'
-  }
-
-  const getStatusBgColor = (status: string): string => {
-    const colors: { [key: string]: string } = {
-      'disp': 'rgba(39, 174, 96, 0.2)',
-      'uso': 'rgba(52, 152, 219, 0.2)',
-      'lav': 'rgba(243, 156, 18, 0.2)',
-      'man': 'rgba(231, 76, 60, 0.2)',
-      'mobilizacao': 'rgba(155, 89, 182, 0.2)'
-    }
-    return colors[status] || 'rgba(149, 165, 166, 0.2)'
   }
 
   const getVehicleImage = (model: string): string => {
@@ -82,11 +61,13 @@ export default function VehicleCard({
     return '/vehicles/generic.png'
   }
 
-  const fuelClass = vehicle.fuel >= 75 ? 'high' : vehicle.fuel >= 30 ? 'medium' : 'low'
+  const fuelSemantic = vehicle.fuel >= 75 ? 'ok' : vehicle.fuel >= 30 ? 'alerta' : 'anormal'
   const remainingKm = vehicle.maintenance - vehicle.km
   const isMaintAlert = remainingKm >= 0 && remainingKm <= 1000
   const isBlocked = vehicle.blocked
   const isMobilization = vehicle.status === 'mobilizacao'
+  const semanticStatus = getVehicleSemanticStatus(vehicle)
+  const statusColor = SEMANTIC_COLORS[semanticStatus]
 
   const btnStyle: CSSProperties = {
     flex: 1,
@@ -108,8 +89,8 @@ export default function VehicleCard({
     <div
       style={{
         ...styles.vehicleCard,
-        borderLeftColor: getStatusColor(vehicle.status),
-        border: isMaintAlert ? '2px solid #e74c3c' : isBlocked ? '2px solid #e74c3c' : undefined,
+        borderLeftColor: statusColor,
+        border: isBlocked ? `2px solid ${SEMANTIC_COLORS.anormal}` : isMaintAlert ? `2px solid ${SEMANTIC_COLORS.alerta}` : undefined,
         opacity: isBlocked ? 0.7 : 1,
         position: 'relative',
       }}
@@ -117,8 +98,7 @@ export default function VehicleCard({
       {/* Blocked Alert */}
       {isBlocked && (
         <div style={{
-          backgroundColor: '#ffeaea',
-          border: '1px solid #e74c3c',
+          backgroundColor: SEMANTIC_COLORS.anormal,
           borderRadius: '8px',
           padding: '10px',
           marginBottom: '15px',
@@ -126,13 +106,13 @@ export default function VehicleCard({
           alignItems: 'center',
           gap: '8px',
         }}>
-          <Ban size={16} style={{ color: '#e74c3c' }} />
+          <Ban size={16} style={{ color: '#fff' }} />
           <div>
-            <span style={{ color: '#e74c3c', fontWeight: 600, fontSize: '0.85rem' }}>
+            <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.85rem' }}>
               Veículo Bloqueado
             </span>
             {vehicle.blockedReason && (
-              <p style={{ color: '#666', fontSize: '0.75rem', margin: 0 }}>
+              <p style={{ color: '#fff', fontSize: '0.75rem', margin: 0, opacity: 0.9 }}>
                 {vehicle.blockedReason}
               </p>
             )}
@@ -143,8 +123,7 @@ export default function VehicleCard({
       {/* Mobilization Alert */}
       {isMobilization && (
         <div style={{
-          backgroundColor: 'rgba(155, 89, 182, 0.15)',
-          border: '1px solid #9b59b6',
+          backgroundColor: SEMANTIC_COLORS.alerta,
           borderRadius: '8px',
           padding: '10px',
           marginBottom: '15px',
@@ -152,8 +131,8 @@ export default function VehicleCard({
           alignItems: 'center',
           gap: '8px',
         }}>
-          <Truck size={16} style={{ color: '#9b59b6' }} />
-          <span style={{ color: '#9b59b6', fontWeight: 600, fontSize: '0.85rem' }}>
+          <Truck size={16} style={{ color: '#fff' }} />
+          <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.85rem' }}>
             Veículo em Processo de Mobilização
           </span>
         </div>
@@ -191,8 +170,8 @@ export default function VehicleCard({
           fontSize: '0.75rem',
           fontWeight: 600,
           textTransform: 'uppercase',
-          backgroundColor: getStatusBgColor(vehicle.status),
-          color: getStatusColor(vehicle.status),
+          backgroundColor: statusColor,
+          color: '#fff',
         }}>
           {getStatusName(vehicle.status)}
         </span>
@@ -225,13 +204,13 @@ export default function VehicleCard({
       )}
 
       {isMaintAlert && (
-        <div style={{ color: '#e74c3c', fontWeight: 'bold', marginBottom: '10px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ color: SEMANTIC_COLORS.alerta, fontWeight: 'bold', marginBottom: '10px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <AlertCircle size={16} /> {t('maintIn', currentLang)} {remainingKm}km
         </div>
       )}
 
       <div style={{ backgroundColor: 'var(--border)', height: '8px', borderRadius: '4px', overflow: 'hidden', marginBottom: '15px' }}>
-        <div style={{ height: '100%', borderRadius: '4px', width: `${vehicle.fuel}%`, backgroundColor: fuelClass === 'high' ? '#27ae60' : fuelClass === 'medium' ? '#f39c12' : '#e74c3c' }} />
+        <div style={{ height: '100%', borderRadius: '4px', width: `${vehicle.fuel}%`, backgroundColor: SEMANTIC_COLORS[fuelSemantic] }} />
       </div>
 
       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '15px' }}>
@@ -243,23 +222,23 @@ export default function VehicleCard({
         {(!isBlocked || isAdmin) ? (
           vehicle.status === 'disp' ? (
             <>
-              <button 
-                onClick={() => !isBlocked && onWithdraw(vehicle)} 
-                style={{ ...btnStyle, backgroundColor: '#3498db', color: 'white' }}
+              <button
+                onClick={() => !isBlocked && onWithdraw(vehicle)}
+                style={{ ...btnStyle, backgroundColor: 'var(--brand-primary)', color: 'white' }}
                 disabled={isBlocked}
               >
                 <Key size={16} /> {t('btnWithdraw', currentLang)}
               </button>
               <button
                 onClick={() => !isBlocked && onService('man', vehicle)}
-                style={{ ...btnStyle, backgroundColor: '#f39c12', color: 'white' }}
+                style={{ ...btnStyle, backgroundColor: 'var(--brand-gray)', color: 'white' }}
                 disabled={isBlocked}
               >
                 <Wrench size={16} /> {t('btnMaint', currentLang)}
               </button>
               <button
                 onClick={() => !isBlocked && onService('lav', vehicle)}
-                style={{ ...btnStyle, backgroundColor: '#f39c12', color: 'white' }}
+                style={{ ...btnStyle, backgroundColor: 'var(--brand-gray)', color: 'white' }}
                 disabled={isBlocked}
               >
                 <Droplet size={16} /> {t('btnWash', currentLang)}
@@ -268,30 +247,30 @@ export default function VehicleCard({
           ) : (
             <button
               onClick={() => !isBlocked && onReturn(vehicle)}
-              style={{ ...btnStyle, backgroundColor: '#9b59b6', color: 'white' }}
+              style={{ ...btnStyle, backgroundColor: 'var(--brand-secondary)', color: 'white' }}
               disabled={isBlocked}
             >
               <Undo2 size={16} /> {t('btnReturn', currentLang)}
             </button>
           )
         ) : (
-          <div style={{ 
-            ...btnStyle, 
-            backgroundColor: '#ffeaea', 
-            color: '#e74c3c',
+          <div style={{
+            ...btnStyle,
+            backgroundColor: SEMANTIC_COLORS.anormal,
+            color: '#fff',
             cursor: 'not-allowed',
           }}>
             <Lock size={16} /> Bloqueado
           </div>
         )}
-        <button 
-          onClick={() => onManage(vehicle)} 
-          style={{ 
-            ...btnStyle, 
-            backgroundColor: '#34495e', 
-            color: 'white', 
-            flex: 'none', 
-            minWidth: 'auto', 
+        <button
+          onClick={() => onManage(vehicle)}
+          style={{
+            ...btnStyle,
+            backgroundColor: 'var(--brand-gray)',
+            color: 'white',
+            flex: 'none',
+            minWidth: 'auto',
             padding: '10px 16px',
             position: 'relative',
           }}
@@ -303,7 +282,7 @@ export default function VehicleCard({
               position: 'absolute',
               top: '-5px',
               right: '-5px',
-              backgroundColor: '#e74c3c',
+              backgroundColor: SEMANTIC_COLORS.anormal,
               color: 'white',
               borderRadius: '50%',
               width: '20px',

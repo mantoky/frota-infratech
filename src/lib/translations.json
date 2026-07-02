@@ -538,5 +538,60 @@
     "pt": "Escuro",
     "en": "Dark",
     "es": "Oscuro"
+  },
+  "searchPlaceholder": {
+    "pt": "Buscar por tag, placa, modelo ou motorista...",
+    "en": "Search by tag, plate, model or driver...",
+    "es": "Buscar por tag, placa, modelo o conductor..."
+  },
+  "menuAdmin": {
+    "pt": "Administração",
+    "en": "Administration",
+    "es": "Administración"
+  },
+  "adminTitle": {
+    "pt": "Administração",
+    "en": "Administration",
+    "es": "Administración"
+  },
+  "adminSubtitle": {
+    "pt": "Gestão completa de veículos e motoristas",
+    "en": "Full vehicle and driver management",
+    "es": "Gestión completa de vehículos y conductores"
+  },
+  "adminVehiclesTitle": {
+    "pt": "Veículos",
+    "en": "Vehicles",
+    "es": "Vehículos"
+  },
+  "adminDriversTitle": {
+    "pt": "Motoristas Cadastrados",
+    "en": "Registered Drivers",
+    "es": "Conductores Registrados"
+  },
+  "adminDriversDesc": {
+    "pt": "Motoristas cadastrados aparecem como sugestão automática no campo de motorista da Retirada.",
+    "en": "Registered drivers show up as autocomplete suggestions in the Withdraw driver field.",
+    "es": "Los conductores registrados aparecen como sugerencia automática en el campo de conductor del Retiro."
+  },
+  "adminNoDrivers": {
+    "pt": "Nenhum motorista cadastrado ainda.",
+    "en": "No drivers registered yet.",
+    "es": "Ningún conductor registrado todavía."
+  },
+  "adminAddDriverPlaceholder": {
+    "pt": "Nome do motorista...",
+    "en": "Driver name...",
+    "es": "Nombre del conductor..."
+  },
+  "btnAddDriver": {
+    "pt": "Adicionar",
+    "en": "Add",
+    "es": "Añadir"
+  },
+  "btnRemove": {
+    "pt": "Remover",
+    "en": "Remove",
+    "es": "Eliminar"
   }
 }

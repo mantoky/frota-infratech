@@ -85,11 +85,11 @@ export default function ServiceModal({
       transition: 'all 0.3s',
     },
     confirmButton: {
-      backgroundColor: '#f39c12',
+      backgroundColor: 'var(--brand-primary)',
       color: 'white',
     },
     cancelButton: {
-      backgroundColor: '#95a5a6',
+      backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
   }

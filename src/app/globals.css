@@ -129,6 +129,18 @@
   --brand-gray: #75787b;
 }
 
+/* No modo escuro as cores de marca clareiam o suficiente pra continuarem
+   legiveis como texto/borda sobre os fundos escuros (--bg-card/--bg-main) -
+   sem isso, qualquer uso de --brand-primary como cor de texto some (bug ja
+   visto uma vez no botao de Configuracoes do TopBar). */
+.dark {
+  --brand-primary: #1c4870;
+  --brand-primary-dark: #143654;
+  --brand-secondary: #1f7a63;
+  --brand-accent: #eaaa00;
+  --brand-gray: #9a9ea1;
+}
+
 /* Custom theme variables */
 :root {
   --bg-main: #f5f7fa;
@@ -196,6 +208,18 @@ input, select, textarea {
   .sidebar-overlay {
     background-color: rgba(0, 0, 0, 0.7);
   }
+}
+
+/* Titulo de pagina: peso forte + leve compressao de letras + uma barra de
+   destaque na marca - efeito discreto, sem ser chamativo. */
+.page-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  border-left: 4px solid var(--brand-secondary);
+  padding-left: 14px;
+  margin-bottom: 10px;
 }
 
 /* Hide scrollbar but allow scrolling */

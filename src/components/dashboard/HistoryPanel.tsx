@@ -4,6 +4,7 @@ import { t } from '@/lib/hooks/useTranslations'
 import { HistoryItem } from '@/types'
 import { CSSProperties } from 'react'
 import { History, Inbox, Download } from 'lucide-react'
+import { SEMANTIC_COLORS } from '@/lib/statusColor'
 
 interface HistoryPanelProps {
   isOpen: boolean
@@ -111,20 +112,20 @@ export default function HistoryPanel({
       textTransform: 'uppercase' as const,
     },
     withdrawBadge: {
-      backgroundColor: 'rgba(52, 152, 219, 0.2)',
-      color: '#3498db',
+      backgroundColor: 'var(--bg-main)',
+      color: 'var(--brand-primary)',
     },
     returnBadge: {
-      backgroundColor: 'rgba(155, 89, 182, 0.2)',
-      color: '#9b59b6',
+      backgroundColor: 'var(--bg-main)',
+      color: 'var(--brand-secondary)',
     },
     maintenanceBadge: {
-      backgroundColor: 'rgba(243, 156, 18, 0.2)',
-      color: '#f39c12',
+      backgroundColor: SEMANTIC_COLORS.alerta,
+      color: '#fff',
     },
     washBadge: {
-      backgroundColor: 'rgba(241, 196, 15, 0.2)',
-      color: '#f1c40f',
+      backgroundColor: SEMANTIC_COLORS.alerta,
+      color: '#fff',
     },
   }
 
@@ -162,7 +163,7 @@ export default function HistoryPanel({
         <div style={styles.content}>
           <button
             onClick={onDownloadPdf}
-            style={{ backgroundColor: '#e74c3c', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginBottom: '20px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            style={{ backgroundColor: 'var(--brand-primary)', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginBottom: '20px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
             <Download size={16} />
             {t('btnDownload', currentLang)}

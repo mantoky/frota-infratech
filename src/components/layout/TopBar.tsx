@@ -44,7 +44,7 @@ export default function TopBar({
         onClick={onToggleSidebar}
         className="menu-toggle-btn"
         style={{
-          background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark))',
+          background: 'linear-gradient(135deg, var(--brand-secondary), var(--brand-primary-dark))',
           border: 'none',
           color: 'white',
           padding: '10px 18px',
@@ -55,7 +55,7 @@ export default function TopBar({
           alignItems: 'center',
           gap: '10px',
           height: '45px',
-          boxShadow: '0 4px 15px rgba(0, 46, 77, 0.4)',
+          boxShadow: '0 4px 15px rgba(0, 89, 76, 0.4)',
           transition: 'all 0.3s ease',
         }}
       >
@@ -67,7 +67,7 @@ export default function TopBar({
         <button
           onClick={() => onNavigate('settings')}
           aria-label={t('menuSettings', currentLang)}
-          style={{ background: 'none', border: '2px solid var(--brand-primary)', color: 'var(--brand-primary)', padding: '8px', borderRadius: '25px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '45px', width: '45px' }}
+          style={{ background: 'none', border: '2px solid var(--border)', color: 'var(--text-primary)', padding: '8px', borderRadius: '25px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '45px', width: '45px' }}
         >
           <Settings size={18} />
         </button>

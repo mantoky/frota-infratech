@@ -3,6 +3,7 @@
 import { useState, FormEvent, CSSProperties } from 'react'
 import { t } from '@/lib/hooks/useTranslations'
 import { Lock, ChevronDown } from 'lucide-react'
+import { SEMANTIC_COLORS } from '@/lib/statusColor'
 
 interface LoginScreenProps {
   currentLang: string
@@ -61,7 +62,7 @@ export default function LoginScreen({
       padding: '14px',
       border: 'none',
       borderRadius: '8px',
-      backgroundColor: 'var(--brand-primary)',
+      backgroundColor: 'var(--brand-secondary)',
       color: 'white',
       fontSize: '1rem',
       fontWeight: 600,
@@ -84,7 +85,7 @@ export default function LoginScreen({
     input: {
       width: '100%',
       padding: '14px',
-      border: `2px solid ${error ? '#e74c3c' : 'var(--border)'}`,
+      border: `2px solid ${error ? SEMANTIC_COLORS.anormal : 'var(--border)'}`,
       borderRadius: '8px',
       backgroundColor: 'var(--bg-main)',
       color: 'var(--text-primary)',
@@ -95,7 +96,7 @@ export default function LoginScreen({
       marginBottom: '12px',
     },
     error: {
-      color: '#e74c3c',
+      color: SEMANTIC_COLORS.anormal,
       fontSize: '0.85rem',
       marginBottom: '12px',
       fontWeight: 600,

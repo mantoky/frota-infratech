@@ -2,9 +2,10 @@
 
 import { t } from '@/lib/hooks/useTranslations'
 import { FilterType, Vehicle } from '@/types'
-import { CSSProperties } from 'react'
+import { CSSProperties, useState } from 'react'
 import VehicleCard from '@/components/vehicles/VehicleCard'
-import { AlertTriangle, Ban } from 'lucide-react'
+import { AlertTriangle, Ban, Search } from 'lucide-react'
+import { SEMANTIC_COLORS } from '@/lib/statusColor'
 
 interface DashboardPageProps {
   vehicles: Vehicle[]
@@ -29,11 +30,27 @@ export default function DashboardPage({
   onService,
   onManage
 }: DashboardPageProps) {
+  const [search, setSearch] = useState('')
+
   const styles: { [key: string]: CSSProperties } = {
     container_padding: {
       padding: '25px',
       maxWidth: '1400px',
       margin: '0 auto',
+    },
+    searchBar: {
+      position: 'relative',
+      marginBottom: '20px',
+      maxWidth: '420px',
+    },
+    searchInput: {
+      width: '100%',
+      padding: '12px 16px 12px 42px',
+      borderRadius: '10px',
+      border: '2px solid var(--border)',
+      backgroundColor: 'var(--bg-card)',
+      color: 'var(--text-primary)',
+      fontSize: '0.95rem',
     },
     filterBar: {
       display: 'flex',
@@ -69,6 +86,16 @@ export default function DashboardPage({
     ? sortedVehicles
     : sortedVehicles.filter(v => v.status === currentFilter)
 
+  const searchQuery = search.trim().toLowerCase()
+  const searchedVehicles = searchQuery
+    ? filteredVehicles.filter(v =>
+        v.tag.toLowerCase().includes(searchQuery) ||
+        v.plate.toLowerCase().includes(searchQuery) ||
+        v.model.toLowerCase().includes(searchQuery) ||
+        (v.driver || '').toLowerCase().includes(searchQuery)
+      )
+    : filteredVehicles
+
   const counts = {
     all: vehicles.length,
     disp: vehicles.filter(v => v.status === 'disp').length,
@@ -90,12 +117,12 @@ export default function DashboardPage({
 
   return (
     <div style={styles.container_padding}>
-      <h1 style={{ fontSize: '1.8rem', marginBottom: '10px', color: 'var(--text-primary)' }}>{t('dashboardTitle', currentLang)}</h1>
+      <h1 className="page-title">{t('dashboardTitle', currentLang)}</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>{t('dashboardSubtitle', currentLang)}</p>
 
       {/* Maintenance Alert Banner */}
       {maintenanceAlerts.length > 0 && (
-        <div style={{ backgroundColor: 'var(--alert-bg)', color: 'var(--alert-text)', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: '5px solid #e74c3c', fontWeight: 600 }}>
+        <div style={{ backgroundColor: SEMANTIC_COLORS.alerta, color: '#fff', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
           <AlertTriangle size={18} />
           <span>{t('maintenanceAlert', currentLang)}</span>
         </div>
@@ -103,16 +130,28 @@ export default function DashboardPage({
 
       {/* Blocked Alert Banner */}
       {blockedAlerts.length > 0 && (
-        <div style={{ backgroundColor: 'rgba(255, 20, 147, 0.15)', color: '#ff1493', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: '5px solid #ff1493', fontWeight: 600 }}>
+        <div style={{ backgroundColor: SEMANTIC_COLORS.anormal, color: '#fff', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
           <Ban size={18} />
           <span>{blockedAlerts.length} {currentLang === 'pt' ? 'veículo(s) bloqueado(s)' : currentLang === 'en' ? 'vehicle(s) blocked' : 'vehículo(s) bloqueado(s)'}</span>
         </div>
       )}
 
+      {/* Search */}
+      <div style={styles.searchBar}>
+        <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t('searchPlaceholder', currentLang)}
+          style={styles.searchInput}
+        />
+      </div>
+
       {/* Filter Bar */}
       <div style={styles.filterBar}>
         {filterOptions.map(filter => {
-          const color = filter === 'all' ? '#34495e' : filter === 'disp' ? '#27ae60' : filter === 'uso' ? '#3498db' : filter === 'lav' ? '#f39c12' : '#e74c3c'
+          const color = filter === 'all' ? 'var(--text-primary)' : filter === 'disp' ? SEMANTIC_COLORS.ok : filter === 'uso' ? SEMANTIC_COLORS.ok : filter === 'lav' ? SEMANTIC_COLORS.alerta : SEMANTIC_COLORS.anormal
           return (
             <div
               key={filter}
@@ -131,7 +170,7 @@ export default function DashboardPage({
 
       {/* Vehicles Grid */}
       <div style={styles.vehiclesGrid}>
-        {filteredVehicles.map(vehicle => (
+        {searchedVehicles.map(vehicle => (
           <VehicleCard
             key={vehicle.id}
             vehicle={vehicle}
