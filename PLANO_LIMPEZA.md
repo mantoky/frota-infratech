@@ -113,8 +113,8 @@ Removendo esses arquivos, as seguintes dependências ficam órfãs e caem junto:
 - [ ] Avaliar mover a validação de PIN para um lugar não embutido no bundle público (ou aceitar o risco conscientemente, já que é uma app 100% client-side)
 - [ ] Remover PINs em texto puro do `README.md` / `NETLIFY_ENV_VARS.txt`
 
-### Fase 5 — Organização para trabalho em equipe (opcional, discutir escopo)
-- [ ] Quebrar `page.tsx` (1118 linhas) em componentes/hooks menores, seguindo o padrão que já existe em `src/lib/hooks/`
+### Fase 5 — Organização para trabalho em equipe
+- [x] Quebrar `page.tsx` (1118 linhas) em componentes/hooks menores, seguindo o padrão que já existe em `src/lib/hooks/` — feito, ver seção 8
 - [ ] Padronizar estrutura de pastas e convenções (documentar em `CONTRIBUTING.md`)
 
 ## 6. Critério de sucesso
@@ -137,6 +137,21 @@ Removendo esses arquivos, as seguintes dependências ficam órfãs e caem junto:
 | Git | inexistente | inicializado, com histórico da faxina |
 
 O número final (642 MB) ficou acima da estimativa inicial (250–350 MB) porque Next.js + Firebase sozinhos já somam ~380 MB — peso legítimo do framework/backend em uso, não gordura.
+
+## 8. Resultado da Fase 5 — quebra do `page.tsx`
+
+`src/app/page.tsx` caiu de **1120 para 332 linhas** (-70%). Ao investigar, descobrimos que já existia um conjunto completo de componentes prontos em `src/components/{layout,dashboard,modals,vehicles}/` — resultado de uma refatoração anterior abandonada, nunca conectada. Em vez de reescrever do zero, adotamos e consertamos esses componentes:
+
+- **Ícones**: trocado FontAwesome (nunca carregado no projeto) por `lucide-react` em 7 arquivos.
+- **Divergências de comportamento corrigidas antes de conectar**: `ReturnModal` só tinha 4 das 11 opções de local; `WithdrawModal` não travava o botão até marcar "prontos"; `ServiceModal` e `ManageModal` tinham bug de estado obsoleto ao reabrir para o mesmo veículo; `DashboardPage` não mostrava alerta de bloqueados; `HistoryPanel` não tinha botão de PDF; `ManageModal.onRequestPin()` não distinguia bloqueio de exclusão.
+- **Extraído**: `src/lib/hooks/useFleetData.ts` (sincronização Firestore) e `src/lib/pdf.ts` (geração de relatório), eliminando os 2 `as any` que existiam por falta de tipagem.
+- `page.tsx` agora é só composição: importa os componentes e hooks, mantém apenas os handlers de negócio que orquestram estado entre eles.
+
+Validado passo a passo (8 commits incrementais) com build+lint+test e fluxo completo no navegador: retirar, devolver, manutenção/lavador, editar, bloquear/desbloquear, PIN, login admin, adicionar e excluir veículo.
+
+**Achado durante a validação**: o `.env.local` deste ambiente de desenvolvimento aponta para o mesmo projeto Firebase de produção (`gestao-de-frota-v1`). Os testes no navegador durante essa fase escreveram dados reais — revertidos manualmente onde a interface permite. Ficou de resíduo: 3 entradas de histórico de teste (não há como apagar histórico pela UI) e o campo "Último Local" do TN-01 mostrando "CCO" em vez do valor original (campo não editável pelo modal de gerenciar). **Recomendação**: separar um projeto Firebase de desenvolvimento/staging para evitar isso no futuro.
+
+**Pendência de limpeza descoberta**: 9 componentes shadcn/ui (`button`, `dialog`, `input`, `label`, `separator`, `sheet`, `skeleton`, `toggle`, `tooltip`) ficaram com zero referências após a quebra do `page.tsx` — confirmado por busca exaustiva no `src/`. A remoção foi bloqueada pelo sistema de permissões por segurança e não houve confirmação a tempo; arquivos permanecem no repositório até decisão explícita.
 
 ### Achado crítico de segurança (fora do escopo original, descoberto durante a Fase 3)
 `DEPLOY.md`, `DEPLOY_RAPIDO.md` e `NETLIFY_ENV_VARS.txt` continham a config real do Firebase e os **PINs de administrador reais em produção** (`3577`, `1521`, `0274`) em texto puro. Os três arquivos foram sanitizados (valores reais removidos). **Pendência do usuário**: trocar os PINs reais no painel do Netlify, já que a troca em produção exige deploy e não foi feita aqui.
