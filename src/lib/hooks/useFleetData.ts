@@ -40,22 +40,43 @@ function writeBackup(vehicles: Vehicle[], history: HistoryItem[], synced: boolea
 // contem o estado completo (vehicles+history), entao a mais recente sempre
 // supera qualquer tentativa anterior que ainda nao tenha sincronizado.
 export function useFleetData() {
-  const initialBackup = readBackup()
-
-  const [vehicles, setVehicles] = useState<Vehicle[]>(initialBackup?.vehicles || [])
-  const [history, setHistory] = useState<HistoryItem[]>(initialBackup?.history || [])
-  const [loading, setLoading] = useState(!initialBackup)
+  // Comeca sempre vazio/carregando, identico no servidor e no primeiro
+  // render do cliente - ler o localStorage direto no useState quebraria a
+  // hidratacao (o HTML gerado no build nunca tem acesso a localStorage, mas
+  // o primeiro render do navegador teria, gerando uma arvore diferente).
+  // A leitura real acontece no primeiro useEffect abaixo, que roda logo
+  // apos a montagem, sem esperar rede nenhuma.
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [history, setHistory] = useState<HistoryItem[]>([])
+  const [loading, setLoading] = useState(true)
 
   const historyRef = useRef(history)
-  const lastUpdatedRef = useRef(initialBackup?.lastUpdated || '')
+  const lastUpdatedRef = useRef('')
   useEffect(() => {
     historyRef.current = history
   }, [history])
 
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- le o backup local apos a montagem; o HTML estatico e pre-renderizado sem acesso ao localStorage, entao isso precisa acontecer no cliente, e nao pode ir no useState (quebraria a hidratacao) */
+    const backup = readBackup()
+    if (backup) {
+      setVehicles(backup.vehicles)
+      setHistory(backup.history)
+      lastUpdatedRef.current = backup.lastUpdated
+      setLoading(false)
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [])
+
   const pushToFirestore = useCallback(async (newVehicles: Vehicle[], newHistory: HistoryItem[], lastUpdated: string) => {
     try {
+      // Firestore rejeita campos com valor undefined (ex: HistoryItem.location
+      // quando a captura de GPS falha) - o round-trip por JSON remove essas
+      // chaves, igual ao que ja acontece ao gravar no localStorage.
+      const sanitizedVehicles = JSON.parse(JSON.stringify(newVehicles))
+      const sanitizedHistory = JSON.parse(JSON.stringify(newHistory))
       await setDoc(doc(db, 'frota', 'data'), {
-        vehicles: newVehicles, history: newHistory, lastUpdated, version: '2.0'
+        vehicles: sanitizedVehicles, history: sanitizedHistory, lastUpdated, version: '2.0'
       }, { merge: true })
       writeBackup(newVehicles, newHistory, true, lastUpdated)
     } catch (e) {
@@ -126,11 +147,11 @@ export function useFleetData() {
     return () => unsub()
   }, [])
 
-  const addToHistory = useCallback((vehicle: Vehicle, action: string, driver: string, km: number, extra: string, currentVehicles: Vehicle[]) => {
+  const addToHistory = useCallback((vehicle: Vehicle, action: string, driver: string, km: number, extra: string, currentVehicles: Vehicle[], extraFields?: Partial<Pick<HistoryItem, 'location' | 'distanceKm' | 'travelTimeMinutes'>>) => {
     const now = new Date()
     const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR')
     const newHistoryItem: HistoryItem = {
-      date: dateStr, vehicle: `${vehicle.tag} (${vehicle.plate})`, driver, action, km, extra
+      date: dateStr, vehicle: `${vehicle.tag} (${vehicle.plate})`, driver, action, km, extra, ...extraFields
     }
     const newHistory = [...historyRef.current, newHistoryItem]
     setHistory(newHistory)

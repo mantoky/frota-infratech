@@ -5,6 +5,7 @@ import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
 import Modal from './Modal'
 import { CSSProperties } from 'react'
+import { captureLocation, GeoPoint } from '@/lib/geolocation'
 
 interface ReturnModalProps {
   isOpen: boolean
@@ -18,6 +19,7 @@ interface ReturnModalProps {
     location: string
     locationSpecify: string
     obs: string
+    coords: GeoPoint | null
   }) => void
 }
 
@@ -108,18 +110,20 @@ export default function ReturnModal({
     return map[text] || 50
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!vehicle) return
 
     const kmValue = parseInt(km)
+    const coords = await captureLocation()
     onConfirm({
       km: kmValue,
       fuel,
       fuelPercent: getFuelPercent(fuel),
       location,
       locationSpecify,
-      obs
+      obs,
+      coords
     })
 
     // Reset form

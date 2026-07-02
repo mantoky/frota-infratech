@@ -19,6 +19,35 @@ export const parseDate = (dateStr: string): Date => {
   return new Date(`${year}-${month}-${day}`)
 }
 
+// Igual ao parseDate, mas preserva a hora - necessario pra calcular tempo de
+// viagem entre retirada e devolucao no mesmo dia (parseDate zera a hora).
+export const parseDateTime = (dateStr: string): Date => {
+  const [datePart, timePart] = dateStr.split(' ')
+  const [day, month, year] = datePart.split('/')
+  return new Date(`${year}-${month}-${day}T${timePart || '00:00:00'}`)
+}
+
+export const haversineKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }): number => {
+  const R = 6371
+  const dLat = (b.lat - a.lat) * Math.PI / 180
+  const dLng = (b.lng - a.lng) * Math.PI / 180
+  const lat1 = a.lat * Math.PI / 180
+  const lat2 = b.lat * Math.PI / 180
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h))
+}
+
+// Encontra a retirada mais recente deste veiculo no historico - usado pra
+// parear com uma devolucao e calcular distancia/tempo de viagem. Assume a
+// mesma regra ja usada por calculateDriverKm: retirada e devolucao sempre
+// alternam por veiculo, sem duas retiradas seguidas sem devolucao no meio.
+export const findLastWithdrawal = (vehicleLabel: string, history: HistoryItem[]): HistoryItem | undefined => {
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].vehicle === vehicleLabel && history[i].action === 'Retirada') return history[i]
+  }
+  return undefined
+}
+
 export const getStatusColor = (status: string): string => {
   const colors: Record<string, string> = {
     disp: '#27ae60',

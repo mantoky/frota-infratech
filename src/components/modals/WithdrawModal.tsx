@@ -5,6 +5,7 @@ import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
 import Modal from './Modal'
 import { CSSProperties } from 'react'
+import { captureLocation, GeoPoint } from '@/lib/geolocation'
 
 interface WithdrawModalProps {
   isOpen: boolean
@@ -18,6 +19,7 @@ interface WithdrawModalProps {
     fuelPercent: number
     obs: string
     checkProntos: boolean
+    location: GeoPoint | null
   }) => void
 }
 
@@ -120,7 +122,7 @@ export default function WithdrawModal({
     return map[text] || 50
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!vehicle) return
 
@@ -130,13 +132,16 @@ export default function WithdrawModal({
       return
     }
 
+    const location = await captureLocation()
+
     onConfirm({
       driver,
       km: kmValue,
       fuel,
       fuelPercent: getFuelPercent(fuel),
       obs,
-      checkProntos
+      checkProntos,
+      location
     })
 
     // Reset form

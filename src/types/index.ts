@@ -24,6 +24,9 @@ export interface HistoryItem {
   action: string
   km: number
   extra: string
+  location?: { lat: number; lng: number }
+  distanceKm?: number
+  travelTimeMinutes?: number
 }
 
 export interface Translations {

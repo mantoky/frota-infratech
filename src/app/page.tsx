@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 
 import { Vehicle, PageType, FilterType } from '@/types'
 import translations from '@/lib/translations.json'
-import { calculateDriverKm, getDriverStats, generateVehicleId } from '@/lib/helpers'
+import { calculateDriverKm, getDriverStats, generateVehicleId, findLastWithdrawal, haversineKm, parseDateTime } from '@/lib/helpers'
+import { GeoPoint } from '@/lib/geolocation'
 import { useFleetData } from '@/lib/hooks/useFleetData'
 import { generateFleetReport } from '@/lib/pdf'
 import Sidebar from '@/components/layout/Sidebar'
@@ -114,19 +115,32 @@ export default function FrotaInfratech() {
   const openServiceModal = (type: 'man' | 'lav', vehicle: Vehicle) => { setSelectedVehicle(vehicle); setServiceType(type); setServiceModal(true) }
   const openManageModal = (vehicle: Vehicle) => { setSelectedVehicle(vehicle); setManageModal(true) }
 
-  const handleWithdrawConfirm = (data: { driver: string; km: number; fuel: string; fuelPercent: number; obs: string }) => {
+  const handleWithdrawConfirm = (data: { driver: string; km: number; fuel: string; fuelPercent: number; obs: string; location: GeoPoint | null }) => {
     if (!selectedVehicle) return
     const updatedVehicle: Vehicle = { ...selectedVehicle, status: 'uso', driver: data.driver, km: data.km, fuel: data.fuelPercent, fuelText: data.fuel, obs: data.obs }
     const newVehicles = vehicles.map(v => v.id === selectedVehicle.id ? updatedVehicle : v)
-    setVehicles(newVehicles); addToHistory(updatedVehicle, 'Retirada', data.driver, data.km, '', newVehicles); setWithdrawModal(false); setSelectedVehicle(null)
+    setVehicles(newVehicles)
+    addToHistory(updatedVehicle, 'Retirada', data.driver, data.km, '', newVehicles, { location: data.location || undefined })
+    setWithdrawModal(false); setSelectedVehicle(null)
   }
 
-  const handleReturnConfirm = (data: { km: number; fuel: string; fuelPercent: number; location: string; locationSpecify: string; obs: string }) => {
+  const handleReturnConfirm = (data: { km: number; fuel: string; fuelPercent: number; location: string; locationSpecify: string; obs: string; coords: GeoPoint | null }) => {
     if (!selectedVehicle) return
     const location = data.location === 'Outros' ? data.locationSpecify : data.location
     const updatedVehicle: Vehicle = { ...selectedVehicle, status: 'disp', driver: '', km: data.km, fuel: data.fuelPercent, fuelText: data.fuel, lastLocation: location, obs: data.obs }
     const newVehicles = vehicles.map(v => v.id === selectedVehicle.id ? updatedVehicle : v)
-    setVehicles(newVehicles); addToHistory(updatedVehicle, 'Devolucao', '', data.km, location, newVehicles); setReturnModal(false); setSelectedVehicle(null)
+
+    const withdrawal = findLastWithdrawal(`${updatedVehicle.tag} (${updatedVehicle.plate})`, history)
+    let distanceKm: number | undefined
+    let travelTimeMinutes: number | undefined
+    if (withdrawal?.location && data.coords) {
+      distanceKm = haversineKm(withdrawal.location, data.coords)
+      travelTimeMinutes = Math.max(0, (Date.now() - parseDateTime(withdrawal.date).getTime()) / 60000)
+    }
+
+    setVehicles(newVehicles)
+    addToHistory(updatedVehicle, 'Devolucao', '', data.km, location, newVehicles, { location: data.coords || undefined, distanceKm, travelTimeMinutes })
+    setReturnModal(false); setSelectedVehicle(null)
   }
 
   const handleServiceConfirm = (data: { driver: string; km: number; obs: string }) => {
