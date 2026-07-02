@@ -593,5 +593,20 @@
     "pt": "Remover",
     "en": "Remove",
     "es": "Eliminar"
+  },
+  "btnInstallApp": {
+    "pt": "Instalar App",
+    "en": "Install App",
+    "es": "Instalar App"
+  },
+  "setInstallApp": {
+    "pt": "Instalar aplicativo",
+    "en": "Install app",
+    "es": "Instalar aplicación"
+  },
+  "setInstallAppDesc": {
+    "pt": "Adiciona o app na tela inicial do dispositivo, com acesso rápido e uso offline.",
+    "en": "Adds the app to your device's home screen, with quick access and offline use.",
+    "es": "Agrega la app a la pantalla de inicio del dispositivo, con acceso rápido y uso sin conexión."
   }
 }

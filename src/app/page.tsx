@@ -20,6 +20,7 @@ import AddModal from '@/components/modals/AddModal'
 import PinModal from '@/components/modals/PinModal'
 import LoginScreen from '@/components/auth/LoginScreen'
 import AdminPage from '@/components/admin/AdminPage'
+import { useInstallPrompt } from '@/lib/hooks/useInstallPrompt'
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>
@@ -28,6 +29,7 @@ const t = (key: string, lang: string): string => {
 
 export default function FrotaInfratech() {
   const { vehicles, setVehicles, history, drivers, saveDrivers, loading, saveData, addToHistory } = useFleetData()
+  const { canInstall, promptInstall } = useInstallPrompt()
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all')
   const [isAdmin, setIsAdmin] = useState(false)
   const [currentLang, setCurrentLang] = useState('pt')
@@ -206,6 +208,8 @@ export default function FrotaInfratech() {
         error={loginPinError}
         onEnterCommon={enterCommon}
         onEnterAdmin={enterAdmin}
+        canInstall={canInstall}
+        onInstall={promptInstall}
       />
     )
   }
@@ -321,6 +325,18 @@ export default function FrotaInfratech() {
                   {theme === 'dark' ? `🌙 ${t('setThemeDark', currentLang)}` : `☀️ ${t('setThemeLight', currentLang)}`}
                 </button>
               </div>
+
+              {canInstall && (
+                <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
+                  <div>
+                    <h3 style={{ marginBottom: '5px' }}>{t('setInstallApp', currentLang)}</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t('setInstallAppDesc', currentLang)}</p>
+                  </div>
+                  <button onClick={promptInstall} style={{ padding: '8px 16px', borderRadius: '5px', border: 'none', background: 'var(--brand-secondary)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+                    {t('btnInstallApp', currentLang)}
+                  </button>
+                </div>
+              )}
 
               <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
                 <button onClick={logout} style={{ padding: '10px 16px', borderRadius: '5px', border: 'none', background: 'var(--brand-gray)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>

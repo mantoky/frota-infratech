@@ -2,7 +2,7 @@
 
 import { useState, FormEvent, CSSProperties } from 'react'
 import { t } from '@/lib/hooks/useTranslations'
-import { Lock, ChevronDown } from 'lucide-react'
+import { Lock, ChevronDown, Download } from 'lucide-react'
 import { SEMANTIC_COLORS } from '@/lib/statusColor'
 
 interface LoginScreenProps {
@@ -10,13 +10,17 @@ interface LoginScreenProps {
   error: boolean
   onEnterCommon: () => void
   onEnterAdmin: (pin: string) => void
+  canInstall: boolean
+  onInstall: () => void
 }
 
 export default function LoginScreen({
   currentLang,
   error,
   onEnterCommon,
-  onEnterAdmin
+  onEnterAdmin,
+  canInstall,
+  onInstall
 }: LoginScreenProps) {
   const [showAdminForm, setShowAdminForm] = useState(false)
   const [pin, setPin] = useState('')
@@ -111,6 +115,22 @@ export default function LoginScreen({
       fontWeight: 600,
       cursor: 'pointer',
     },
+    installButton: {
+      width: '100%',
+      padding: '12px',
+      border: '2px solid var(--brand-secondary)',
+      borderRadius: '8px',
+      backgroundColor: 'transparent',
+      color: 'var(--brand-secondary)',
+      fontSize: '0.95rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+      marginTop: '12px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
+    },
   }
 
   const handleAdminSubmit = (e: FormEvent) => {
@@ -131,6 +151,13 @@ export default function LoginScreen({
         <button style={styles.enterButton} onClick={onEnterCommon}>
           {t('btnEnter', currentLang)}
         </button>
+
+        {canInstall && (
+          <button style={styles.installButton} onClick={onInstall}>
+            <Download size={16} />
+            {t('btnInstallApp', currentLang)}
+          </button>
+        )}
 
         <button
           style={styles.adminToggle}
