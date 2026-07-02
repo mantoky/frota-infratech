@@ -23,3 +23,16 @@ export const getVehicleSemanticStatus = (vehicle: Vehicle): SemanticStatus => {
 
   return 'ok'
 }
+
+// Chave de traducao pro rotulo exibido no badge - prioriza bloqueio, senao
+// reflete o status real (evita mostrar "DISPONIVEL" num veiculo bloqueado
+// so porque o campo status em si nao mudou).
+export const getStatusLabelKey = (vehicle: Vehicle): string => {
+  if (vehicle.blocked) return 'vehicleBlocked'
+  if (vehicle.status === 'disp') return 'statusAvailable'
+  if (vehicle.status === 'uso') return 'statusInUse'
+  if (vehicle.status === 'lav') return 'statusWash'
+  if (vehicle.status === 'man') return 'statusMaintenance'
+  if (vehicle.status === 'mobilizacao') return 'statusMobilization'
+  return 'statusAvailable'
+}

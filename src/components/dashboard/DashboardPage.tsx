@@ -3,7 +3,8 @@
 import { t } from '@/lib/hooks/useTranslations'
 import { FilterType, Vehicle } from '@/types'
 import { CSSProperties, useState } from 'react'
-import VehicleCard from '@/components/vehicles/VehicleCard'
+import VehicleMiniCard from '@/components/vehicles/VehicleMiniCard'
+import VehicleDetailModal from '@/components/vehicles/VehicleDetailModal'
 import { AlertTriangle, Ban, Search } from 'lucide-react'
 import { SEMANTIC_COLORS } from '@/lib/statusColor'
 
@@ -31,6 +32,7 @@ export default function DashboardPage({
   onManage
 }: DashboardPageProps) {
   const [search, setSearch] = useState('')
+  const [detailVehicle, setDetailVehicle] = useState<Vehicle | null>(null)
 
   const styles: { [key: string]: CSSProperties } = {
     container_padding: {
@@ -71,8 +73,8 @@ export default function DashboardPage({
     },
     vehiclesGrid: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-      gap: '20px',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+      gap: '12px',
     },
   }
 
@@ -171,18 +173,26 @@ export default function DashboardPage({
       {/* Vehicles Grid */}
       <div style={styles.vehiclesGrid}>
         {searchedVehicles.map(vehicle => (
-          <VehicleCard
+          <VehicleMiniCard
             key={vehicle.id}
             vehicle={vehicle}
             currentLang={currentLang}
-            isAdmin={isAdmin}
-            onWithdraw={onWithdraw}
-            onReturn={onReturn}
-            onService={onService}
-            onManage={onManage}
+            onClick={() => setDetailVehicle(vehicle)}
           />
         ))}
       </div>
+
+      <VehicleDetailModal
+        vehicle={detailVehicle}
+        isOpen={!!detailVehicle}
+        onClose={() => setDetailVehicle(null)}
+        currentLang={currentLang}
+        isAdmin={isAdmin}
+        onWithdraw={onWithdraw}
+        onReturn={onReturn}
+        onService={onService}
+        onManage={onManage}
+      />
     </div>
   )
 }

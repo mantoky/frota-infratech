@@ -3,7 +3,7 @@
 import { useState, CSSProperties } from 'react'
 import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
-import { SEMANTIC_COLORS, getVehicleSemanticStatus } from '@/lib/statusColor'
+import { SEMANTIC_COLORS, getVehicleSemanticStatus, getStatusLabelKey } from '@/lib/statusColor'
 import { Search, Pencil, Plus, X, UserPlus } from 'lucide-react'
 
 interface AdminPageProps {
@@ -13,16 +13,6 @@ interface AdminPageProps {
   onManage: (vehicle: Vehicle) => void
   onAddVehicle: () => void
   onSaveDrivers: (drivers: string[]) => void
-}
-
-const statusLabelKey = (vehicle: Vehicle): string => {
-  if (vehicle.blocked) return 'vehicleBlocked'
-  if (vehicle.status === 'disp') return 'statusAvailable'
-  if (vehicle.status === 'uso') return 'statusInUse'
-  if (vehicle.status === 'lav') return 'statusWash'
-  if (vehicle.status === 'man') return 'statusMaintenance'
-  if (vehicle.status === 'mobilizacao') return 'statusMobilization'
-  return 'statusAvailable'
 }
 
 export default function AdminPage({
@@ -221,7 +211,7 @@ export default function AdminPage({
                     <td style={styles.td}>{vehicle.model}</td>
                     <td style={styles.td}>
                       <span style={{ ...styles.badge, backgroundColor: SEMANTIC_COLORS[semantic] }}>
-                        {t(statusLabelKey(vehicle), currentLang)}
+                        {t(getStatusLabelKey(vehicle), currentLang)}
                       </span>
                     </td>
                     <td style={styles.td}>{vehicle.km.toLocaleString()} km</td>

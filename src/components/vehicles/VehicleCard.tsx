@@ -4,12 +4,13 @@ import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
 import { CSSProperties } from 'react'
 import { Ban, Truck, AlertCircle, Key, Wrench, Droplet, Undo2, Lock, Pencil } from 'lucide-react'
-import { SEMANTIC_COLORS, getVehicleSemanticStatus } from '@/lib/statusColor'
+import { SEMANTIC_COLORS, getVehicleSemanticStatus, getStatusLabelKey } from '@/lib/statusColor'
 
 interface VehicleCardProps {
   vehicle: Vehicle
   currentLang: string
   isAdmin: boolean
+  embedded?: boolean
   onWithdraw: (vehicle: Vehicle) => void
   onReturn: (vehicle: Vehicle) => void
   onService: (type: 'man' | 'lav', vehicle: Vehicle) => void
@@ -20,6 +21,7 @@ export default function VehicleCard({
   vehicle,
   currentLang,
   isAdmin,
+  embedded,
   onWithdraw,
   onReturn,
   onService,
@@ -27,24 +29,11 @@ export default function VehicleCard({
 }: VehicleCardProps) {
   const styles: { [key: string]: CSSProperties } = {
     vehicleCard: {
-      backgroundColor: 'var(--bg-card)',
       borderRadius: '12px',
       padding: '20px',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
       borderLeft: `5px solid ${SEMANTIC_COLORS.ok}`,
       transition: 'transform 0.3s',
     },
-  }
-
-  const getStatusName = (status: string): string => {
-    const statusNames: { [key: string]: string } = {
-      'disp': t('statusAvailable', currentLang),
-      'uso': t('statusInUse', currentLang),
-      'lav': t('statusWash', currentLang),
-      'man': t('statusMaintenance', currentLang),
-      'mobilizacao': 'Mobilização'
-    }
-    return statusNames[status] || status
   }
 
   const getVehicleImage = (model: string): string => {
@@ -89,6 +78,8 @@ export default function VehicleCard({
     <div
       style={{
         ...styles.vehicleCard,
+        backgroundColor: embedded ? 'transparent' : 'var(--bg-card)',
+        boxShadow: embedded ? 'none' : '0 4px 15px rgba(0,0,0,0.1)',
         borderLeftColor: statusColor,
         border: isBlocked ? `2px solid ${SEMANTIC_COLORS.anormal}` : isMaintAlert ? `2px solid ${SEMANTIC_COLORS.alerta}` : undefined,
         opacity: isBlocked ? 0.7 : 1,
@@ -173,7 +164,7 @@ export default function VehicleCard({
           backgroundColor: statusColor,
           color: '#fff',
         }}>
-          {getStatusName(vehicle.status)}
+          {t(getStatusLabelKey(vehicle), currentLang)}
         </span>
       </div>
 
