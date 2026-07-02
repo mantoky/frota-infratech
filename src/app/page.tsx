@@ -1,15 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { db } from '@/lib/firebase'
-import { doc, setDoc, onSnapshot } from 'firebase/firestore'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { useState, useEffect } from 'react'
 
-import { Vehicle, HistoryItem, PageType } from '@/types'
+import { Vehicle, PageType } from '@/types'
 import translations from '@/lib/translations.json'
-import { initialVehicles } from '@/lib/constants'
-import { getFuelPercent, calculateDriverKm, getDriverStats, getDriverKmDetails, generateVehicleId } from '@/lib/helpers'
+import { getFuelPercent, calculateDriverKm, getDriverStats, generateVehicleId } from '@/lib/helpers'
+import { useFleetData } from '@/lib/hooks/useFleetData'
+import { generateFleetReport } from '@/lib/pdf'
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>
@@ -40,8 +37,7 @@ const getVehicleIcon = (model: string): string => {
 }
 
 export default function FrotaInfratech() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [history, setHistory] = useState<HistoryItem[]>([])
+  const { vehicles, setVehicles, history, loading, saveData, addToHistory } = useFleetData()
   const [currentFilter, setCurrentFilter] = useState<string>('all')
   const [isAdmin, setIsAdmin] = useState(false)
   const [currentLang, setCurrentLang] = useState('pt')
@@ -49,7 +45,6 @@ export default function FrotaInfratech() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard')
-  const [loading, setLoading] = useState(true)
 
   const [withdrawModal, setWithdrawModal] = useState(false)
   const [returnModal, setReturnModal] = useState(false)
@@ -104,7 +99,7 @@ export default function FrotaInfratech() {
   const [addMaintenance, setAddMaintenance] = useState('')
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- restaura preferências e backup do localStorage após a montagem; o HTML estático é pré-renderizado sem acesso ao localStorage, então isso precisa acontecer no cliente, depois do primeiro paint */
+    /* eslint-disable react-hooks/set-state-in-effect -- restaura preferências do localStorage após a montagem; o HTML estático é pré-renderizado sem acesso ao localStorage, então isso precisa acontecer no cliente, depois do primeiro paint */
     const storedLang = localStorage.getItem('frota_lang')
     const storedTheme = localStorage.getItem('theme')
     const storedAdmin = localStorage.getItem('isAdmin')
@@ -112,48 +107,7 @@ export default function FrotaInfratech() {
     if (storedLang) setCurrentLang(storedLang)
     if (storedTheme) setTheme(storedTheme)
     if (storedAdmin === 'true') setIsAdmin(true)
-
-    const localBackup = localStorage.getItem('frota_backup')
-    if (localBackup) {
-      try {
-        const backup = JSON.parse(localBackup)
-        if (backup.vehicles) setVehicles(backup.vehicles)
-        if (backup.history) setHistory(backup.history)
-      } catch (e) {
-        console.error('Error loading local backup:', e)
-      }
-    }
     /* eslint-enable react-hooks/set-state-in-effect */
-
-    const unsub = onSnapshot(doc(db, 'frota', 'data'), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data()
-        const firestoreVehicles = data.vehicles || []
-        const firestoreHistory = data.history || []
-
-        if (firestoreVehicles.length > 0) setVehicles(firestoreVehicles)
-        if (firestoreHistory.length > 0 || !localBackup) setHistory(firestoreHistory)
-
-        localStorage.setItem('frota_backup', JSON.stringify({
-          vehicles: firestoreVehicles.length > 0 ? firestoreVehicles : vehicles,
-          history: firestoreHistory.length > 0 ? firestoreHistory : history,
-          backupDate: new Date().toISOString()
-        }))
-      } else {
-        if (!localBackup) {
-          setVehicles(initialVehicles)
-          setDoc(doc(db, 'frota', 'data'), {
-            vehicles: initialVehicles, history: [], createdAt: new Date().toISOString(), version: '2.0'
-          }, { merge: true })
-        }
-      }
-      setLoading(false)
-    }, (error) => {
-      console.error('Error fetching Firestore data:', error)
-      setLoading(false)
-    })
-
-    return () => unsub()
   }, [])
 
   useEffect(() => {
@@ -161,33 +115,6 @@ export default function FrotaInfratech() {
     document.documentElement.classList.toggle('dark', theme === 'dark')
     localStorage.setItem('theme', theme)
   }, [theme])
-
-  const saveData = useCallback(async (newVehicles: Vehicle[], newHistory: HistoryItem[]) => {
-    try {
-      await setDoc(doc(db, 'frota', 'data'), {
-        vehicles: newVehicles, history: newHistory, lastUpdated: new Date().toISOString(), version: '2.0'
-      }, { merge: true })
-      localStorage.setItem('frota_backup', JSON.stringify({
-        vehicles: newVehicles, history: newHistory, backupDate: new Date().toISOString()
-      }))
-    } catch (e) {
-      console.error('Error saving data to Firestore', e)
-      localStorage.setItem('frota_backup', JSON.stringify({
-        vehicles: newVehicles, history: newHistory, backupDate: new Date().toISOString()
-      }))
-    }
-  }, [])
-
-  const addToHistory = useCallback((vehicle: Vehicle, action: string, driver: string, km: number, extra: string = '', currentVehicles: Vehicle[] = vehicles) => {
-    const now = new Date()
-    const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR')
-    const newHistoryItem: HistoryItem = {
-      date: dateStr, vehicle: `${vehicle.tag} (${vehicle.plate})`, driver, action, km, extra
-    }
-    const newHistory = [...history, newHistoryItem]
-    setHistory(newHistory)
-    saveData(currentVehicles, newHistory)
-  }, [history, saveData, vehicles])
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
   const changeLanguage = (lang: string) => { setCurrentLang(lang); localStorage.setItem('frota_lang', lang) }
@@ -311,145 +238,7 @@ export default function FrotaInfratech() {
 
   const confirmDelete = () => { setPendingAction('delete'); setManageModal(false); setPinModal(true) }
 
-  // PDF com detalhes de KM por motorista
-  const downloadPDF = () => {
-    const doc = new jsPDF()
-    let yPos = 20
-
-    doc.setFontSize(22)
-    doc.setTextColor(0, 150, 136)
-    doc.text('FROTA INFRATECH', 105, yPos, { align: 'center' })
-    yPos += 10
-
-    doc.setFontSize(12)
-    doc.setTextColor(100, 100, 100)
-    doc.text('Relatorio Detalhado de Historico de Veiculos', 105, yPos, { align: 'center' })
-    yPos += 8
-
-    doc.setFontSize(10)
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} as ${new Date().toLocaleTimeString('pt-BR')}`, 105, yPos, { align: 'center' })
-    yPos += 15
-
-    // Estatísticas por motorista
-    const driverStats = getDriverStats(history)
-    if (driverStats.length > 0) {
-      doc.setFontSize(14)
-      doc.setTextColor(0, 150, 136)
-      doc.text('ESTATISTICAS POR MOTORISTA (Ultimos 30 dias)', 14, yPos)
-      yPos += 8
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [['#', 'Motorista', 'Retiradas', 'KM Rodado', 'Media/Retirada']],
-        body: driverStats.map((driver, index) => {
-          const totalKm = calculateDriverKm(driver[0], history)
-          const avgKm = driver[1] > 0 ? Math.round(totalKm / driver[1]) : 0
-          return [index + 1, driver[0], driver[1], `${totalKm.toLocaleString()} km`, `${avgKm.toLocaleString()} km`]
-        }),
-        theme: 'striped',
-        headStyles: { fillColor: [0, 150, 136], fontSize: 9 },
-        bodyStyles: { fontSize: 9 },
-        margin: { left: 14, right: 14 },
-      })
-      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : 80
-    }
-
-    // Detalhes de KM por motorista (retirada/devolução)
-    doc.addPage()
-    yPos = 20
-    doc.setFontSize(14)
-    doc.setTextColor(0, 150, 136)
-    doc.text('DETALHES DE KM POR MOTORISTA', 14, yPos)
-    yPos += 10
-
-    const driversWithDetails = driverStats.filter(d => calculateDriverKm(d[0], history) > 0)
-
-    driversWithDetails.forEach(([driverName]) => {
-      if (yPos > 250) { doc.addPage(); yPos = 20 }
-
-      doc.setFontSize(11)
-      doc.setTextColor(52, 73, 94)
-      doc.text(`Motorista: ${driverName}`, 14, yPos)
-      yPos += 6
-
-      const details = getDriverKmDetails(driverName, history)
-      if (details.length > 0) {
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Data', 'Veiculo', 'KM Inicio', 'KM Fim', 'KM Rodado']],
-          body: details.map(d => [d.date, d.vehicle, d.kmStart.toLocaleString(), d.kmEnd.toLocaleString(), `${d.kmDriven.toLocaleString()} km`]),
-          theme: 'grid',
-          headStyles: { fillColor: [52, 73, 94], fontSize: 8 },
-          bodyStyles: { fontSize: 8 },
-          margin: { left: 14, right: 14 },
-        })
-        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
-      }
-      yPos += 5
-    })
-
-    // Histórico detalhado
-    doc.addPage()
-    yPos = 20
-    doc.setFontSize(14)
-    doc.setTextColor(0, 150, 136)
-    doc.text('HISTORICO COMPLETO DE MOVIMENTACOES', 14, yPos)
-    yPos += 10
-
-    if (history.length > 0) {
-      const sortedHistory = [...history].reverse().slice(0, 100)
-      autoTable(doc, {
-        startY: yPos,
-        head: [['Data/Hora', 'Veiculo', 'Motorista', 'Acao', 'KM', 'Extras']],
-        body: sortedHistory.map(item => [item.date, item.vehicle, item.driver || '-', item.action, item.km.toLocaleString() + ' km', item.extra || '-']),
-        theme: 'grid',
-        headStyles: { fillColor: [52, 73, 94], fontSize: 8 },
-        bodyStyles: { fontSize: 7 },
-        columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: 30 }, 2: { cellWidth: 25 }, 3: { cellWidth: 25 }, 4: { cellWidth: 20 }, 5: { cellWidth: 35 } },
-        margin: { left: 14, right: 14 },
-      })
-    }
-
-    // Resumo da frota
-    doc.addPage()
-    yPos = 20
-    doc.setFontSize(14)
-    doc.setTextColor(0, 150, 136)
-    doc.text('RESUMO DA FROTA', 14, yPos)
-    yPos += 10
-
-    const totalVehicles = vehicles.length
-    const stats = [
-      ['Total de Veiculos', totalVehicles, '100%'],
-      ['Disponiveis', vehicles.filter(v => v.status === 'disp').length],
-      ['Em Uso', vehicles.filter(v => v.status === 'uso').length],
-      ['Em Manutencao', vehicles.filter(v => v.status === 'man').length],
-      ['Em Lavador', vehicles.filter(v => v.status === 'lav').length],
-      ['Em Mobilizacao', vehicles.filter(v => v.status === 'mobilizacao').length],
-      ['Bloqueados', vehicles.filter(v => v.blocked).length],
-    ]
-
-    autoTable(doc, {
-      startY: yPos,
-      head: [['Status', 'Quantidade', 'Percentual']],
-      body: stats.map((s, i) => [s[0], s[1], i === 0 ? '100%' : `${((s[1] as number) / totalVehicles * 100).toFixed(1)}%`]),
-      theme: 'striped',
-      headStyles: { fillColor: [0, 150, 136] },
-      margin: { left: 14, right: 14 },
-    })
-
-    // Rodapé
-    const pageCount = doc.getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i)
-      doc.setFontSize(8)
-      doc.setTextColor(150, 150, 150)
-      doc.text(`Frota Infratech - Pagina ${i} de ${pageCount}`, 105, 290, { align: 'center' })
-      doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 295, { align: 'center' })
-    }
-
-    doc.save(`relatorio-frota-${new Date().toISOString().split('T')[0]}.pdf`)
-  }
+  const downloadPDF = () => generateFleetReport(vehicles, history)
 
   // Sort vehicles by tag (TN-01, TN-02, etc.)
   const sortedVehicles = [...vehicles].sort((a, b) => {
