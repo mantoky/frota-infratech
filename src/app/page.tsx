@@ -10,6 +10,7 @@ import { generateFleetReport } from '@/lib/pdf'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
 import DashboardPage from '@/components/dashboard/DashboardPage'
+import HistoryPanel from '@/components/dashboard/HistoryPanel'
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>
@@ -318,43 +319,13 @@ export default function FrotaInfratech() {
         )}
       </main>
 
-      {/* History Panel */}
-      {historyPanelOpen && (
-        <div style={{ position: 'fixed', right: 0, top: 0, width: '600px', maxWidth: '90%', height: '100vh', backgroundColor: 'var(--bg-card)', boxShadow: '-5px 0 20px rgba(0,0,0,0.2)', zIndex: 1500, overflowY: 'auto' }}>
-          <div style={{ padding: '20px', background: 'linear-gradient(135deg, #009688, #00796b)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0 }}>
-            <h2>📜 {t('historyTitle', currentLang)}</h2>
-            <button onClick={() => setHistoryPanelOpen(false)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
-          </div>
-          <div style={{ padding: '20px' }}>
-            <button onClick={downloadPDF} style={{ backgroundColor: '#e74c3c', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginTop: '15px', width: '100%' }}>
-              📥 {t('btnDownload', currentLang)}
-            </button>
-            <h3 style={{ marginBottom: '15px', marginTop: '20px' }}>{t('allMovements', currentLang)}</h3>
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
-                <thead><tr>
-                  <th style={{ padding: '12px 8px', textAlign: 'left', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-main)', fontWeight: 600, fontSize: '0.85rem' }}>{t('thDate', currentLang)}</th>
-                  <th style={{ padding: '12px 8px', textAlign: 'left', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-main)', fontWeight: 600, fontSize: '0.85rem' }}>{t('thVehicle', currentLang)}</th>
-                  <th style={{ padding: '12px 8px', textAlign: 'left', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-main)', fontWeight: 600, fontSize: '0.85rem' }}>{t('thDriver', currentLang)}</th>
-                  <th style={{ padding: '12px 8px', textAlign: 'left', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-main)', fontWeight: 600, fontSize: '0.85rem' }}>{t('thAction', currentLang)}</th>
-                  <th style={{ padding: '12px 8px', textAlign: 'left', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-main)', fontWeight: 600, fontSize: '0.85rem' }}>{t('thKM', currentLang)}</th>
-                </tr></thead>
-                <tbody>
-                  {[...history].reverse().slice(0, 50).map((h, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '12px 8px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{h.date}</td>
-                      <td style={{ padding: '12px 8px', fontSize: '0.85rem' }}>{h.vehicle}</td>
-                      <td style={{ padding: '12px 8px', fontSize: '0.85rem' }}>{h.driver || '-'}</td>
-                      <td style={{ padding: '12px 8px', fontSize: '0.85rem' }}>{h.action}</td>
-                      <td style={{ padding: '12px 8px', fontSize: '0.85rem' }}>{h.km.toLocaleString()} km</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+      <HistoryPanel
+        isOpen={historyPanelOpen}
+        onClose={() => setHistoryPanelOpen(false)}
+        history={history}
+        currentLang={currentLang}
+        onDownloadPdf={downloadPDF}
+      />
 
       {/* Withdraw Modal */}
       {withdrawModal && selectedVehicle && (
