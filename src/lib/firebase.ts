@@ -13,19 +13,22 @@ const firebaseConfig = {
     measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Validate required environment variables
-const requiredEnvVars = [
-    'NEXT_PUBLIC_FIREBASE_API_KEY',
-    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-    'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-    'NEXT_PUBLIC_FIREBASE_APP_ID'
+// Validate required config values. Acesso via process.env[chave-dinamica] nao
+// e substituido em build-time pelo Next.js (so process.env.NEXT_PUBLIC_X
+// literal e substituido) - checar direto no objeto ja resolvido evita falsos
+// positivos de "variavel faltando" mesmo quando o valor esta correto.
+const requiredConfig: [string, string | undefined][] = [
+    ['NEXT_PUBLIC_FIREBASE_API_KEY', firebaseConfig.apiKey],
+    ['NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', firebaseConfig.authDomain],
+    ['NEXT_PUBLIC_FIREBASE_PROJECT_ID', firebaseConfig.projectId],
+    ['NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', firebaseConfig.storageBucket],
+    ['NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', firebaseConfig.messagingSenderId],
+    ['NEXT_PUBLIC_FIREBASE_APP_ID', firebaseConfig.appId],
 ];
 
-for (const envVar of requiredEnvVars) {
-    if (!process.env[envVar]) {
-        console.warn(`Missing required environment variable: ${envVar}`);
+for (const [name, value] of requiredConfig) {
+    if (!value) {
+        console.warn(`Missing required environment variable: ${name}`);
     }
 }
 
