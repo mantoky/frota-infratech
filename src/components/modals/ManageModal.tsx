@@ -45,21 +45,24 @@ export default function ManageModal({
   const [blockedReason, setBlockedReason] = useState('')
   const [showBlockModal, setShowBlockModal] = useState(false)
   const [newBlockReason, setNewBlockReason] = useState('')
-  const [loadedVehicleId, setLoadedVehicleId] = useState<number | null>(null)
+  const [loadedKey, setLoadedKey] = useState<number | null>(null)
 
-  if (vehicle && vehicle.id !== loadedVehicleId) {
-    setLoadedVehicleId(vehicle.id)
-    setTag(vehicle.tag)
-    setPlate(vehicle.plate)
-    setModel(vehicle.model)
-    setStatus(vehicle.status)
-    setDriver(vehicle.driver || '')
-    setKm(vehicle.km.toString())
-    setFuel(vehicle.fuelText)
-    setMaintenance(vehicle.maintenance?.toString() || '')
-    setObs(vehicle.obs || '')
-    setBlocked(vehicle.blocked || false)
-    setBlockedReason(vehicle.blockedReason || '')
+  const openKey = isOpen && vehicle ? vehicle.id : null
+  if (openKey !== null && openKey !== loadedKey) {
+    setLoadedKey(openKey)
+    setTag(vehicle!.tag)
+    setPlate(vehicle!.plate)
+    setModel(vehicle!.model)
+    setStatus(vehicle!.status)
+    setDriver(vehicle!.driver || '')
+    setKm(vehicle!.km.toString())
+    setFuel(vehicle!.fuelText)
+    setMaintenance(vehicle!.maintenance?.toString() || '')
+    setObs(vehicle!.obs || '')
+    setBlocked(vehicle!.blocked || false)
+    setBlockedReason(vehicle!.blockedReason || '')
+  } else if (openKey === null && loadedKey !== null) {
+    setLoadedKey(null)
   }
 
   const styles: { [key: string]: CSSProperties } = {

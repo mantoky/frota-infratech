@@ -237,7 +237,8 @@ export default function WithdrawModal({
           </button>
           <button
             type="submit"
-            style={{ ...styles.button, ...styles.confirmButton }}
+            disabled={!checkProntos}
+            style={{ ...styles.button, ...styles.confirmButton, ...(!checkProntos ? { backgroundColor: '#ccc', cursor: 'not-allowed' } : {}) }}
           >
             {t('btnConfirm', currentLang)}
           </button>

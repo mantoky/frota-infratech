@@ -28,8 +28,17 @@ export default function ServiceModal({
   onConfirm
 }: ServiceModalProps) {
   const [driver, setDriver] = useState('')
-  const [km, setKm] = useState(vehicle?.km.toString() || '')
+  const [km, setKm] = useState('')
   const [obs, setObs] = useState('')
+  const [loadedKey, setLoadedKey] = useState<number | null>(null)
+
+  const openKey = isOpen && vehicle ? vehicle.id : null
+  if (openKey !== null && openKey !== loadedKey) {
+    setLoadedKey(openKey)
+    setKm(vehicle!.km.toString())
+  } else if (openKey === null && loadedKey !== null) {
+    setLoadedKey(null)
+  }
 
   const styles: { [key: string]: CSSProperties } = {
     formGroup: {

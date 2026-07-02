@@ -3,20 +3,22 @@
 import { t } from '@/lib/hooks/useTranslations'
 import { HistoryItem } from '@/types'
 import { CSSProperties } from 'react'
-import { History, Inbox } from 'lucide-react'
+import { History, Inbox, Download } from 'lucide-react'
 
 interface HistoryPanelProps {
   isOpen: boolean
   onClose: () => void
   history: HistoryItem[]
   currentLang: string
+  onDownloadPdf: () => void
 }
 
 export default function HistoryPanel({
   isOpen,
   onClose,
   history,
-  currentLang
+  currentLang,
+  onDownloadPdf
 }: HistoryPanelProps) {
   const styles: { [key: string]: CSSProperties } = {
     overlay: {
@@ -158,6 +160,14 @@ export default function HistoryPanel({
         </div>
         
         <div style={styles.content}>
+          <button
+            onClick={onDownloadPdf}
+            style={{ backgroundColor: '#e74c3c', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginBottom: '20px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
+            <Download size={16} />
+            {t('btnDownload', currentLang)}
+          </button>
+
           {sortedHistory.length === 0 ? (
             <div style={styles.emptyState}>
               <div style={{ ...styles.emptyIcon, display: 'flex', justifyContent: 'center' }}>

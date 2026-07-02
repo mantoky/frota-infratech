@@ -181,9 +181,16 @@ export default function ReturnModal({
             required
           >
             <option value="">Selecione...</option>
+            <option value="Parauapebas">Parauapebas</option>
+            <option value="Praca da Bandeira">Praca da Bandeira</option>
+            <option value="CCO">CCO</option>
+            <option value="Cafeteira">Cafeteira</option>
+            <option value="Nucleo">Nucleo</option>
+            <option value="Helio Grace">Helio Grace</option>
             <option value="Infratech">Infratech</option>
-            <option value="Nucleo">Núcleo</option>
-            <option value="Lavador de NG">Lavador de NG</option>
+            <option value="Oficina Centralizada">Oficina Centralizada</option>
+            <option value="Lavador">Lavador</option>
+            <option value="Meio Ambiente">Meio Ambiente</option>
             <option value="Outros">Outros</option>
           </select>
         </div>
