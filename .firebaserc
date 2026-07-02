@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "frota-infratech",
+    "dev": "frota-infratech",
+    "prod": "gestao-de-frota-v1"
+  }
+}

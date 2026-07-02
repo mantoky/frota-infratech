@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// O app hoje nao usa Firebase Auth - o PIN de admin e so uma trava de UI
+// (variavel NEXT_PUBLIC_ADMIN_PIN_*, visivel no bundle estatico). Ate a
+// "gestao completa de usuarios" ser implementada (item adiado do backlog),
+// estas regras sao a unica camada real de protecao dos dados, entao ficam
+// deliberadamente restritas ao unico documento que o app le/escreve hoje.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /frota/data {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['vehicles', 'history'])
+        && request.resource.data.vehicles is list
+        && request.resource.data.history is list;
+    }
+
+    // Nega qualquer outro documento/colecao por padrao.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
