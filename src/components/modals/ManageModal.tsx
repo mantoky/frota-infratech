@@ -15,7 +15,7 @@ interface ManageModalProps {
   isAdmin: boolean
   onSave: (data: Partial<Vehicle>) => void
   onDelete: () => void
-  onRequestPin: () => void
+  onRequestPin: (action: 'delete' | 'unblock') => void
   onBlock: (reason: string) => void
   onUnblock: () => void
 }
@@ -228,7 +228,7 @@ export default function ManageModal({
 
   const handleDelete = () => {
     if (!isAdmin) {
-      onRequestPin()
+      onRequestPin('delete')
     } else {
       onDelete()
     }
@@ -250,7 +250,7 @@ export default function ManageModal({
 
   const handleUnblock = () => {
     if (!isAdmin) {
-      onRequestPin()
+      onRequestPin('unblock')
     } else {
       onUnblock()
       setBlocked(false)
