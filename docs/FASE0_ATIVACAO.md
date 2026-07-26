@@ -1,8 +1,16 @@
 # Fase 0 — Ativação da autenticação
 
-> Passo a passo para colocar em produção o que foi implementado nesta fase. **A ordem importa.**
-> Publicar as regras antes de existir um administrador deixa o aplicativo sem ninguém que consiga
-> aprovar ninguém.
+> Passo a passo para colocar em produção o que foi implementado nesta fase. **A ordem importa: as
+> Security Rules vão antes do primeiro cadastro.**
+>
+> A primeira versão deste documento mandava o contrário, e estava errada. O autocadastro grava um
+> documento em `users/{uid}`, e as regras antigas negavam tudo que não fosse `frota/data`.
+> Resultado: a conta era criada no Auth, a gravação do perfil era recusada, e a tela mostrava um
+> erro genérico.
+>
+> O receio que motivou a ordem errada — "publicar regras sem administrador tranca todo mundo" — não
+> se sustenta: **ninguém precisa ser administrador para se autocadastrar.** A regra de `create` em
+> `users/{uid}` só exige estar autenticado e pedir nível comum com status pendente.
 
 Ambiente atual: <https://frota-infratech-dev.netlify.app/>
 
@@ -33,12 +41,24 @@ Sem isso o login retorna `auth/operation-not-allowed`.
 O deploy pelo Netlify já acontece no push. Confirme que a versão publicada é a que tem a tela de
 login com e-mail e senha antes de seguir.
 
-### 3. Criar a primeira conta
+### 3. Publicar as Security Rules
+
+```
+firebase deploy --only firestore:rules
+```
+
+**Antes de qualquer cadastro.** Sem isto, as regras antigas ainda estão valendo e negam a escrita em
+`users/{uid}` — o cadastro falha depois de já ter criado a conta no Auth.
+
+Para conferir o que está publicado: Firebase Console → **Firestore Database** → aba **Regras**. Se
+ainda aparecer `match /frota/data` com `allow read: if true`, o deploy não aconteceu.
+
+### 4. Criar a primeira conta
 
 Pelo próprio aplicativo, em **Primeiro acesso**. Ela nasce `pendente` — é o comportamento correto, e
 é por isso que o passo seguinte existe.
 
-### 4. Promover essa conta a administrador master
+### 5. Promover essa conta a administrador master
 
 Firestore Console → coleção `users` → o documento com o `uid` recém-criado:
 
@@ -52,22 +72,29 @@ status →  ativo
 > virar administrador. O console usa o Admin SDK, que passa por cima das rules por definição, e é
 > justamente por isso que ele é o lugar certo para o bootstrap.
 
-### 5. Publicar as Security Rules
-
-```
-firebase deploy --only firestore:rules
-```
-
-**Só depois do passo 4.** Publicar antes deixa a base sem nenhum usuário ativo: ninguém lê, ninguém
-aprova, e a única saída volta a ser o console.
-
-> Não há risco de travamento definitivo — o console sempre ignora as rules. Mas na ordem errada o
-> aplicativo fica inutilizável até alguém perceber.
-
 ### 6. Conferir que fechou
 
 Abra o site em uma janela anônima, sem fazer login. Nenhum dado de frota pode aparecer. Se aparecer,
 as rules não foram publicadas.
+
+---
+
+## Se o cadastro falhar
+
+| Mensagem na tela                                          | Causa                                                              | O que fazer                                |
+| --------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------ |
+| "As regras de segurança do banco recusaram o cadastro"    | Rules ainda não publicadas — o passo 3 não aconteceu               | `firebase deploy --only firestore:rules`   |
+| "Login por e-mail e senha não está habilitado no projeto" | Provedor desligado no console                                      | Passo 1                                    |
+| "Já existe uma conta com este e-mail"                     | Conta órfã de uma tentativa anterior que não conseguiu se desfazer | Apagar em Authentication → Users e repetir |
+| "Sem conexão com o banco de dados"                        | Rede, ou variáveis do Firebase ausentes no Netlify                 | Conferir as `NEXT_PUBLIC_FIREBASE_*`       |
+
+Para ver o erro cru, abra o console do navegador (F12) na aba **Console** — o código original é
+registrado ali antes de virar mensagem amigável.
+
+> **Sobre a conta órfã.** O cadastro toca dois serviços: cria a conta no Auth e grava o perfil no
+> Firestore. Não há transação entre os dois. Quando a segunda etapa falha, o código agora apaga a
+> conta recém-criada para que a pessoa possa tentar de novo — sem isso, a tentativa seguinte
+> esbarrava em "e-mail já em uso" e a conta ficava para sempre sem perfil.
 
 ---
 
