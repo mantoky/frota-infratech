@@ -1,8 +1,24 @@
-# Hospedagem — Netlify hoje, VPS com domínio depois
+# Hospedagem — Netlify e VPS
 
 > Conclusão técnica sobre onde a plataforma roda em cada fase, o que é testável em cada lugar, e os
 > gatilhos objetivos que disparam a migração. Complementa [`ARQUITETURA.md`](./ARQUITETURA.md) e
 > [`REQUISITOS_V2.md`](./REQUISITOS_V2.md).
+
+> **Situação atual — a migração foi decidida antes de qualquer gatilho técnico.**
+>
+> A análise abaixo continua válida e concluía que nada obrigava a sair do Netlify agora. A decisão
+> de subir para VPS própria em `techartsolucoes.com.br` foi tomada por domínio próprio e controle, e
+> é legítima — o §4 lista necessidades, não proibições.
+>
+> O que ela custa está no §5.4 e vale repetir: a conta de infraestrutura é a parte barata. Patch de
+> sistema, renovação de certificado, backup e resposta a incidente passam a ser trabalho da equipe.
+>
+> **Execução em [`VPS_DEPLOY.md`](./VPS_DEPLOY.md).** Os dois ambientes convivem:
+>
+> | Ambiente        | Endereço                                  | Hospedagem   |
+> | --------------- | ----------------------------------------- | ------------ |
+> | Produção        | <https://techartsolucoes.com.br>          | Nginx na VPS |
+> | Desenvolvimento | <https://frota-infratech-dev.netlify.app> | Netlify      |
 
 ---
 
