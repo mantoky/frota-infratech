@@ -31,11 +31,13 @@ const authMock = {
   isAdmin: false,
   isOperator: false,
   status: null as string | null,
+  user: null as { email: string } | null,
   signIn: jest.fn(() => Promise.resolve()),
   signUp: jest.fn(() => Promise.resolve()),
   logout: jest.fn(),
   resetPassword: jest.fn(() => Promise.resolve()),
   reauthenticate: jest.fn(() => Promise.resolve()),
+  completeProfile: jest.fn(() => Promise.resolve()),
 };
 
 jest.mock('@/lib/hooks/useAuth', () => ({
@@ -44,7 +46,24 @@ jest.mock('@/lib/hooks/useAuth', () => ({
 }));
 
 function comoDeslogado() {
-  Object.assign(authMock, { profile: null, isActive: false, isAdmin: false, status: null });
+  Object.assign(authMock, {
+    profile: null,
+    user: null,
+    isActive: false,
+    isAdmin: false,
+    status: null,
+  });
+}
+
+/** Autenticado no Auth, mas sem documento em `users/{uid}`. */
+function comoSemPerfil() {
+  Object.assign(authMock, {
+    profile: null,
+    user: { email: 'c0699118@vale.com' },
+    isActive: false,
+    isAdmin: false,
+    status: 'sem-perfil',
+  });
 }
 
 function comoUsuario(
@@ -52,6 +71,7 @@ function comoUsuario(
   status: UserProfile['status'] = 'ativo'
 ) {
   Object.assign(authMock, {
+    user: { email: 'a@b.com' },
     profile: { uid: 'u1', email: 'a@b.com', displayName: 'Teste', level, status } as UserProfile,
     isActive: status === 'ativo',
     isAdmin: status === 'ativo' && ['admin', 'admin_master'].includes(level),
@@ -141,6 +161,35 @@ describe('Portão de acesso', () => {
     expect(screen.getByRole('heading', { name: /Cadastro em análise/i })).toBeInTheDocument();
     expect(screen.queryByText('TN-01')).not.toBeInTheDocument();
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
+  it('conta sem perfil oferece concluir o cadastro, e não um beco sem saída', async () => {
+    comoSemPerfil();
+    render(<FrotaInfratech />);
+
+    // Regressao: esta tela so tinha "Sair", e sair levava de volta a ela. Quem
+    // perdesse a gravacao do perfil entre Auth e Firestore ficava preso ate um
+    // administrador apagar a conta no console - mesmo com as rules permitindo
+    // que a propria pessoa criasse o documento.
+    expect(screen.getByRole('heading', { name: /Concluir cadastro/i })).toBeInTheDocument();
+    expect(screen.getByText('c0699118@vale.com')).toBeInTheDocument();
+    expect(screen.getByLabelText(/RAC02/i)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Robson' } });
+    fireEvent.change(screen.getByLabelText(/Empresa/i), { target: { value: 'Infratech' } });
+    fireEvent.change(screen.getByLabelText(/Função/i), { target: { value: 'Analista' } });
+    fireEvent.change(screen.getByLabelText(/Gerência/i), { target: { value: 'GER' } });
+    fireEvent.change(screen.getByLabelText(/Coordenador/i), { target: { value: 'Coord' } });
+    fireEvent.change(screen.getByLabelText(/Gestor/i), { target: { value: 'Gestor' } });
+    fireEvent.change(screen.getByLabelText(/ID crachá/i), { target: { value: '123' } });
+    fireEvent.change(screen.getByLabelText(/RAC02/i), { target: { value: 'R1' } });
+    fireEvent.click(screen.getByRole('button', { name: /Concluir cadastro/i }));
+
+    await waitFor(() => expect(authMock.completeProfile).toHaveBeenCalled());
+    expect(authMock.completeProfile.mock.calls[0][0]).toMatchObject({
+      nomeCompleto: 'Robson',
+      rac02: 'R1',
+    });
   });
 
   it('conta bloqueada recebe mensagem diferente de conta pendente', () => {

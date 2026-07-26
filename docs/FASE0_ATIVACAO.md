@@ -81,20 +81,28 @@ as rules não foram publicadas.
 
 ## Se o cadastro falhar
 
-| Mensagem na tela                                          | Causa                                                              | O que fazer                                |
-| --------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------ |
-| "As regras de segurança do banco recusaram o cadastro"    | Rules ainda não publicadas — o passo 3 não aconteceu               | `firebase deploy --only firestore:rules`   |
-| "Login por e-mail e senha não está habilitado no projeto" | Provedor desligado no console                                      | Passo 1                                    |
-| "Já existe uma conta com este e-mail"                     | Conta órfã de uma tentativa anterior que não conseguiu se desfazer | Apagar em Authentication → Users e repetir |
-| "Sem conexão com o banco de dados"                        | Rede, ou variáveis do Firebase ausentes no Netlify                 | Conferir as `NEXT_PUBLIC_FIREBASE_*`       |
+| Mensagem na tela                                          | Causa                                                              | O que fazer                                                            |
+| --------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| "As regras de segurança do banco recusaram o cadastro"    | Rules ainda não publicadas — o passo 3 não aconteceu               | `firebase deploy --only firestore:rules`                               |
+| "Login por e-mail e senha não está habilitado no projeto" | Provedor desligado no console                                      | Passo 1                                                                |
+| "Já existe uma conta com este e-mail"                     | Conta órfã de uma tentativa anterior que não conseguiu se desfazer | Entrar com ela: a tela **Concluir cadastro** grava o perfil que faltou |
+| "Sem conexão com o banco de dados"                        | Rede, ou variáveis do Firebase ausentes no Netlify                 | Conferir as `NEXT_PUBLIC_FIREBASE_*`                                   |
 
 Para ver o erro cru, abra o console do navegador (F12) na aba **Console** — o código original é
 registrado ali antes de virar mensagem amigável.
 
 > **Sobre a conta órfã.** O cadastro toca dois serviços: cria a conta no Auth e grava o perfil no
-> Firestore. Não há transação entre os dois. Quando a segunda etapa falha, o código agora apaga a
-> conta recém-criada para que a pessoa possa tentar de novo — sem isso, a tentativa seguinte
-> esbarrava em "e-mail já em uso" e a conta ficava para sempre sem perfil.
+> Firestore, sem transação entre os dois. Há duas defesas para isso agora:
+>
+> 1. Quando a segunda etapa falha, a conta recém-criada é apagada, para que a pessoa possa repetir o
+>    cadastro do zero.
+> 2. Se mesmo assim sobrar uma conta sem perfil — porque a limpeza também falhou, ou porque a aba
+>    foi fechada no meio —, basta **entrar com ela**: a tela **Concluir cadastro** pede os dados
+>    declarados e grava o perfil que faltou.
+>
+> A segunda existe porque a primeira não é garantida. Antes das duas, a única saída era um
+> administrador apagar a conta no console — e a tela mostrada ao usuário só tinha "Sair", que levava
+> de volta ao mesmo lugar.
 
 ---
 

@@ -62,6 +62,7 @@ export function useAuth(): AuthState & {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   reauthenticate: (senha: string) => Promise<void>;
+  completeProfile: (dados: DadosPerfil) => Promise<void>;
 } {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -93,55 +94,89 @@ export function useAuth(): AuthState & {
     await signInWithEmailAndPassword(getAppAuth(), email.trim().toLowerCase(), senha);
   }, []);
 
-  const signUp = useCallback(async (dados: SignUpData) => {
-    // Minusculas obrigatorias. O Firebase normaliza o e-mail no token, entao
-    // `auth.token.email` sempre vem em minusculo. A rule compara o campo
-    // gravado com esse token; se a pessoa digitasse "Nome@Empresa.com", os
-    // dois nao batiam e o cadastro era recusado com permission-denied.
-    const email = dados.email.trim().toLowerCase();
+  // Uma unica origem para o documento de perfil. O autocadastro e a
+  // recuperacao gravam exatamente a mesma coisa; se cada um montasse o seu,
+  // um dia divergiriam - e perfil incompleto dependendo do caminho percorrido
+  // e o tipo de inconsistencia que so aparece meses depois.
+  const montarPerfil = useCallback(
+    (email: string, dados: SignUpData | DadosPerfil) => ({
+      email,
+      displayName: dados.nomeCompleto,
+      level: 'usuario' satisfies UserLevel,
+      status: 'pendente' satisfies UserStatus,
+      declarado: {
+        gerencia: dados.gerencia,
+        coordenador: dados.coordenador,
+        gestorStaff: dados.gestorStaff,
+        funcao: dados.funcao,
+        empresa: dados.empresa,
+        idCracha: dados.idCracha,
+        rac02: dados.rac02,
+        prontosCadastrado: dados.prontosCadastrado,
+      },
+      preferencias: { popupNovasMensagens: true, idioma: 'pt', tema: 'light' },
+      createdAt: serverTimestamp(),
+    }),
+    []
+  );
 
-    const cred = await createUserWithEmailAndPassword(getAppAuth(), email, dados.senha);
+  /**
+   * Grava o perfil de quem ja esta autenticado mas ficou sem documento.
+   *
+   * Sem isto, uma falha entre criar a conta no Auth e gravar o perfil deixava
+   * a pessoa num beco sem saida: autenticada, sem perfil, e sem nenhuma acao
+   * disponivel alem de sair e cair no mesmo lugar. As rules sempre permitiram
+   * que o proprio usuario criasse o seu documento - faltava o caminho.
+   */
+  const completeProfile = useCallback(
+    async (dados: DadosPerfil) => {
+      const atual = getAppAuth().currentUser;
+      if (!atual?.email) throw new Error('Sem sessão ativa');
 
-    try {
-      await updateProfile(cred.user, { displayName: dados.nomeCompleto });
+      await updateProfile(atual, { displayName: dados.nomeCompleto });
+      await setDoc(doc(db, 'users', atual.uid), montarPerfil(atual.email, dados));
 
-      // O documento nasce `pendente` e com nivel comum. As Security Rules
-      // recusam qualquer outra combinacao vinda do cliente - se aceitassem,
-      // bastaria uma escrita direta pelo SDK para nascer administrador.
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        email,
-        displayName: dados.nomeCompleto,
-        level: 'usuario' satisfies UserLevel,
-        status: 'pendente' satisfies UserStatus,
-        declarado: {
-          gerencia: dados.gerencia,
-          coordenador: dados.coordenador,
-          gestorStaff: dados.gestorStaff,
-          funcao: dados.funcao,
-          empresa: dados.empresa,
-          idCracha: dados.idCracha,
-          rac02: dados.rac02,
-          prontosCadastrado: dados.prontosCadastrado,
-        },
-        preferencias: { popupNovasMensagens: true, idioma: 'pt', tema: 'light' },
-        createdAt: serverTimestamp(),
-      });
-    } catch (e) {
-      // O cadastro nao e atomico: a conta no Auth ja existe quando a gravacao
-      // do perfil falha. Sem desfazer, a pessoa fica presa - a proxima
-      // tentativa devolve "e-mail ja em uso" e a conta orfa nunca recebe
-      // perfil. Apagar aqui e possivel porque a credencial acabou de ser
-      // criada e ainda e recente o bastante para o Firebase aceitar.
-      await deleteUser(cred.user).catch((cleanupError) => {
-        console.error(
-          'Cadastro falhou e a conta órfã não pôde ser removida. ' +
-            'Será necessário excluí-la no console do Firebase.',
-          cleanupError
-        );
-      });
-      throw e;
-    }
-  }, []);
+      const snap = await getDoc(doc(db, 'users', atual.uid));
+      if (snap.exists()) setProfile({ uid: atual.uid, ...snap.data() } as UserProfile);
+    },
+    [montarPerfil]
+  );
+
+  const signUp = useCallback(
+    async (dados: SignUpData) => {
+      // Minusculas obrigatorias. O Firebase normaliza o e-mail no token, entao
+      // `auth.token.email` sempre vem em minusculo. A rule compara o campo
+      // gravado com esse token; se a pessoa digitasse "Nome@Empresa.com", os
+      // dois nao batiam e o cadastro era recusado com permission-denied.
+      const email = dados.email.trim().toLowerCase();
+
+      const cred = await createUserWithEmailAndPassword(getAppAuth(), email, dados.senha);
+
+      try {
+        await updateProfile(cred.user, { displayName: dados.nomeCompleto });
+
+        // O documento nasce `pendente` e com nivel comum. As Security Rules
+        // recusam qualquer outra combinacao vinda do cliente - se aceitassem,
+        // bastaria uma escrita direta pelo SDK para nascer administrador.
+        await setDoc(doc(db, 'users', cred.user.uid), montarPerfil(email, dados));
+      } catch (e) {
+        // O cadastro nao e atomico: a conta no Auth ja existe quando a gravacao
+        // do perfil falha. Sem desfazer, a pessoa fica presa - a proxima
+        // tentativa devolve "e-mail ja em uso" e a conta orfa nunca recebe
+        // perfil. Apagar aqui e possivel porque a credencial acabou de ser
+        // criada e ainda e recente o bastante para o Firebase aceitar.
+        await deleteUser(cred.user).catch((cleanupError) => {
+          console.error(
+            'Cadastro falhou e a conta órfã não pôde ser removida. ' +
+              'Será necessário excluí-la no console do Firebase.',
+            cleanupError
+          );
+        });
+        throw e;
+      }
+    },
+    [montarPerfil]
+  );
 
   const logout = useCallback(async () => {
     await signOut(getAppAuth());
@@ -177,13 +212,14 @@ export function useAuth(): AuthState & {
     logout,
     resetPassword,
     reauthenticate,
+    completeProfile,
   };
 }
 
-export interface SignUpData {
+/** Campos declarados no cadastro, sem credencial. Compartilhado com a tela de
+ *  recuperacao de perfil. */
+export interface DadosPerfil {
   nomeCompleto: string;
-  email: string;
-  senha: string;
   gerencia: string;
   coordenador: string;
   gestorStaff: string;
@@ -192,4 +228,9 @@ export interface SignUpData {
   idCracha: string;
   rac02: string;
   prontosCadastrado: boolean;
+}
+
+export interface SignUpData extends DadosPerfil {
+  email: string;
+  senha: string;
 }

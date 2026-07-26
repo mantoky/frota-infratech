@@ -5,6 +5,7 @@ import { t } from '@/lib/hooks/useTranslations';
 import { Download, Truck, AlertCircle, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { SEMANTIC_TEXT, SEMANTIC_SOFT } from '@/lib/statusColor';
 import { SignUpData, authErrorMessage } from '@/lib/hooks/useAuth';
+import DeclaredFields, { DadosDeclarados, DADOS_DECLARADOS_VAZIO } from './DeclaredFields';
 
 type Modo = 'login' | 'cadastro' | 'recuperar';
 
@@ -35,18 +36,8 @@ export default function LoginScreen({
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
-  const [form, setForm] = useState({
-    nomeCompleto: '',
-    gerencia: '',
-    coordenador: '',
-    gestorStaff: '',
-    funcao: '',
-    empresa: '',
-    idCracha: '',
-    rac02: '',
-    prontosCadastrado: false,
-  });
-  const set = (campo: keyof typeof form, valor: string | boolean) =>
+  const [form, setForm] = useState<DadosDeclarados>(DADOS_DECLARADOS_VAZIO);
+  const set = (campo: keyof DadosDeclarados, valor: string | boolean) =>
     setForm((f) => ({ ...f, [campo]: valor }));
 
   const styles: { [key: string]: CSSProperties } = {
@@ -241,10 +232,6 @@ export default function LoginScreen({
 
         {modo === 'cadastro' && (
           <form onSubmit={handleCadastro} style={{ display: 'grid', gap: 'var(--space-4)' }}>
-            {campo('cad-nome', 'Nome completo', form.nomeCompleto, (v) => set('nomeCompleto', v), {
-              required: true,
-              autoComplete: 'name',
-            })}
             {campo('cad-email', 'E-mail corporativo', email, setEmail, {
               type: 'email',
               required: true,
@@ -257,64 +244,7 @@ export default function LoginScreen({
               autoComplete: 'new-password',
             })}
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: 'var(--space-4)',
-              }}
-            >
-              {campo('cad-empresa', 'Empresa', form.empresa, (v) => set('empresa', v), {
-                required: true,
-              })}
-              {campo('cad-funcao', 'Função', form.funcao, (v) => set('funcao', v), {
-                required: true,
-              })}
-              {campo('cad-gerencia', 'Gerência', form.gerencia, (v) => set('gerencia', v), {
-                required: true,
-              })}
-              {campo(
-                'cad-coordenador',
-                'Coordenador',
-                form.coordenador,
-                (v) => set('coordenador', v),
-                { required: true }
-              )}
-              {campo(
-                'cad-gestor',
-                'Gestor / staff',
-                form.gestorStaff,
-                (v) => set('gestorStaff', v),
-                { required: true }
-              )}
-              {campo('cad-cracha', 'ID crachá', form.idCracha, (v) => set('idCracha', v), {
-                required: true,
-              })}
-              {campo('cad-rac02', 'RAC02', form.rac02, (v) => set('rac02', v), { required: true })}
-            </div>
-
-            <label
-              className="surface-inset"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-3)',
-                padding: 'var(--space-3)',
-                cursor: 'pointer',
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={form.prontosCadastrado}
-                onChange={(e) => set('prontosCadastrado', e.target.checked)}
-              />
-              <span style={{ fontSize: '0.88rem' }}>Declaro possuir cadastro no Prontos</span>
-            </label>
-
-            <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              RAC02, Prontos e crachá são conferidos por um administrador ou operador da sua área
-              antes da liberação do acesso.
-            </p>
+            <DeclaredFields valores={form} onChange={set} prefixo="cad" />
 
             <button type="submit" className="btn btn-primary" disabled={enviando}>
               {enviando ? 'Enviando...' : 'Enviar cadastro'}

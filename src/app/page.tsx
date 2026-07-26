@@ -28,6 +28,7 @@ import AddModal from '@/components/modals/AddModal';
 import ConfirmPasswordModal from '@/components/modals/ConfirmPasswordModal';
 import LoginScreen from '@/components/auth/LoginScreen';
 import AccessPending from '@/components/auth/AccessPending';
+import CompleteProfile from '@/components/auth/CompleteProfile';
 import AdminPage from '@/components/admin/AdminPage';
 import MetricsPage from '@/components/metrics/MetricsPage';
 import ForumPage from '@/components/forum/ForumPage';
@@ -104,6 +105,7 @@ export default function FrotaInfratech() {
   // localStorage.isAdmin, que o proprio usuario podia editar no console do
   // navegador - e do PIN, que estava em texto claro no bundle.
   const {
+    user,
     profile,
     loading: authLoading,
     isActive,
@@ -114,6 +116,7 @@ export default function FrotaInfratech() {
     logout: signOutUser,
     resetPassword,
     reauthenticate,
+    completeProfile,
   } = useAuth();
 
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
@@ -425,6 +428,15 @@ export default function FrotaInfratech() {
         onSignUp={signUp}
         onResetPassword={resetPassword}
       />
+    );
+  }
+
+  // Autenticado, sem perfil. Nao e caso de aviso: as rules sempre permitiram
+  // que a propria pessoa crie o seu documento, entao o certo e oferecer o
+  // caminho, e nao um beco sem saida cujo unico botao e "Sair".
+  if (authStatus === 'sem-perfil') {
+    return (
+      <CompleteProfile email={user?.email || ''} onSubmit={completeProfile} onLogout={logout} />
     );
   }
 
