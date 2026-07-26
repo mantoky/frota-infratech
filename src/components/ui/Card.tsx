@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import { CSSProperties, ReactNode } from 'react'
+import { CSSProperties, ReactNode } from 'react';
 
 interface CardProps {
-  children: ReactNode
+  children: ReactNode;
   /** 'flat' remove a sombra - usar quando o card ja esta dentro de outro card. */
-  variant?: 'raised' | 'flat' | 'inset'
-  padding?: 'none' | 'sm' | 'md' | 'lg'
+  variant?: 'raised' | 'flat' | 'inset';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
   /** Faixa colorida na borda esquerda, para status semantico. */
-  accent?: string
-  style?: CSSProperties
-  className?: string
+  accent?: string;
+  style?: CSSProperties;
+  className?: string;
 }
 
 const PADDING: Record<NonNullable<CardProps['padding']>, string> = {
@@ -18,13 +18,13 @@ const PADDING: Record<NonNullable<CardProps['padding']>, string> = {
   sm: 'var(--space-3)',
   md: 'var(--space-5)',
   lg: 'var(--space-6)',
-}
+};
 
 const VARIANT_CLASS: Record<NonNullable<CardProps['variant']>, string> = {
   raised: 'surface',
   flat: 'surface-flat',
   inset: 'surface-inset',
-}
+};
 
 export default function Card({
   children,
@@ -45,14 +45,14 @@ export default function Card({
     >
       {children}
     </div>
-  )
+  );
 }
 
 interface CardHeaderProps {
-  title: string
-  description?: string
-  icon?: ReactNode
-  action?: ReactNode
+  title: string;
+  description?: string;
+  icon?: ReactNode;
+  action?: ReactNode;
 }
 
 export function CardHeader({ title, description, icon, action }: CardHeaderProps) {
@@ -95,5 +95,5 @@ export function CardHeader({ title, description, icon, action }: CardHeaderProps
       </div>
       {action}
     </div>
-  )
+  );
 }

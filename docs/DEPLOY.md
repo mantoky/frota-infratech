@@ -1,6 +1,7 @@
 # 🚀 Deploy no Netlify - Drag and Drop
 
 ## Pré-requisitos
+
 - Node.js 20+ instalado
 - Conta no Netlify (grátis): https://app.netlify.com/
 
@@ -22,8 +23,7 @@ Isso vai criar a pasta `out/` com os arquivos otimizados.
 
 3. Aguarde o upload (pode levar alguns segundos)
 
-4. Pronto! Seu site estará disponível em um link como:
-   `https://seu-nome.netlify.app`
+4. Pronto! Seu site estará disponível em um link como: `https://seu-nome.netlify.app`
 
 ## Passo 3: Configurar Variáveis de Ambiente
 
@@ -55,7 +55,8 @@ Após o deploy, acesse o link fornecido pelo Netlify.
 
 ## PINs de Acesso Admin
 
-Os PINs reais ficam configurados como variáveis de ambiente no painel do Netlify — nunca commitar os valores em texto no repositório.
+Os PINs reais ficam configurados como variáveis de ambiente no painel do Netlify — nunca commitar os
+valores em texto no repositório.
 
 ## Comandos Úteis
 
@@ -73,5 +74,5 @@ npm run lint
 ## Problemas Comuns
 
 1. **Site não carrega:** Verifique se as variáveis de ambiente estão configuradas
-2. **Firebase não conecta:** Verifique se todas as variáveis NEXT_PUBLIC_FIREBASE_* estão corretas
-3. **PIN não funciona:** Verifique se NEXT_PUBLIC_ADMIN_PIN_* estão configuradas
+2. **Firebase não conecta:** Verifique se todas as variáveis NEXT*PUBLIC_FIREBASE*\* estão corretas
+3. **PIN não funciona:** Verifique se NEXT*PUBLIC_ADMIN_PIN*\* estão configuradas

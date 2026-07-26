@@ -1,28 +1,22 @@
-'use client'
+'use client';
 
-import { useState, FormEvent } from 'react'
-import { t } from '@/lib/hooks/useTranslations'
-import Modal from './Modal'
-import { CSSProperties } from 'react'
-import { Lock } from 'lucide-react'
-import { SEMANTIC_TEXT } from '@/lib/statusColor'
+import { useState, FormEvent } from 'react';
+import { t } from '@/lib/hooks/useTranslations';
+import Modal from './Modal';
+import { CSSProperties } from 'react';
+import { Lock } from 'lucide-react';
+import { SEMANTIC_TEXT } from '@/lib/statusColor';
 
 interface PinModalProps {
-  isOpen: boolean
-  onClose: () => void
-  currentLang: string
-  error: boolean
-  onVerify: (pin: string) => void
+  isOpen: boolean;
+  onClose: () => void;
+  currentLang: string;
+  error: boolean;
+  onVerify: (pin: string) => void;
 }
 
-export default function PinModal({
-  isOpen,
-  onClose,
-  currentLang,
-  error,
-  onVerify
-}: PinModalProps) {
-  const [pin, setPin] = useState('')
+export default function PinModal({ isOpen, onClose, currentLang, error, onVerify }: PinModalProps) {
+  const [pin, setPin] = useState('');
 
   const styles: { [key: string]: CSSProperties } = {
     formGroup: {
@@ -81,31 +75,29 @@ export default function PinModal({
       marginBottom: '20px',
       color: 'var(--text-primary)',
     },
-  }
+  };
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (pin.length >= 4) {
-      onVerify(pin)
-      setPin('')
+      onVerify(pin);
+      setPin('');
     }
-  }
+  };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t('modalAdmin', currentLang)}
-      maxWidth="400px"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={t('modalAdmin', currentLang)} maxWidth="400px">
       <div style={{ ...styles.icon, display: 'flex', justifyContent: 'center' }}>
         <Lock size={48} />
       </div>
-      
+
       <form onSubmit={handleSubmit}>
         <div style={styles.formGroup}>
-          <label htmlFor="pin-f1" style={styles.label}>{t('pinMsg', currentLang)}</label>
-          <input id="pin-f1"
+          <label htmlFor="pin-f1" style={styles.label}>
+            {t('pinMsg', currentLang)}
+          </label>
+          <input
+            id="pin-f1"
             type="password"
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
@@ -115,9 +107,7 @@ export default function PinModal({
             autoFocus
             required
           />
-          {error && (
-            <p style={styles.error}>{t('pinError', currentLang)}</p>
-          )}
+          {error && <p style={styles.error}>{t('pinError', currentLang)}</p>}
         </div>
 
         <div style={styles.buttonGroup}>
@@ -138,5 +128,5 @@ export default function PinModal({
         </div>
       </form>
     </Modal>
-  )
+  );
 }

@@ -1,26 +1,30 @@
-'use client'
+'use client';
 
-import { t } from '@/lib/hooks/useTranslations'
-import { Vehicle } from '@/types'
-import { CSSProperties, ReactNode } from 'react'
-import { Ban, Truck, AlertCircle, Key, Wrench, Droplet, Undo2, Lock, Pencil } from 'lucide-react'
+import { t } from '@/lib/hooks/useTranslations';
+import { Vehicle } from '@/types';
+import { CSSProperties, ReactNode } from 'react';
+import { Ban, Truck, AlertCircle, Key, Wrench, Droplet, Undo2, Lock, Pencil } from 'lucide-react';
 import {
-  SEMANTIC_COLORS, SEMANTIC_TEXT, getVehicleSemanticStatus, getStatusLabelKey, getFuelSemanticStatus
-} from '@/lib/statusColor'
-import Badge from '@/components/ui/Badge'
-import Meter from '@/components/ui/Meter'
-import AlertBanner from '@/components/ui/AlertBanner'
-import { getVehicleImage } from '@/lib/vehicleImage'
+  SEMANTIC_COLORS,
+  SEMANTIC_TEXT,
+  getVehicleSemanticStatus,
+  getStatusLabelKey,
+  getFuelSemanticStatus,
+} from '@/lib/statusColor';
+import Badge from '@/components/ui/Badge';
+import Meter from '@/components/ui/Meter';
+import AlertBanner from '@/components/ui/AlertBanner';
+import { getVehicleImage } from '@/lib/vehicleImage';
 
 interface VehicleCardProps {
-  vehicle: Vehicle
-  currentLang: string
-  isAdmin: boolean
-  embedded?: boolean
-  onWithdraw: (vehicle: Vehicle) => void
-  onReturn: (vehicle: Vehicle) => void
-  onService: (type: 'man' | 'lav', vehicle: Vehicle) => void
-  onManage: (vehicle: Vehicle) => void
+  vehicle: Vehicle;
+  currentLang: string;
+  isAdmin: boolean;
+  embedded?: boolean;
+  onWithdraw: (vehicle: Vehicle) => void;
+  onReturn: (vehicle: Vehicle) => void;
+  onService: (type: 'man' | 'lav', vehicle: Vehicle) => void;
+  onManage: (vehicle: Vehicle) => void;
 }
 
 function DataPoint({ label, value, tone }: { label: string; value: ReactNode; tone?: string }) {
@@ -29,12 +33,17 @@ function DataPoint({ label, value, tone }: { label: string; value: ReactNode; to
       <span className="field-label">{label}</span>
       <p
         className="tabular"
-        style={{ margin: 0, fontWeight: 650, fontSize: '0.92rem', color: tone || 'var(--text-primary)' }}
+        style={{
+          margin: 0,
+          fontWeight: 650,
+          fontSize: '0.92rem',
+          color: tone || 'var(--text-primary)',
+        }}
       >
         {value}
       </p>
     </div>
-  )
+  );
 }
 
 export default function VehicleCard({
@@ -45,14 +54,14 @@ export default function VehicleCard({
   onWithdraw,
   onReturn,
   onService,
-  onManage
+  onManage,
 }: VehicleCardProps) {
-  const fuelSemantic = getFuelSemanticStatus(vehicle.fuel)
-  const remainingKm = vehicle.maintenance - vehicle.km
-  const isMaintAlert = remainingKm >= 0 && remainingKm <= 1000
-  const isBlocked = Boolean(vehicle.blocked)
-  const isMobilization = vehicle.status === 'mobilizacao'
-  const semanticStatus = getVehicleSemanticStatus(vehicle)
+  const fuelSemantic = getFuelSemanticStatus(vehicle.fuel);
+  const remainingKm = vehicle.maintenance - vehicle.km;
+  const isMaintAlert = remainingKm >= 0 && remainingKm <= 1000;
+  const isBlocked = Boolean(vehicle.blocked);
+  const isMobilization = vehicle.status === 'mobilizacao';
+  const semanticStatus = getVehicleSemanticStatus(vehicle);
 
   const styles: { [key: string]: CSSProperties } = {
     root: {
@@ -89,9 +98,9 @@ export default function VehicleCard({
       gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
       gap: 'var(--space-2)',
     },
-  }
+  };
 
-  const actionsDisabled = isBlocked
+  const actionsDisabled = isBlocked;
 
   return (
     <div style={styles.root}>
@@ -145,14 +154,20 @@ export default function VehicleCard({
       </div>
 
       <div style={styles.dataGrid}>
-        <DataPoint label={t('lblMileage', currentLang)} value={`${vehicle.km.toLocaleString('pt-BR')} km`} />
+        <DataPoint
+          label={t('lblMileage', currentLang)}
+          value={`${vehicle.km.toLocaleString('pt-BR')} km`}
+        />
         <DataPoint label={t('lblPlateLabel', currentLang)} value={vehicle.plate} />
         <DataPoint
           label={t('lblNextMaintLabel', currentLang)}
           value={vehicle.maintenance ? `${vehicle.maintenance.toLocaleString('pt-BR')} km` : '—'}
           tone={isMaintAlert ? SEMANTIC_TEXT.alerta : undefined}
         />
-        <DataPoint label={t('lblDriverLabel', currentLang)} value={vehicle.driver || t('none', currentLang)} />
+        <DataPoint
+          label={t('lblDriverLabel', currentLang)}
+          value={vehicle.driver || t('none', currentLang)}
+        />
         {vehicle.lastLocation && (
           <DataPoint label={t('lblLastLocation', currentLang)} value={vehicle.lastLocation} />
         )}
@@ -186,7 +201,14 @@ export default function VehicleCard({
       {vehicle.obs && (
         <div>
           <span className="field-label">Observações</span>
-          <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: '0.86rem',
+              color: 'var(--text-secondary)',
+              lineHeight: 1.5,
+            }}
+          >
             {vehicle.obs}
           </p>
         </div>
@@ -196,7 +218,7 @@ export default function VehicleCard({
         {/* Veiculo bloqueado esconde as acoes de operacao para quem nao e
             admin. Antes o botao aparecia desabilitado, o que so gera
             tentativa repetida em campo sem explicar o motivo. */}
-        {(!isBlocked || isAdmin) ? (
+        {!isBlocked || isAdmin ? (
           vehicle.status === 'disp' ? (
             <>
               <button
@@ -238,7 +260,11 @@ export default function VehicleCard({
           <div
             className="btn"
             aria-disabled="true"
-            style={{ backgroundColor: 'var(--state-danger-soft)', color: SEMANTIC_TEXT.anormal, cursor: 'not-allowed' }}
+            style={{
+              backgroundColor: 'var(--state-danger-soft)',
+              color: SEMANTIC_TEXT.anormal,
+              cursor: 'not-allowed',
+            }}
           >
             <Lock size={16} /> Bloqueado
           </div>
@@ -249,5 +275,5 @@ export default function VehicleCard({
         </button>
       </div>
     </div>
-  )
+  );
 }

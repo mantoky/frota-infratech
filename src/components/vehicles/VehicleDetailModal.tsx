@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import { Vehicle } from '@/types'
-import Modal from '@/components/modals/Modal'
-import VehicleCard from './VehicleCard'
+import { Vehicle } from '@/types';
+import Modal from '@/components/modals/Modal';
+import VehicleCard from './VehicleCard';
 
 interface VehicleDetailModalProps {
-  vehicle: Vehicle | null
-  isOpen: boolean
-  onClose: () => void
-  currentLang: string
-  isAdmin: boolean
-  onWithdraw: (vehicle: Vehicle) => void
-  onReturn: (vehicle: Vehicle) => void
-  onService: (type: 'man' | 'lav', vehicle: Vehicle) => void
-  onManage: (vehicle: Vehicle) => void
+  vehicle: Vehicle | null;
+  isOpen: boolean;
+  onClose: () => void;
+  currentLang: string;
+  isAdmin: boolean;
+  onWithdraw: (vehicle: Vehicle) => void;
+  onReturn: (vehicle: Vehicle) => void;
+  onService: (type: 'man' | 'lav', vehicle: Vehicle) => void;
+  onManage: (vehicle: Vehicle) => void;
 }
 
 // A "mini card" no Dashboard so mostra o essencial pra escanear a frota
@@ -29,22 +29,39 @@ export default function VehicleDetailModal({
   onWithdraw,
   onReturn,
   onService,
-  onManage
+  onManage,
 }: VehicleDetailModalProps) {
-  if (!vehicle) return null
+  if (!vehicle) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`${vehicle.tag} - ${vehicle.model}`} maxWidth="480px">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${vehicle.tag} - ${vehicle.model}`}
+      maxWidth="480px"
+    >
       <VehicleCard
         vehicle={vehicle}
         currentLang={currentLang}
         isAdmin={isAdmin}
         embedded
-        onWithdraw={(v) => { onClose(); onWithdraw(v) }}
-        onReturn={(v) => { onClose(); onReturn(v) }}
-        onService={(type, v) => { onClose(); onService(type, v) }}
-        onManage={(v) => { onClose(); onManage(v) }}
+        onWithdraw={(v) => {
+          onClose();
+          onWithdraw(v);
+        }}
+        onReturn={(v) => {
+          onClose();
+          onReturn(v);
+        }}
+        onService={(type, v) => {
+          onClose();
+          onService(type, v);
+        }}
+        onManage={(v) => {
+          onClose();
+          onManage(v);
+        }}
       />
     </Modal>
-  )
+  );
 }

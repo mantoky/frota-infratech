@@ -1,12 +1,12 @@
 # Roadmap de Evolução — Plataforma Corporativa
 
-> Sequência de execução para levar o app do estado atual à plataforma descrita
-> em [`ARQUITETURA.md`](./ARQUITETURA.md). A ordem não é negociável em um ponto:
-> **segurança antes de funcionalidade**. Construir multirregião sobre uma base
-> com `allow read: if true` é multiplicar a exposição.
+> Sequência de execução para levar o app do estado atual à plataforma descrita em
+> [`ARQUITETURA.md`](./ARQUITETURA.md). A ordem não é negociável em um ponto: **segurança antes de
+> funcionalidade**. Construir multirregião sobre uma base com `allow read: if true` é multiplicar a
+> exposição.
 
-Estimativas em semanas de trabalho, assumindo 1 desenvolvedor em dedicação
-parcial. São ordens de grandeza para planejamento, não compromisso contratual.
+Estimativas em semanas de trabalho, assumindo 1 desenvolvedor em dedicação parcial. São ordens de
+grandeza para planejamento, não compromisso contratual.
 
 ---
 
@@ -14,34 +14,34 @@ parcial. São ordens de grandeza para planejamento, não compromisso contratual.
 
 Nada aqui é evolução; é parar o sangramento. Deve começar imediatamente.
 
-| # | Entrega | Por quê |
-|---|---|---|
-| 0.1 | Firebase Auth com e-mail/senha; contas provisionadas por admin | Hoje qualquer pessoa com o `projectId` lê a frota inteira |
-| 0.2 | `allow read: if true` **removido**; rules exigem `request.auth != null` | Fecha a exposição pública |
-| 0.3 | PINs fora de `NEXT_PUBLIC_*`; validação de *step-up* server-side | Os três PINs estão em texto claro no bundle |
-| 0.4 | App Check (reCAPTCHA Enterprise) | Impede uso da API fora do app |
-| 0.5 | Rotação de credenciais do Firebase | Chaves atuais devem ser consideradas comprometidas |
+| #   | Entrega                                                                 | Por quê                                                   |
+| --- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
+| 0.1 | Firebase Auth com e-mail/senha; contas provisionadas por admin          | Hoje qualquer pessoa com o `projectId` lê a frota inteira |
+| 0.2 | `allow read: if true` **removido**; rules exigem `request.auth != null` | Fecha a exposição pública                                 |
+| 0.3 | PINs fora de `NEXT_PUBLIC_*`; validação de _step-up_ server-side        | Os três PINs estão em texto claro no bundle               |
+| 0.4 | App Check (reCAPTCHA Enterprise)                                        | Impede uso da API fora do app                             |
+| 0.5 | Rotação de credenciais do Firebase                                      | Chaves atuais devem ser consideradas comprometidas        |
 
-**Critério de saída:** nenhuma leitura ou escrita anônima possível, verificado
-por teste automatizado contra o Emulator Suite.
+**Critério de saída:** nenhuma leitura ou escrita anônima possível, verificado por teste
+automatizado contra o Emulator Suite.
 
 ---
 
 ## Fase 1 — Fundação organizacional (2–3 semanas)
 
-| # | Entrega |
-|---|---|
+| #   | Entrega                                                                   |
+| --- | ------------------------------------------------------------------------- |
 | 1.1 | Coleção `orgUnits` com `path[]` e `depth`, escrita exclusiva por Function |
-| 1.2 | Migração de `regionais` e `gerencias` do localStorage para o Firestore |
-| 1.3 | Níveis `subgerencia` e `coordenacao` habilitados |
-| 1.4 | Coleção `users` + Function `setUserScope` gravando custom claims |
-| 1.5 | Sete papéis implementados; UI reage à claim `role` |
-| 1.6 | Security Rules com `inScope()`; suíte de testes das rules no CI |
-| 1.7 | Tela de gestão de estrutura organizacional (árvore navegável) |
-| 1.8 | Seletor de escopo na TopBar (o espaço já está reservado no layout) |
+| 1.2 | Migração de `regionais` e `gerencias` do localStorage para o Firestore    |
+| 1.3 | Níveis `subgerencia` e `coordenacao` habilitados                          |
+| 1.4 | Coleção `users` + Function `setUserScope` gravando custom claims          |
+| 1.5 | Sete papéis implementados; UI reage à claim `role`                        |
+| 1.6 | Security Rules com `inScope()`; suíte de testes das rules no CI           |
+| 1.7 | Tela de gestão de estrutura organizacional (árvore navegável)             |
+| 1.8 | Seletor de escopo na TopBar (o espaço já está reservado no layout)        |
 
-**Critério de saída:** um coordenador de Carajás não consegue — nem pela UI, nem
-por chamada direta ao SDK — ler um veículo de Vitória.
+**Critério de saída:** um coordenador de Carajás não consegue — nem pela UI, nem por chamada direta
+ao SDK — ler um veículo de Vitória.
 
 ---
 
@@ -49,80 +49,79 @@ por chamada direta ao SDK — ler um veículo de Vitória.
 
 Executa os cinco passos de [`MODELO_DADOS.md`](./MODELO_DADOS.md) §5.
 
-| # | Entrega |
-|---|---|
-| 2.1 | Function de espelho: `frota/data` → `vehicles/*` + `movements/*` |
+| #   | Entrega                                                            |
+| --- | ------------------------------------------------------------------ |
+| 2.1 | Function de espelho: `frota/data` → `vehicles/*` + `movements/*`   |
 | 2.2 | Backfill do histórico; fotos base64 extraídas para o Cloud Storage |
-| 2.3 | Compressão de imagem no cliente antes do upload |
-| 2.4 | Frontend lendo das coleções novas atrás de *feature flag* |
-| 2.5 | Índices compostos publicados |
-| 2.6 | `frota/data` congelado como somente-leitura |
+| 2.3 | Compressão de imagem no cliente antes do upload                    |
+| 2.4 | Frontend lendo das coleções novas atrás de _feature flag_          |
+| 2.5 | Índices compostos publicados                                       |
+| 2.6 | `frota/data` congelado como somente-leitura                        |
 
-**Critério de saída:** contagem de veículos e movimentações idêntica entre o
-documento antigo e as coleções novas, conferida em `staging` antes de produção.
+**Critério de saída:** contagem de veículos e movimentações idêntica entre o documento antigo e as
+coleções novas, conferida em `staging` antes de produção.
 
-> **Risco principal desta fase.** O backfill é a operação mais delicada do
-> roadmap. Regras: rodar sempre em `staging` primeiro; export completo para GCS
-> antes de tocar em produção; conferência documento a documento, não por
-> amostragem. Dual-write mantido até a Fase 4 — enquanto ele existir, o rollback
-> é desligar uma flag.
+> **Risco principal desta fase.** O backfill é a operação mais delicada do roadmap. Regras: rodar
+> sempre em `staging` primeiro; export completo para GCS antes de tocar em produção; conferência
+> documento a documento, não por amostragem. Dual-write mantido até a Fase 4 — enquanto ele existir,
+> o rollback é desligar uma flag.
 
 ---
 
 ## Fase 3 — Regras de negócio no servidor (2 semanas)
 
-| # | Entrega |
-|---|---|
+| #   | Entrega                                                                                            |
+| --- | -------------------------------------------------------------------------------------------------- |
 | 3.1 | Callables: `withdrawVehicle`, `returnVehicle`, `serviceVehicle`, `blockVehicle`, `transferVehicle` |
-| 3.2 | Validações que hoje não existem: KM não regride, veículo bloqueado não sai, CNH válida |
-| 3.3 | `auditLogs` gravado na mesma transação da mudança |
-| 3.4 | Persistência offline nativa do Firestore substitui a camada manual de localStorage |
-| 3.5 | Fila de operações pendentes com indicador de sincronização na UI |
-| 3.6 | `minInstances: 1` nas Functions do caminho crítico |
+| 3.2 | Validações que hoje não existem: KM não regride, veículo bloqueado não sai, CNH válida             |
+| 3.3 | `auditLogs` gravado na mesma transação da mudança                                                  |
+| 3.4 | Persistência offline nativa do Firestore substitui a camada manual de localStorage                 |
+| 3.5 | Fila de operações pendentes com indicador de sincronização na UI                                   |
+| 3.6 | `minInstances: 1` nas Functions do caminho crítico                                                 |
 
-**Critério de saída:** toda mudança de status tem um registro de auditoria
-correspondente. Zero exceções na conferência.
+**Critério de saída:** toda mudança de status tem um registro de auditoria correspondente. Zero
+exceções na conferência.
 
 ---
 
 ## Fase 4 — Auditoria e conformidade (2 semanas)
 
-| # | Entrega |
-|---|---|
+| #   | Entrega                                                         |
+| --- | --------------------------------------------------------------- |
 | 4.1 | Papel `auditor` com leitura irrestrita no escopo e escrita nula |
-| 4.2 | Tela de auditoria com filtro por setor, ator, ação e período |
-| 4.3 | Export de trilha em CSV e PDF assinado |
+| 4.2 | Tela de auditoria com filtro por setor, ator, ação e período    |
+| 4.3 | Export de trilha em CSV e PDF assinado                          |
 | 4.4 | Export Firestore → BigQuery; snapshots diários com IAM restrito |
-| 4.5 | Retenção e anonimização de GPS/fotos após 12 meses |
-| 4.6 | MFA obrigatório para papéis administrativos |
-| 4.7 | Encerramento do dual-write; `frota/data` exportado e removido |
+| 4.5 | Retenção e anonimização de GPS/fotos após 12 meses              |
+| 4.6 | MFA obrigatório para papéis administrativos                     |
+| 4.7 | Encerramento do dual-write; `frota/data` exportado e removido   |
 
-**Critério de saída:** um auditor externo consegue reconstruir, sem ajuda,
-quem fez o quê, quando e em qual setor — nos últimos 12 meses.
+**Critério de saída:** um auditor externo consegue reconstruir, sem ajuda, quem fez o quê, quando e
+em qual setor — nos últimos 12 meses.
 
 ---
 
 ## Fase 5 — Inteligência operacional (3 semanas)
 
-| # | Entrega |
-|---|---|
-| 5.1 | Agregações pré-calculadas por setor (Function agendada) |
-| 5.2 | Dashboards Looker Studio por nível hierárquico |
-| 5.3 | Grafana via plugin BigQuery, aposentando o `.prom` manual |
+| #   | Entrega                                                                    |
+| --- | -------------------------------------------------------------------------- |
+| 5.1 | Agregações pré-calculadas por setor (Function agendada)                    |
+| 5.2 | Dashboards Looker Studio por nível hierárquico                             |
+| 5.3 | Grafana via plugin BigQuery, aposentando o `.prom` manual                  |
 | 5.4 | Alertas proativos: manutenção próxima, veículo parado, checklist reprovado |
-| 5.5 | Comparativo entre setores (disponibilidade, km/veículo, tempo parado) |
-| 5.6 | Relatório mensal automático por e-mail para responsáveis de setor |
+| 5.5 | Comparativo entre setores (disponibilidade, km/veículo, tempo parado)      |
+| 5.6 | Relatório mensal automático por e-mail para responsáveis de setor          |
 
 ---
 
 ## Fase 6 — Integração corporativa (3–4 semanas)
 
-| # | Entrega |
-|---|---|
-| 6.1 | SSO Microsoft Entra ID via Identity Platform |
-| 6.2 | Provisionamento e desligamento automáticos a partir do RH |
-| 6.3 | Integração de centro de custo com o ERP |
-| 6.4 | Webhooks para sistemas de manutenção terceirizados |
+| #   | Entrega                                                             |
+| --- | ------------------------------------------------------------------- |
+| 6.1 | SSO Microsoft Entra ID via Identity Platform                        |
+| 6.2 | Provisionamento e desligamento automáticos a partir do RH           |
+| 6.3 | Integração de centro de custo com o ERP                             |
+| 6.4 | Webhooks para sistemas de manutenção terceirizados                  |
 | 6.5 | API pública versionada e documentada (OpenAPI) para consumo interno |
 
 ---
@@ -145,33 +144,31 @@ Fase 3 ─── Regras de negócio no servidor
    └────── Fase 6 ─── Integração corporativa     (depende da 1 e da 4)
 ```
 
-Total até a Fase 4 (plataforma corporativa auditável e operante):
-**~10 a 12 semanas**. As fases 5 e 6 agregam valor, mas o sistema já é
-defensável em auditoria ao fim da Fase 4.
+Total até a Fase 4 (plataforma corporativa auditável e operante): **~10 a 12 semanas**. As fases 5 e
+6 agregam valor, mas o sistema já é defensável em auditoria ao fim da Fase 4.
 
 ---
 
 ## Ordem de grandeza de custo mensal (produção)
 
-Cenário: 5 regionais, ~200 veículos, ~150 usuários ativos, ~3.000
-movimentações/mês.
+Cenário: 5 regionais, ~200 veículos, ~150 usuários ativos, ~3.000 movimentações/mês.
 
-| Serviço | Estimativa |
-|---|---|
-| Firestore (leituras, escritas, armazenamento) | US$ 25–60 |
-| Cloud Functions (2ª geração, com `minInstances: 1`) | US$ 15–40 |
-| Cloud Storage (fotos comprimidas) | US$ 5–15 |
-| Identity Platform (acima da cota gratuita) | US$ 0–30 |
-| BigQuery (armazenamento + consultas) | US$ 10–25 |
-| Netlify (hospedagem estática) | US$ 0–19 |
-| **Total** | **US$ 55–190/mês** |
+| Serviço                                             | Estimativa         |
+| --------------------------------------------------- | ------------------ |
+| Firestore (leituras, escritas, armazenamento)       | US$ 25–60          |
+| Cloud Functions (2ª geração, com `minInstances: 1`) | US$ 15–40          |
+| Cloud Storage (fotos comprimidas)                   | US$ 5–15           |
+| Identity Platform (acima da cota gratuita)          | US$ 0–30           |
+| BigQuery (armazenamento + consultas)                | US$ 10–25          |
+| Netlify (hospedagem estática)                       | US$ 0–19           |
+| **Total**                                           | **US$ 55–190/mês** |
 
-`minInstances: 1` é o item mais sensível: cada instância sempre quente custa
-por hora mesmo ociosa. Vale para as Functions de retirada e devolução, onde o
-cold start é sentido em campo; não vale para as agendadas.
+`minInstances: 1` é o item mais sensível: cada instância sempre quente custa por hora mesmo ociosa.
+Vale para as Functions de retirada e devolução, onde o cold start é sentido em campo; não vale para
+as agendadas.
 
-Estimativa para planejamento. Validar com a calculadora oficial do Google Cloud
-antes de comprometer orçamento.
+Estimativa para planejamento. Validar com a calculadora oficial do Google Cloud antes de comprometer
+orçamento.
 
 ---
 
@@ -179,12 +176,12 @@ antes de comprometer orçamento.
 
 Itens conhecidos, fora do caminho crítico, mas que devem ser endereçados:
 
-| Item | Onde | Observação |
-|---|---|---|
-| `Vehicle.id` numérico gerado por timestamp | `helpers.ts` | Colide com criações simultâneas. Migrar para UUID na Fase 2. |
-| Datas como string `pt-BR` | `useFleetData.addToHistory` | Não ordena, depende do relógio do dispositivo. `Timestamp` na Fase 2. |
-| `useOrgData.persist` com `setState` aninhado | `useOrgData.ts` | Padrão frágil. Resolve-se sozinho quando os dados forem para o Firestore. |
-| `tailwind.config.ts` com `content` desatualizado | raiz | Aponta para `./pages`, `./components`, `./app`; o código vive em `./src/**`. Sem efeito prático hoje (Tailwind v4 detecta automaticamente), mas confunde quem lê. |
-| `useModals.ts` é código morto | `src/lib/hooks` | Nenhum arquivo importa o hook — `page.tsx` controla os modais com estado próprio. São 125 linhas que duplicam a lógica de abertura: risco de alguém corrigir um bug num lado e não no outro. Remover. |
-| Validação de formulário só no HTML nativo | modais | `required` e `type="number"` não rodam em submit programático. O `parseIntSafe` fecha o buraco de KM; os demais campos ainda dependem só do navegador. |
-| Fotos de checklist em base64 no documento | `types/index.ts` | Já coberto na Fase 2, mas repetido aqui porque é o item que mais aproxima o teto de 1 MiB. |
+| Item                                             | Onde                        | Observação                                                                                                                                                                                            |
+| ------------------------------------------------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Vehicle.id` numérico gerado por timestamp       | `helpers.ts`                | Colide com criações simultâneas. Migrar para UUID na Fase 2.                                                                                                                                          |
+| Datas como string `pt-BR`                        | `useFleetData.addToHistory` | Não ordena, depende do relógio do dispositivo. `Timestamp` na Fase 2.                                                                                                                                 |
+| `useOrgData.persist` com `setState` aninhado     | `useOrgData.ts`             | Padrão frágil. Resolve-se sozinho quando os dados forem para o Firestore.                                                                                                                             |
+| `tailwind.config.ts` com `content` desatualizado | raiz                        | Aponta para `./pages`, `./components`, `./app`; o código vive em `./src/**`. Sem efeito prático hoje (Tailwind v4 detecta automaticamente), mas confunde quem lê.                                     |
+| `useModals.ts` é código morto                    | `src/lib/hooks`             | Nenhum arquivo importa o hook — `page.tsx` controla os modais com estado próprio. São 125 linhas que duplicam a lógica de abertura: risco de alguém corrigir um bug num lado e não no outro. Remover. |
+| Validação de formulário só no HTML nativo        | modais                      | `required` e `type="number"` não rodam em submit programático. O `parseIntSafe` fecha o buraco de KM; os demais campos ainda dependem só do navegador.                                                |
+| Fotos de checklist em base64 no documento        | `types/index.ts`            | Já coberto na Fase 2, mas repetido aqui porque é o item que mais aproxima o teto de 1 MiB.                                                                                                            |

@@ -30,6 +30,6 @@ const config = {
       statements: 42,
     },
   },
-}
+};
 
-module.exports = config
+module.exports = config;

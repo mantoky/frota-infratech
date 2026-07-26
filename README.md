@@ -1,6 +1,7 @@
 # Frota Infratech - Sistema de Gerenciamento de Veículos
 
-Sistema completo para gerenciamento de frotas de veículos, desenvolvido em Next.js 15 com TypeScript.
+Sistema completo para gerenciamento de frotas de veículos, desenvolvido em Next.js 15 com
+TypeScript.
 
 ## 🚀 Funcionalidades
 
@@ -15,7 +16,8 @@ Sistema completo para gerenciamento de frotas de veículos, desenvolvido em Next
 
 ## 🔐 PINs de Administrador
 
-Configurados via variáveis de ambiente (`NEXT_PUBLIC_ADMIN_PIN_1/2/3`) — nunca documentar os valores reais aqui. Veja `.env.example`.
+Configurados via variáveis de ambiente (`NEXT_PUBLIC_ADMIN_PIN_1/2/3`) — nunca documentar os valores
+reais aqui. Veja `.env.example`.
 
 ## 📦 Deploy no Netlify
 
@@ -91,7 +93,8 @@ frota-infratech/
 
 ## 🎨 Imagens dos Veículos
 
-As imagens dos veículos foram geradas com IA em estilo artístico (anime/aquarela) para uma interface mais elegante e diferenciada.
+As imagens dos veículos foram geradas com IA em estilo artístico (anime/aquarela) para uma interface
+mais elegante e diferenciada.
 
 ## ⚠️ Notas Importantes
 
@@ -102,19 +105,24 @@ As imagens dos veículos foram geradas com IA em estilo artístico (anime/aquare
 ## 📝 Changelog
 
 ### v1.1.0 — Modal Responsivo Padrão de Mercado & Refatoração de Acessibilidade
+
 - **Refatoração de Modal com Radix UI Primitives (`@radix-ui/react-dialog`)**:
   - **Focus Trap Automático**: Previne escape de foco por teclado para fora do modal aberto.
   - **Scroll Lock Nativo**: Impede rolagem do fundo (`body`) durante a exibição do diálogo.
-  - **Acessibilidade WCAG 2.1 AA**: Atributos `aria-modal="true"`, `DialogTitle` e `DialogDescription`.
+  - **Acessibilidade WCAG 2.1 AA**: Atributos `aria-modal="true"`, `DialogTitle` e
+    `DialogDescription`.
 - **Padrão Mobile Bottom Sheet (< 640px)**:
-  - Transição automática no mobile para deslizar do rodapé (*Bottom Sheet*).
-  - Indicador de toque estilo pílula (*Drag Handle Pill*), cantos superiores arredondados e transição fluida.
+  - Transição automática no mobile para deslizar do rodapé (_Bottom Sheet_).
+  - Indicador de toque estilo pílula (_Drag Handle Pill_), cantos superiores arredondados e
+    transição fluida.
 - **Visual Glassmorphism em Desktop (≥ 640px)**:
-  - Diálogo centralizado com bordas arredondadas, profundidade com sombra e backdrop desfocado (`backdrop-blur-sm`).
+  - Diálogo centralizado com bordas arredondadas, profundidade com sombra e backdrop desfocado
+    (`backdrop-blur-sm`).
 - **Validação e Servidor Local**:
   - Servidor em tempo real em `http://localhost:3003`.
 
 ### v1.0.0
+
 - Lançamento inicial
 - Sistema completo de gestão de frotas
 - Interface em português, inglês e espanhol

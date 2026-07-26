@@ -1,12 +1,24 @@
-'use client'
+'use client';
 
-import { t } from '@/lib/hooks/useTranslations'
-import { FilterType, PageType } from '@/types'
-import { CSSProperties, useEffect } from 'react'
+import { t } from '@/lib/hooks/useTranslations';
+import { FilterType, PageType } from '@/types';
+import { CSSProperties, useEffect } from 'react';
 import {
-  Truck, LayoutGrid, Check, Clock, Droplet, Wrench, Users, History, Settings, ShieldCheck,
-  BarChart3, MessageSquare, MapPin, X
-} from 'lucide-react'
+  Truck,
+  LayoutGrid,
+  Check,
+  Clock,
+  Droplet,
+  Wrench,
+  Users,
+  History,
+  Settings,
+  ShieldCheck,
+  BarChart3,
+  MessageSquare,
+  MapPin,
+  X,
+} from 'lucide-react';
 
 const FILTER_ICONS: Record<FilterType, typeof Check> = {
   all: LayoutGrid,
@@ -14,25 +26,25 @@ const FILTER_ICONS: Record<FilterType, typeof Check> = {
   uso: Clock,
   lav: Droplet,
   man: Wrench,
-}
+};
 
 const FILTER_LABEL_KEY: Record<Exclude<FilterType, 'all'>, string> = {
   disp: 'statAvailable',
   uso: 'statInUse',
   lav: 'statWash',
   man: 'statMaintenance',
-}
+};
 
 interface SidebarProps {
-  currentPage: PageType
-  currentFilter: FilterType
-  sidebarOpen: boolean
-  currentLang: string
-  isAdmin: boolean
-  onNavigate: (page: PageType) => void
-  onFilterChange: (filter: FilterType) => void
-  onHistoryOpen: () => void
-  onClose: () => void
+  currentPage: PageType;
+  currentFilter: FilterType;
+  sidebarOpen: boolean;
+  currentLang: string;
+  isAdmin: boolean;
+  onNavigate: (page: PageType) => void;
+  onFilterChange: (filter: FilterType) => void;
+  onHistoryOpen: () => void;
+  onClose: () => void;
 }
 
 export default function Sidebar({
@@ -44,16 +56,18 @@ export default function Sidebar({
   onNavigate,
   onFilterChange,
   onHistoryOpen,
-  onClose
+  onClose,
 }: SidebarProps) {
   // Esc fecha a gaveta no mobile. Sem isso o unico jeito de sair era acertar
   // o overlay com o dedo - ruim em tela pequena, pior ainda com luva.
   useEffect(() => {
-    if (!sidebarOpen) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [sidebarOpen, onClose])
+    if (!sidebarOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sidebarOpen, onClose]);
 
   const styles: { [key: string]: CSSProperties } = {
     // Acima de 1024px a sidebar e coluna fixa (a classe .app-main--docked
@@ -114,7 +128,8 @@ export default function Sidebar({
       fontSize: '0.9rem',
       fontWeight: 550,
       textAlign: 'left',
-      transition: 'background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out)',
+      transition:
+        'background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out)',
     },
     itemActive: {
       backgroundColor: 'var(--bg-sidebar-active)',
@@ -122,7 +137,7 @@ export default function Sidebar({
       color: '#fff',
       fontWeight: 650,
     },
-  }
+  };
 
   const item = (
     key: string,
@@ -137,12 +152,21 @@ export default function Sidebar({
       type="button"
       aria-current={active ? 'page' : undefined}
       style={{ ...styles.item, ...(active ? styles.itemActive : null) }}
-      onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = 'var(--bg-sidebar-hover)' }}
-      onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent' }}
-      onClick={() => { onSelect(); onClose() }}
+      onMouseEnter={(e) => {
+        if (!active) e.currentTarget.style.backgroundColor = 'var(--bg-sidebar-hover)';
+      }}
+      onMouseLeave={(e) => {
+        if (!active) e.currentTarget.style.backgroundColor = 'transparent';
+      }}
+      onClick={() => {
+        onSelect();
+        onClose();
+      }}
     >
       <Icon size={17} style={{ flexShrink: 0, opacity: active ? 1 : 0.8 }} />
-      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {label}
+      </span>
       {badge && (
         <span
           style={{
@@ -159,9 +183,9 @@ export default function Sidebar({
         </span>
       )}
     </button>
-  )
+  );
 
-  const filters: Exclude<FilterType, 'all'>[] = ['disp', 'uso', 'lav', 'man']
+  const filters: Exclude<FilterType, 'all'>[] = ['disp', 'uso', 'lav', 'man'];
 
   return (
     <>
@@ -187,10 +211,19 @@ export default function Sidebar({
             <Truck size={19} />
           </span>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, letterSpacing: '-0.015em' }}>
+            <p
+              style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, letterSpacing: '-0.015em' }}
+            >
               {t('sidebarTitle', currentLang)}
             </p>
-            <p style={{ margin: 0, fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.04em' }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '0.68rem',
+                color: 'rgba(255,255,255,0.45)',
+                letterSpacing: '0.04em',
+              }}
+            >
               {isAdmin ? 'Perfil administrador' : 'Perfil operacional'}
             </p>
           </div>
@@ -221,29 +254,60 @@ export default function Sidebar({
           style={{ flex: 1, overflowY: 'auto', paddingBottom: 'var(--space-6)' }}
         >
           <p style={styles.groupLabel}>{t('menuMain', currentLang)}</p>
-          {item('dashboard', t('menuDashboard', currentLang), LayoutGrid, currentPage === 'dashboard', () => onNavigate('dashboard'))}
-          {item('metrics', 'Métricas & Telemetria', BarChart3, currentPage === 'metrics', () => onNavigate('metrics'))}
-          {item('forum', 'Fórum Operacional', MessageSquare, currentPage === 'forum', () => onNavigate('forum'))}
-          {item('regionais', 'Regionais e Gerências', MapPin, currentPage === 'regionais', () => onNavigate('regionais'))}
+          {item(
+            'dashboard',
+            t('menuDashboard', currentLang),
+            LayoutGrid,
+            currentPage === 'dashboard',
+            () => onNavigate('dashboard')
+          )}
+          {item('metrics', 'Métricas & Telemetria', BarChart3, currentPage === 'metrics', () =>
+            onNavigate('metrics')
+          )}
+          {item('forum', 'Fórum Operacional', MessageSquare, currentPage === 'forum', () =>
+            onNavigate('forum')
+          )}
+          {item('regionais', 'Regionais e Gerências', MapPin, currentPage === 'regionais', () =>
+            onNavigate('regionais')
+          )}
 
           <p style={styles.groupLabel}>{t('menuFilters', currentLang)}</p>
-          {filters.map(filter =>
+          {filters.map((filter) =>
             item(
               filter,
               t(FILTER_LABEL_KEY[filter], currentLang),
               FILTER_ICONS[filter],
               currentPage === 'dashboard' && currentFilter === filter,
-              () => { onFilterChange(filter); onNavigate('dashboard') }
+              () => {
+                onFilterChange(filter);
+                onNavigate('dashboard');
+              }
             )
           )}
 
           <p style={styles.groupLabel}>{t('menuReports', currentLang)}</p>
-          {item('drivers', t('menuDrivers', currentLang), Users, currentPage === 'drivers', () => onNavigate('drivers'))}
+          {item('drivers', t('menuDrivers', currentLang), Users, currentPage === 'drivers', () =>
+            onNavigate('drivers')
+          )}
           {item('history', t('menuHistory', currentLang), History, false, onHistoryOpen)}
 
           <p style={styles.groupLabel}>{t('menuSystem', currentLang)}</p>
-          {item('settings', t('menuSettings', currentLang), Settings, currentPage === 'settings', () => onNavigate('settings'))}
-          {isAdmin && item('admin', t('menuAdmin', currentLang), ShieldCheck, currentPage === 'admin', () => onNavigate('admin'), 'ADM')}
+          {item(
+            'settings',
+            t('menuSettings', currentLang),
+            Settings,
+            currentPage === 'settings',
+            () => onNavigate('settings')
+          )}
+          {isAdmin &&
+            item(
+              'admin',
+              t('menuAdmin', currentLang),
+              ShieldCheck,
+              currentPage === 'admin',
+              () => onNavigate('admin'),
+              'ADM'
+            )}
         </nav>
 
         <div
@@ -273,5 +337,5 @@ export default function Sidebar({
         />
       )}
     </>
-  )
+  );
 }

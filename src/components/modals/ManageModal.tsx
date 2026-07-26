@@ -1,25 +1,25 @@
-'use client'
+'use client';
 
-import { useState, FormEvent } from 'react'
-import { t } from '@/lib/hooks/useTranslations'
-import { Vehicle } from '@/types'
-import Modal from './Modal'
-import { parseIntSafe } from '@/lib/helpers'
-import { CSSProperties } from 'react'
-import { Ban, Truck, Unlock, Lock, AlertTriangle } from 'lucide-react'
-import { SEMANTIC_COLORS } from '@/lib/statusColor'
+import { useState, FormEvent } from 'react';
+import { t } from '@/lib/hooks/useTranslations';
+import { Vehicle } from '@/types';
+import Modal from './Modal';
+import { parseIntSafe } from '@/lib/helpers';
+import { CSSProperties } from 'react';
+import { Ban, Truck, Unlock, Lock, AlertTriangle } from 'lucide-react';
+import { SEMANTIC_COLORS } from '@/lib/statusColor';
 
 interface ManageModalProps {
-  isOpen: boolean
-  onClose: () => void
-  vehicle: Vehicle | null
-  currentLang: string
-  isAdmin: boolean
-  onSave: (data: Partial<Vehicle>) => void
-  onDelete: () => void
-  onRequestPin: (action: 'delete' | 'unblock') => void
-  onBlock: (reason: string) => void
-  onUnblock: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  vehicle: Vehicle | null;
+  currentLang: string;
+  isAdmin: boolean;
+  onSave: (data: Partial<Vehicle>) => void;
+  onDelete: () => void;
+  onRequestPin: (action: 'delete' | 'unblock') => void;
+  onBlock: (reason: string) => void;
+  onUnblock: () => void;
 }
 
 export default function ManageModal({
@@ -32,39 +32,39 @@ export default function ManageModal({
   onDelete,
   onRequestPin,
   onBlock,
-  onUnblock
+  onUnblock,
 }: ManageModalProps) {
-  const [tag, setTag] = useState('')
-  const [plate, setPlate] = useState('')
-  const [model, setModel] = useState('')
-  const [status, setStatus] = useState<'disp' | 'uso' | 'lav' | 'man' | 'mobilizacao'>('disp')
-  const [driver, setDriver] = useState('')
-  const [km, setKm] = useState('')
-  const [fuel, setFuel] = useState('Reserva')
-  const [maintenance, setMaintenance] = useState('')
-  const [obs, setObs] = useState('')
-  const [blocked, setBlocked] = useState(false)
-  const [blockedReason, setBlockedReason] = useState('')
-  const [showBlockModal, setShowBlockModal] = useState(false)
-  const [newBlockReason, setNewBlockReason] = useState('')
-  const [loadedKey, setLoadedKey] = useState<number | null>(null)
+  const [tag, setTag] = useState('');
+  const [plate, setPlate] = useState('');
+  const [model, setModel] = useState('');
+  const [status, setStatus] = useState<'disp' | 'uso' | 'lav' | 'man' | 'mobilizacao'>('disp');
+  const [driver, setDriver] = useState('');
+  const [km, setKm] = useState('');
+  const [fuel, setFuel] = useState('Reserva');
+  const [maintenance, setMaintenance] = useState('');
+  const [obs, setObs] = useState('');
+  const [blocked, setBlocked] = useState(false);
+  const [blockedReason, setBlockedReason] = useState('');
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [newBlockReason, setNewBlockReason] = useState('');
+  const [loadedKey, setLoadedKey] = useState<number | null>(null);
 
-  const openKey = isOpen && vehicle ? vehicle.id : null
+  const openKey = isOpen && vehicle ? vehicle.id : null;
   if (openKey !== null && openKey !== loadedKey) {
-    setLoadedKey(openKey)
-    setTag(vehicle!.tag)
-    setPlate(vehicle!.plate)
-    setModel(vehicle!.model)
-    setStatus(vehicle!.status)
-    setDriver(vehicle!.driver || '')
-    setKm(vehicle!.km.toString())
-    setFuel(vehicle!.fuelText)
-    setMaintenance(vehicle!.maintenance?.toString() || '')
-    setObs(vehicle!.obs || '')
-    setBlocked(vehicle!.blocked || false)
-    setBlockedReason(vehicle!.blockedReason || '')
+    setLoadedKey(openKey);
+    setTag(vehicle!.tag);
+    setPlate(vehicle!.plate);
+    setModel(vehicle!.model);
+    setStatus(vehicle!.status);
+    setDriver(vehicle!.driver || '');
+    setKm(vehicle!.km.toString());
+    setFuel(vehicle!.fuelText);
+    setMaintenance(vehicle!.maintenance?.toString() || '');
+    setObs(vehicle!.obs || '');
+    setBlocked(vehicle!.blocked || false);
+    setBlockedReason(vehicle!.blockedReason || '');
   } else if (openKey === null && loadedKey !== null) {
-    setLoadedKey(null)
+    setLoadedKey(null);
   }
 
   const styles: { [key: string]: CSSProperties } = {
@@ -191,25 +191,25 @@ export default function ManageModal({
       marginBottom: '15px',
       fontWeight: 600,
     },
-  }
+  };
 
   const getFuelPercent = (text: string): number => {
     const map: { [key: string]: number } = {
-      'Reserva': 10,
+      Reserva: 10,
       '1/4': 25,
       '2/4': 50,
       '3/4': 75,
-      'Cheio': 100
-    }
-    return map[text] || 50
-  }
+      Cheio: 100,
+    };
+    return map[text] || 50;
+  };
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    if (!vehicle) return
+    e.preventDefault();
+    if (!vehicle) return;
 
     // Only admin can change maintenance km
-    const maintenanceValue = isAdmin ? parseIntSafe(maintenance) : vehicle.maintenance
+    const maintenanceValue = isAdmin ? parseIntSafe(maintenance) : vehicle.maintenance;
 
     onSave({
       id: vehicle.id,
@@ -224,54 +224,49 @@ export default function ManageModal({
       maintenance: maintenanceValue,
       obs,
       blocked,
-      blockedReason
-    })
-  }
+      blockedReason,
+    });
+  };
 
   const handleDelete = () => {
     if (!isAdmin) {
-      onRequestPin('delete')
+      onRequestPin('delete');
     } else {
-      onDelete()
+      onDelete();
     }
-  }
+  };
 
   const handleBlock = () => {
-    setShowBlockModal(true)
-  }
+    setShowBlockModal(true);
+  };
 
   const confirmBlock = () => {
     if (newBlockReason.trim()) {
-      onBlock(newBlockReason)
-      setBlocked(true)
-      setBlockedReason(newBlockReason)
-      setShowBlockModal(false)
-      setNewBlockReason('')
+      onBlock(newBlockReason);
+      setBlocked(true);
+      setBlockedReason(newBlockReason);
+      setShowBlockModal(false);
+      setNewBlockReason('');
     }
-  }
+  };
 
   const handleUnblock = () => {
     if (!isAdmin) {
-      onRequestPin('unblock')
+      onRequestPin('unblock');
     } else {
-      onUnblock()
-      setBlocked(false)
-      setBlockedReason('')
+      onUnblock();
+      setBlocked(false);
+      setBlockedReason('');
     }
-  }
+  };
 
-  if (!vehicle) return null
+  if (!vehicle) return null;
 
-  const isBlocked = blocked || vehicle.blocked
-  const isMobilization = status === 'mobilizacao' || vehicle.status === 'mobilizacao'
+  const isBlocked = blocked || vehicle.blocked;
+  const isMobilization = status === 'mobilizacao' || vehicle.status === 'mobilizacao';
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t('modalManage', currentLang)}
-      maxWidth="700px"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={t('modalManage', currentLang)} maxWidth="700px">
       {/* Blocked Alert */}
       {isBlocked && (
         <div style={styles.blockedAlert}>
@@ -281,15 +276,33 @@ export default function ManageModal({
           </div>
           <div style={styles.blockedReason}>
             <strong>Motivo:</strong> {vehicle.blockedReason || blockedReason || 'Não especificado'}
-            {vehicle.blockedBy && <><br /><strong>Por:</strong> {vehicle.blockedBy}</>}
-            {vehicle.blockedAt && <><br /><strong>Data:</strong> {vehicle.blockedAt}</>}
+            {vehicle.blockedBy && (
+              <>
+                <br />
+                <strong>Por:</strong> {vehicle.blockedBy}
+              </>
+            )}
+            {vehicle.blockedAt && (
+              <>
+                <br />
+                <strong>Data:</strong> {vehicle.blockedAt}
+              </>
+            )}
           </div>
         </div>
       )}
 
       {/* Mobilization Alert */}
       {isMobilization && (
-        <div style={{ ...styles.mobilizationBadge, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+        <div
+          style={{
+            ...styles.mobilizationBadge,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+          }}
+        >
           <Truck size={18} />
           Veículo em Processo de Mobilização
         </div>
@@ -322,8 +335,11 @@ export default function ManageModal({
       <form onSubmit={handleSubmit}>
         <div style={styles.grid}>
           <div style={styles.formGroup}>
-            <label htmlFor="mg-f1" style={styles.label}>{t('lblTag', currentLang)}</label>
-            <input id="mg-f1"
+            <label htmlFor="mg-f1" style={styles.label}>
+              {t('lblTag', currentLang)}
+            </label>
+            <input
+              id="mg-f1"
               type="text"
               value={tag}
               onChange={(e) => setTag(e.target.value)}
@@ -333,8 +349,11 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="mg-f2" style={styles.label}>{t('lblPlate', currentLang)}</label>
-            <input id="mg-f2"
+            <label htmlFor="mg-f2" style={styles.label}>
+              {t('lblPlate', currentLang)}
+            </label>
+            <input
+              id="mg-f2"
               type="text"
               value={plate}
               onChange={(e) => setPlate(e.target.value)}
@@ -344,8 +363,11 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="mg-f3" style={styles.label}>{t('lblModel', currentLang)}</label>
-            <input id="mg-f3"
+            <label htmlFor="mg-f3" style={styles.label}>
+              {t('lblModel', currentLang)}
+            </label>
+            <input
+              id="mg-f3"
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
@@ -355,10 +377,15 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="mg-f4" style={styles.label}>{t('lblStatus', currentLang)}</label>
-            <select id="mg-f4"
+            <label htmlFor="mg-f4" style={styles.label}>
+              {t('lblStatus', currentLang)}
+            </label>
+            <select
+              id="mg-f4"
               value={status}
-              onChange={(e) => setStatus(e.target.value as 'disp' | 'uso' | 'lav' | 'man' | 'mobilizacao')}
+              onChange={(e) =>
+                setStatus(e.target.value as 'disp' | 'uso' | 'lav' | 'man' | 'mobilizacao')
+              }
               style={styles.select}
               required
               disabled={isBlocked}
@@ -370,7 +397,16 @@ export default function ManageModal({
               <option value="mobilizacao">Em Processo de Mobilização</option>
             </select>
             {isBlocked && (
-              <p style={{ fontSize: '0.75rem', color: SEMANTIC_COLORS.anormal, marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <p
+                style={{
+                  fontSize: '0.75rem',
+                  color: SEMANTIC_COLORS.anormal,
+                  marginTop: '5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
                 <Ban size={12} />
                 Veículo bloqueado - desbloqueie para alterar o status
               </p>
@@ -378,8 +414,11 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="mg-f5" style={styles.label}>{t('lblDriverLabel', currentLang)}</label>
-            <input id="mg-f5"
+            <label htmlFor="mg-f5" style={styles.label}>
+              {t('lblDriverLabel', currentLang)}
+            </label>
+            <input
+              id="mg-f5"
               type="text"
               value={driver}
               onChange={(e) => setDriver(e.target.value)}
@@ -388,8 +427,11 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="mg-f6" style={styles.label}>{t('lblKm', currentLang)}</label>
-            <input id="mg-f6"
+            <label htmlFor="mg-f6" style={styles.label}>
+              {t('lblKm', currentLang)}
+            </label>
+            <input
+              id="mg-f6"
               type="number"
               value={km}
               onChange={(e) => setKm(e.target.value)}
@@ -400,8 +442,11 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="mg-f7" style={styles.label}>{t('lblFuel', currentLang)}</label>
-            <select id="mg-f7"
+            <label htmlFor="mg-f7" style={styles.label}>
+              {t('lblFuel', currentLang)}
+            </label>
+            <select
+              id="mg-f7"
               value={fuel}
               onChange={(e) => setFuel(e.target.value)}
               style={styles.select}
@@ -420,17 +465,27 @@ export default function ManageModal({
               {t('lblNextMaint', currentLang)}
               {!isAdmin && <span style={styles.adminOnlyBadge}>APENAS ADMIN</span>}
             </label>
-            <input id="mg-f8"
+            <input
+              id="mg-f8"
               type="number"
               value={maintenance}
               onChange={(e) => isAdmin && setMaintenance(e.target.value)}
               style={isAdmin ? styles.input : styles.inputReadonly}
               min="0"
               readOnly={!isAdmin}
-              title={!isAdmin ? "Apenas administradores podem alterar este campo" : ""}
+              title={!isAdmin ? 'Apenas administradores podem alterar este campo' : ''}
             />
             {!isAdmin && (
-              <p style={{ fontSize: '0.75rem', color: SEMANTIC_COLORS.alerta, marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <p
+                style={{
+                  fontSize: '0.75rem',
+                  color: SEMANTIC_COLORS.alerta,
+                  marginTop: '5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
                 <Lock size={12} />
                 Apenas administradores podem alterar a próxima manutenção
               </p>
@@ -439,8 +494,11 @@ export default function ManageModal({
         </div>
 
         <div style={styles.formGroup}>
-          <label htmlFor="mg-f9" style={styles.label}>{t('lblObs', currentLang)}</label>
-          <textarea id="mg-f9"
+          <label htmlFor="mg-f9" style={styles.label}>
+            {t('lblObs', currentLang)}
+          </label>
+          <textarea
+            id="mg-f9"
             value={obs}
             onChange={(e) => setObs(e.target.value)}
             style={styles.textarea}
@@ -464,10 +522,7 @@ export default function ManageModal({
               {t('btnDelete', currentLang)}
             </button>
           )}
-          <button
-            type="submit"
-            style={{ ...styles.button, ...styles.saveButton }}
-          >
+          <button type="submit" style={{ ...styles.button, ...styles.saveButton }}>
             {t('btnSave', currentLang)}
           </button>
         </div>
@@ -475,31 +530,44 @@ export default function ManageModal({
 
       {/* Block Confirmation Modal */}
       {showBlockModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 3000,
-        }}>
-          <div style={{
-            backgroundColor: 'var(--bg-card)',
-            padding: '25px',
-            borderRadius: '12px',
-            width: '400px',
-            maxWidth: '90%',
-          }}>
-            <h3 style={{ marginBottom: '15px', color: SEMANTIC_COLORS.anormal, display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 3000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              padding: '25px',
+              borderRadius: '12px',
+              width: '400px',
+              maxWidth: '90%',
+            }}
+          >
+            <h3
+              style={{
+                marginBottom: '15px',
+                color: SEMANTIC_COLORS.anormal,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+              }}
+            >
               <AlertTriangle size={20} />
               Bloquear Veículo
             </h3>
             <p style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>
-              Informe o motivo do bloqueio. O veículo não poderá ser usado até ser desbloqueado por um administrador.
+              Informe o motivo do bloqueio. O veículo não poderá ser usado até ser desbloqueado por
+              um administrador.
             </p>
             <textarea
               value={newBlockReason}
@@ -520,8 +588,8 @@ export default function ManageModal({
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 onClick={() => {
-                  setShowBlockModal(false)
-                  setNewBlockReason('')
+                  setShowBlockModal(false);
+                  setNewBlockReason('');
                 }}
                 style={{ ...styles.button, ...styles.cancelButton }}
               >
@@ -539,5 +607,5 @@ export default function ManageModal({
         </div>
       )}
     </Modal>
-  )
+  );
 }

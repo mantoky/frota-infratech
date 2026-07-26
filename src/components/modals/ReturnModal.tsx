@@ -1,27 +1,27 @@
-'use client'
+'use client';
 
-import { useState, FormEvent } from 'react'
-import { t } from '@/lib/hooks/useTranslations'
-import { Vehicle } from '@/types'
-import Modal from './Modal'
-import { parseIntSafe } from '@/lib/helpers'
-import { CSSProperties } from 'react'
-import { captureLocation, GeoPoint } from '@/lib/geolocation'
+import { useState, FormEvent } from 'react';
+import { t } from '@/lib/hooks/useTranslations';
+import { Vehicle } from '@/types';
+import Modal from './Modal';
+import { parseIntSafe } from '@/lib/helpers';
+import { CSSProperties } from 'react';
+import { captureLocation, GeoPoint } from '@/lib/geolocation';
 
 interface ReturnModalProps {
-  isOpen: boolean
-  onClose: () => void
-  vehicle: Vehicle | null
-  currentLang: string
+  isOpen: boolean;
+  onClose: () => void;
+  vehicle: Vehicle | null;
+  currentLang: string;
   onConfirm: (data: {
-    km: number
-    fuel: string
-    fuelPercent: number
-    location: string
-    locationSpecify: string
-    obs: string
-    coords: GeoPoint | null
-  }) => void
+    km: number;
+    fuel: string;
+    fuelPercent: number;
+    location: string;
+    locationSpecify: string;
+    obs: string;
+    coords: GeoPoint | null;
+  }) => void;
 }
 
 export default function ReturnModal({
@@ -29,13 +29,13 @@ export default function ReturnModal({
   onClose,
   vehicle,
   currentLang,
-  onConfirm
+  onConfirm,
 }: ReturnModalProps) {
-  const [km, setKm] = useState('')
-  const [fuel, setFuel] = useState('Reserva')
-  const [location, setLocation] = useState('')
-  const [locationSpecify, setLocationSpecify] = useState('')
-  const [obs, setObs] = useState('')
+  const [km, setKm] = useState('');
+  const [fuel, setFuel] = useState('Reserva');
+  const [location, setLocation] = useState('');
+  const [locationSpecify, setLocationSpecify] = useState('');
+  const [obs, setObs] = useState('');
 
   const styles: { [key: string]: CSSProperties } = {
     formGroup: {
@@ -98,25 +98,25 @@ export default function ReturnModal({
       backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
-  }
+  };
 
   const getFuelPercent = (text: string): number => {
     const map: { [key: string]: number } = {
-      'Reserva': 10,
+      Reserva: 10,
       '1/4': 25,
       '2/4': 50,
       '3/4': 75,
-      'Cheio': 100
-    }
-    return map[text] || 50
-  }
+      Cheio: 100,
+    };
+    return map[text] || 50;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!vehicle) return
+    e.preventDefault();
+    if (!vehicle) return;
 
-    const kmValue = parseIntSafe(km, -1)
-    const coords = await captureLocation()
+    const kmValue = parseIntSafe(km, -1);
+    const coords = await captureLocation();
     onConfirm({
       km: kmValue,
       fuel,
@@ -124,34 +124,35 @@ export default function ReturnModal({
       location,
       locationSpecify,
       obs,
-      coords
-    })
+      coords,
+    });
 
     // Reset form
-    setKm('')
-    setFuel('Reserva')
-    setLocation('')
-    setLocationSpecify('')
-    setObs('')
-  }
+    setKm('');
+    setFuel('Reserva');
+    setLocation('');
+    setLocationSpecify('');
+    setObs('');
+  };
 
-  if (!vehicle) return null
+  if (!vehicle) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t('modalReturn', currentLang)}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={t('modalReturn', currentLang)}>
       <form onSubmit={handleSubmit}>
         <div style={styles.formGroup}>
           <span style={styles.label}>{t('lblVehicle', currentLang)}</span>
-          <p style={{ fontWeight: 600 }}>{vehicle.tag} - {vehicle.model}</p>
+          <p style={{ fontWeight: 600 }}>
+            {vehicle.tag} - {vehicle.model}
+          </p>
         </div>
 
         <div style={styles.formGroup}>
-          <label htmlFor="rt-f1" style={styles.label}>{t('lblKm', currentLang)}</label>
-          <input id="rt-f1"
+          <label htmlFor="rt-f1" style={styles.label}>
+            {t('lblKm', currentLang)}
+          </label>
+          <input
+            id="rt-f1"
             type="number"
             value={km}
             onChange={(e) => setKm(e.target.value)}
@@ -162,8 +163,11 @@ export default function ReturnModal({
         </div>
 
         <div style={styles.formGroup}>
-          <label htmlFor="rt-f2" style={styles.label}>{t('lblFuel', currentLang)}</label>
-          <select id="rt-f2"
+          <label htmlFor="rt-f2" style={styles.label}>
+            {t('lblFuel', currentLang)}
+          </label>
+          <select
+            id="rt-f2"
             value={fuel}
             onChange={(e) => setFuel(e.target.value)}
             style={styles.select}
@@ -178,8 +182,11 @@ export default function ReturnModal({
         </div>
 
         <div style={styles.formGroup}>
-          <label htmlFor="rt-f3" style={styles.label}>{t('lblLocation', currentLang)}</label>
-          <select id="rt-f3"
+          <label htmlFor="rt-f3" style={styles.label}>
+            {t('lblLocation', currentLang)}
+          </label>
+          <select
+            id="rt-f3"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             style={styles.select}
@@ -202,8 +209,11 @@ export default function ReturnModal({
 
         {location === 'Outros' && (
           <div style={styles.formGroup}>
-            <label htmlFor="rt-f4" style={styles.label}>{t('lblSpecify', currentLang)}</label>
-            <input id="rt-f4"
+            <label htmlFor="rt-f4" style={styles.label}>
+              {t('lblSpecify', currentLang)}
+            </label>
+            <input
+              id="rt-f4"
               type="text"
               value={locationSpecify}
               onChange={(e) => setLocationSpecify(e.target.value)}
@@ -214,8 +224,11 @@ export default function ReturnModal({
         )}
 
         <div style={styles.formGroup}>
-          <label htmlFor="rt-f5" style={styles.label}>{t('lblObs', currentLang)}</label>
-          <textarea id="rt-f5"
+          <label htmlFor="rt-f5" style={styles.label}>
+            {t('lblObs', currentLang)}
+          </label>
+          <textarea
+            id="rt-f5"
             value={obs}
             onChange={(e) => setObs(e.target.value)}
             style={styles.textarea}
@@ -230,14 +243,11 @@ export default function ReturnModal({
           >
             {t('btnCancel', currentLang)}
           </button>
-          <button
-            type="submit"
-            style={{ ...styles.button, ...styles.confirmButton }}
-          >
+          <button type="submit" style={{ ...styles.button, ...styles.confirmButton }}>
             {t('btnConfirmReturn', currentLang)}
           </button>
         </div>
       </form>
     </Modal>
-  )
+  );
 }

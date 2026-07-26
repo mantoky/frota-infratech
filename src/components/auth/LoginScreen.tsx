@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import { useState, FormEvent, CSSProperties } from 'react'
-import { t } from '@/lib/hooks/useTranslations'
-import { Lock, ChevronDown, Download, Truck, AlertCircle, ArrowRight } from 'lucide-react'
-import { SEMANTIC_TEXT, SEMANTIC_SOFT } from '@/lib/statusColor'
+import { useState, FormEvent, CSSProperties } from 'react';
+import { t } from '@/lib/hooks/useTranslations';
+import { Lock, ChevronDown, Download, Truck, AlertCircle, ArrowRight } from 'lucide-react';
+import { SEMANTIC_TEXT, SEMANTIC_SOFT } from '@/lib/statusColor';
 
 interface LoginScreenProps {
-  currentLang: string
-  error: boolean
-  onEnterCommon: () => void
-  onEnterAdmin: (pin: string) => void
-  canInstall: boolean
-  onInstall: () => void
+  currentLang: string;
+  error: boolean;
+  onEnterCommon: () => void;
+  onEnterAdmin: (pin: string) => void;
+  canInstall: boolean;
+  onInstall: () => void;
 }
 
 export default function LoginScreen({
@@ -20,10 +20,10 @@ export default function LoginScreen({
   onEnterCommon,
   onEnterAdmin,
   canInstall,
-  onInstall
+  onInstall,
 }: LoginScreenProps) {
-  const [showAdminForm, setShowAdminForm] = useState(false)
-  const [pin, setPin] = useState('')
+  const [showAdminForm, setShowAdminForm] = useState(false);
+  const [pin, setPin] = useState('');
 
   const styles: { [key: string]: CSSProperties } = {
     page: {
@@ -74,15 +74,15 @@ export default function LoginScreen({
       fontWeight: 700,
       fontVariantNumeric: 'tabular-nums',
     },
-  }
+  };
 
   const handleAdminSubmit = (e: FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (pin.length >= 4) {
-      onEnterAdmin(pin)
-      setPin('')
+      onEnterAdmin(pin);
+      setPin('');
     }
-  }
+  };
 
   return (
     <div style={styles.page}>
@@ -91,7 +91,9 @@ export default function LoginScreen({
           <Truck size={26} />
         </span>
 
-        <p className="eyebrow" style={{ marginBottom: 'var(--space-1)' }}>Infratech</p>
+        <p className="eyebrow" style={{ marginBottom: 'var(--space-1)' }}>
+          Infratech
+        </p>
         <h1
           style={{
             fontSize: '1.55rem',
@@ -245,5 +247,5 @@ export default function LoginScreen({
         Uso restrito a colaboradores autorizados · Atividades são registradas
       </p>
     </div>
-  )
+  );
 }

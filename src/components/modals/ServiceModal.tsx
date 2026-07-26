@@ -1,23 +1,19 @@
-'use client'
+'use client';
 
-import { useState, FormEvent } from 'react'
-import { t } from '@/lib/hooks/useTranslations'
-import { Vehicle } from '@/types'
-import Modal from './Modal'
-import { parseIntSafe } from '@/lib/helpers'
-import { CSSProperties } from 'react'
+import { useState, FormEvent } from 'react';
+import { t } from '@/lib/hooks/useTranslations';
+import { Vehicle } from '@/types';
+import Modal from './Modal';
+import { parseIntSafe } from '@/lib/helpers';
+import { CSSProperties } from 'react';
 
 interface ServiceModalProps {
-  isOpen: boolean
-  onClose: () => void
-  vehicle: Vehicle | null
-  serviceType: 'man' | 'lav'
-  currentLang: string
-  onConfirm: (data: {
-    driver: string
-    km: number
-    obs: string
-  }) => void
+  isOpen: boolean;
+  onClose: () => void;
+  vehicle: Vehicle | null;
+  serviceType: 'man' | 'lav';
+  currentLang: string;
+  onConfirm: (data: { driver: string; km: number; obs: string }) => void;
 }
 
 export default function ServiceModal({
@@ -26,19 +22,19 @@ export default function ServiceModal({
   vehicle,
   serviceType,
   currentLang,
-  onConfirm
+  onConfirm,
 }: ServiceModalProps) {
-  const [driver, setDriver] = useState('')
-  const [km, setKm] = useState('')
-  const [obs, setObs] = useState('')
-  const [loadedKey, setLoadedKey] = useState<number | null>(null)
+  const [driver, setDriver] = useState('');
+  const [km, setKm] = useState('');
+  const [obs, setObs] = useState('');
+  const [loadedKey, setLoadedKey] = useState<number | null>(null);
 
-  const openKey = isOpen && vehicle ? vehicle.id : null
+  const openKey = isOpen && vehicle ? vehicle.id : null;
   if (openKey !== null && openKey !== loadedKey) {
-    setLoadedKey(openKey)
-    setKm(vehicle!.km.toString())
+    setLoadedKey(openKey);
+    setKm(vehicle!.km.toString());
   } else if (openKey === null && loadedKey !== null) {
-    setLoadedKey(null)
+    setLoadedKey(null);
   }
 
   const styles: { [key: string]: CSSProperties } = {
@@ -93,45 +89,47 @@ export default function ServiceModal({
       backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
-  }
+  };
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    if (!vehicle) return
+    e.preventDefault();
+    if (!vehicle) return;
 
     onConfirm({
       driver,
       km: parseIntSafe(km, vehicle.km),
-      obs
-    })
+      obs,
+    });
 
     // Reset form
-    setDriver('')
-    setKm('')
-    setObs('')
-  }
+    setDriver('');
+    setKm('');
+    setObs('');
+  };
 
-  if (!vehicle) return null
+  if (!vehicle) return null;
 
-  const title = serviceType === 'man' 
-    ? t('serviceTitleMaint', currentLang) 
-    : t('serviceTitleWash', currentLang)
+  const title =
+    serviceType === 'man'
+      ? t('serviceTitleMaint', currentLang)
+      : t('serviceTitleWash', currentLang);
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={title}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={title}>
       <form onSubmit={handleSubmit}>
         <div style={styles.formGroup}>
           <span style={styles.label}>{t('lblVehicle', currentLang)}</span>
-          <p style={{ fontWeight: 600 }}>{vehicle.tag} - {vehicle.model}</p>
+          <p style={{ fontWeight: 600 }}>
+            {vehicle.tag} - {vehicle.model}
+          </p>
         </div>
 
         <div style={styles.formGroup}>
-          <label htmlFor="sv-f1" style={styles.label}>{t('lblDriver', currentLang)}</label>
-          <input id="sv-f1"
+          <label htmlFor="sv-f1" style={styles.label}>
+            {t('lblDriver', currentLang)}
+          </label>
+          <input
+            id="sv-f1"
             type="text"
             value={driver}
             onChange={(e) => setDriver(e.target.value)}
@@ -140,8 +138,11 @@ export default function ServiceModal({
         </div>
 
         <div style={styles.formGroup}>
-          <label htmlFor="sv-f2" style={styles.label}>{t('lblKm', currentLang)}</label>
-          <input id="sv-f2"
+          <label htmlFor="sv-f2" style={styles.label}>
+            {t('lblKm', currentLang)}
+          </label>
+          <input
+            id="sv-f2"
             type="number"
             value={km}
             onChange={(e) => setKm(e.target.value)}
@@ -152,8 +153,11 @@ export default function ServiceModal({
         </div>
 
         <div style={styles.formGroup}>
-          <label htmlFor="sv-f3" style={styles.label}>{t('lblObs', currentLang)}</label>
-          <textarea id="sv-f3"
+          <label htmlFor="sv-f3" style={styles.label}>
+            {t('lblObs', currentLang)}
+          </label>
+          <textarea
+            id="sv-f3"
             value={obs}
             onChange={(e) => setObs(e.target.value)}
             style={styles.textarea}
@@ -168,14 +172,11 @@ export default function ServiceModal({
           >
             {t('btnCancel', currentLang)}
           </button>
-          <button
-            type="submit"
-            style={{ ...styles.button, ...styles.confirmButton }}
-          >
+          <button type="submit" style={{ ...styles.button, ...styles.confirmButton }}>
             {t('btnConfirmService', currentLang)}
           </button>
         </div>
       </form>
     </Modal>
-  )
+  );
 }

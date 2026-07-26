@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { ReactNode } from 'react'
+import { ReactNode } from 'react';
 
 interface EmptyStateProps {
-  icon?: ReactNode
-  title: string
-  description?: string
-  action?: ReactNode
+  icon?: ReactNode;
+  title: string;
+  description?: string;
+  action?: ReactNode;
 }
 
 /**
@@ -46,11 +46,18 @@ export default function EmptyState({ icon, title, description, action }: EmptySt
       )}
       <p style={{ margin: 0, fontWeight: 650, color: 'var(--text-primary)' }}>{title}</p>
       {description && (
-        <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-secondary)', maxWidth: '42ch' }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: '0.88rem',
+            color: 'var(--text-secondary)',
+            maxWidth: '42ch',
+          }}
+        >
           {description}
         </p>
       )}
       {action && <div style={{ marginTop: 'var(--space-3)' }}>{action}</div>}
     </div>
-  )
+  );
 }

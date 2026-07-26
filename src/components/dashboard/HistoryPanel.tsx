@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import { t } from '@/lib/hooks/useTranslations'
-import { HistoryItem } from '@/types'
-import { CSSProperties, useEffect } from 'react'
-import { History, Inbox, Download, X } from 'lucide-react'
-import { SEMANTIC_COLORS } from '@/lib/statusColor'
+import { t } from '@/lib/hooks/useTranslations';
+import { HistoryItem } from '@/types';
+import { CSSProperties, useEffect } from 'react';
+import { History, Inbox, Download, X } from 'lucide-react';
+import { SEMANTIC_COLORS } from '@/lib/statusColor';
 
 interface HistoryPanelProps {
-  isOpen: boolean
-  onClose: () => void
-  history: HistoryItem[]
-  currentLang: string
-  onDownloadPdf: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  history: HistoryItem[];
+  currentLang: string;
+  onDownloadPdf: () => void;
 }
 
 export default function HistoryPanel({
@@ -19,16 +19,18 @@ export default function HistoryPanel({
   onClose,
   history,
   currentLang,
-  onDownloadPdf
+  onDownloadPdf,
 }: HistoryPanelProps) {
   // O painel cobre a tela inteira com um overlay, entao precisa fechar com Esc
   // como qualquer dialogo - antes so fechava clicando fora ou no X.
   useEffect(() => {
-    if (!isOpen) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [isOpen, onClose])
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
 
   const styles: { [key: string]: CSSProperties } = {
     overlay: {
@@ -136,31 +138,31 @@ export default function HistoryPanel({
       backgroundColor: SEMANTIC_COLORS.alerta,
       color: '#fff',
     },
-  }
+  };
 
   const getActionBadge = (action: string) => {
-    const actionLower = action.toLowerCase()
+    const actionLower = action.toLowerCase();
     if (actionLower.includes('retirada')) {
-      return { ...styles.badge, ...styles.withdrawBadge }
+      return { ...styles.badge, ...styles.withdrawBadge };
     } else if (actionLower.includes('devolucao')) {
-      return { ...styles.badge, ...styles.returnBadge }
+      return { ...styles.badge, ...styles.returnBadge };
     } else if (actionLower.includes('manutencao')) {
-      return { ...styles.badge, ...styles.maintenanceBadge }
+      return { ...styles.badge, ...styles.maintenanceBadge };
     } else if (actionLower.includes('lavador')) {
-      return { ...styles.badge, ...styles.washBadge }
+      return { ...styles.badge, ...styles.washBadge };
     }
-    return styles.badge
-  }
+    return styles.badge;
+  };
 
-  const sortedHistory = [...history].reverse()
+  const sortedHistory = [...history].reverse();
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div
         style={styles.panel}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="history-panel-title"
@@ -174,11 +176,25 @@ export default function HistoryPanel({
             <X size={20} />
           </button>
         </div>
-        
+
         <div style={styles.content}>
           <button
             onClick={onDownloadPdf}
-            style={{ backgroundColor: 'var(--brand-primary)', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginBottom: '20px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            style={{
+              backgroundColor: 'var(--brand-primary)',
+              color: 'white',
+              padding: '12px 20px',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              marginBottom: '20px',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
           >
             <Download size={16} />
             {t('btnDownload', currentLang)}
@@ -209,9 +225,7 @@ export default function HistoryPanel({
                     <td style={styles.td}>{item.vehicle}</td>
                     <td style={styles.td}>{item.driver || '-'}</td>
                     <td style={styles.td}>
-                      <span style={getActionBadge(item.action)}>
-                        {item.action}
-                      </span>
+                      <span style={getActionBadge(item.action)}>{item.action}</span>
                     </td>
                     <td style={styles.td}>{item.km.toLocaleString()}</td>
                   </tr>
@@ -222,5 +236,5 @@ export default function HistoryPanel({
         </div>
       </div>
     </div>
-  )
+  );
 }

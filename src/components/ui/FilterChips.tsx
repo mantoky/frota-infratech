@@ -1,20 +1,20 @@
-'use client'
+'use client';
 
-import { SemanticStatus, SEMANTIC_SOFT, SEMANTIC_TEXT } from '@/lib/statusColor'
+import { SemanticStatus, SEMANTIC_SOFT, SEMANTIC_TEXT } from '@/lib/statusColor';
 
 export interface FilterChipOption<T extends string> {
-  value: T
-  label: string
-  count?: number
-  tone?: SemanticStatus | 'neutral'
+  value: T;
+  label: string;
+  count?: number;
+  tone?: SemanticStatus | 'neutral';
 }
 
 interface FilterChipsProps<T extends string> {
-  options: FilterChipOption<T>[]
-  value: T
-  onChange: (value: T) => void
+  options: FilterChipOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
   /** Rotulo do grupo para leitores de tela. */
-  ariaLabel: string
+  ariaLabel: string;
 }
 
 /**
@@ -40,11 +40,11 @@ export default function FilterChips<T extends string>({
         paddingBottom: 2,
       }}
     >
-      {options.map(option => {
-        const selected = option.value === value
-        const tone = option.tone ?? 'neutral'
-        const accent = tone === 'neutral' ? 'var(--brand-primary)' : SEMANTIC_TEXT[tone]
-        const accentSoft = tone === 'neutral' ? 'var(--brand-primary-soft)' : SEMANTIC_SOFT[tone]
+      {options.map((option) => {
+        const selected = option.value === value;
+        const tone = option.tone ?? 'neutral';
+        const accent = tone === 'neutral' ? 'var(--brand-primary)' : SEMANTIC_TEXT[tone];
+        const accentSoft = tone === 'neutral' ? 'var(--brand-primary-soft)' : SEMANTIC_SOFT[tone];
 
         return (
           <button
@@ -88,8 +88,8 @@ export default function FilterChips<T extends string>({
               </span>
             )}
           </button>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

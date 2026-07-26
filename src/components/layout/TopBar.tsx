@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import { CSSProperties } from 'react'
-import { Menu, Settings, Plus, Moon, Sun, ShieldCheck, User } from 'lucide-react'
-import { PageType } from '@/types'
-import { t } from '@/lib/hooks/useTranslations'
+import { CSSProperties } from 'react';
+import { Menu, Settings, Plus, Moon, Sun, ShieldCheck, User } from 'lucide-react';
+import { PageType } from '@/types';
+import { t } from '@/lib/hooks/useTranslations';
 
 interface TopBarProps {
-  sidebarOpen: boolean
-  currentLang: string
-  isAdmin: boolean
-  theme: string
-  onToggleSidebar: () => void
-  onToggleTheme: () => void
-  onNavigate: (page: PageType) => void
-  onAddVehicle: () => void
+  sidebarOpen: boolean;
+  currentLang: string;
+  isAdmin: boolean;
+  theme: string;
+  onToggleSidebar: () => void;
+  onToggleTheme: () => void;
+  onNavigate: (page: PageType) => void;
+  onAddVehicle: () => void;
 }
 
 export default function TopBar({
@@ -24,7 +24,7 @@ export default function TopBar({
   onToggleSidebar,
   onToggleTheme,
   onNavigate,
-  onAddVehicle
+  onAddVehicle,
 }: TopBarProps) {
   const styles: { [key: string]: CSSProperties } = {
     topBar: {
@@ -54,7 +54,7 @@ export default function TopBar({
       cursor: 'pointer',
       transition: 'all var(--duration-fast) var(--ease-out)',
     },
-  }
+  };
 
   return (
     <header style={styles.topBar}>
@@ -91,7 +91,12 @@ export default function TopBar({
           </p>
           <p
             className="topbar__subtitle"
-            style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.02em' }}
+            style={{
+              margin: 0,
+              fontSize: '0.72rem',
+              color: 'var(--text-muted)',
+              letterSpacing: '0.02em',
+            }}
           >
             Infratech · Operação corporativa
           </p>
@@ -147,5 +152,5 @@ export default function TopBar({
         )}
       </div>
     </header>
-  )
+  );
 }

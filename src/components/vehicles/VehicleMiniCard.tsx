@@ -1,26 +1,29 @@
-'use client'
+'use client';
 
-import { t } from '@/lib/hooks/useTranslations'
-import { Vehicle } from '@/types'
-import { CSSProperties } from 'react'
-import { Lock, User } from 'lucide-react'
+import { t } from '@/lib/hooks/useTranslations';
+import { Vehicle } from '@/types';
+import { CSSProperties } from 'react';
+import { Lock, User } from 'lucide-react';
 import {
-  SEMANTIC_COLORS, getVehicleSemanticStatus, getStatusLabelKey, getFuelSemanticStatus
-} from '@/lib/statusColor'
-import Badge from '@/components/ui/Badge'
-import Meter from '@/components/ui/Meter'
-import { getVehicleImage } from '@/lib/vehicleImage'
+  SEMANTIC_COLORS,
+  getVehicleSemanticStatus,
+  getStatusLabelKey,
+  getFuelSemanticStatus,
+} from '@/lib/statusColor';
+import Badge from '@/components/ui/Badge';
+import Meter from '@/components/ui/Meter';
+import { getVehicleImage } from '@/lib/vehicleImage';
 
 interface VehicleMiniCardProps {
-  vehicle: Vehicle
-  currentLang: string
-  onClick: () => void
+  vehicle: Vehicle;
+  currentLang: string;
+  onClick: () => void;
 }
 
 export default function VehicleMiniCard({ vehicle, currentLang, onClick }: VehicleMiniCardProps) {
-  const semantic = getVehicleSemanticStatus(vehicle)
-  const fuelSemantic = getFuelSemanticStatus(vehicle.fuel)
-  const statusLabel = t(getStatusLabelKey(vehicle), currentLang)
+  const semantic = getVehicleSemanticStatus(vehicle);
+  const fuelSemantic = getFuelSemanticStatus(vehicle.fuel);
+  const statusLabel = t(getStatusLabelKey(vehicle), currentLang);
 
   const styles: { [key: string]: CSSProperties } = {
     card: {
@@ -64,7 +67,7 @@ export default function VehicleMiniCard({ vehicle, currentLang, onClick }: Vehic
       overflow: 'hidden',
       textOverflow: 'ellipsis',
     },
-  }
+  };
 
   return (
     <button
@@ -81,11 +84,17 @@ export default function VehicleMiniCard({ vehicle, currentLang, onClick }: Vehic
           <p style={styles.tag}>{vehicle.tag}</p>
           <p style={styles.model}>{vehicle.model}</p>
         </div>
-        {vehicle.blocked && <Lock size={14} style={{ color: 'var(--state-danger)', flexShrink: 0 }} />}
+        {vehicle.blocked && (
+          <Lock size={14} style={{ color: 'var(--state-danger)', flexShrink: 0 }} />
+        )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-        <Badge tone={semantic} variant="soft" size="sm">{statusLabel}</Badge>
+      <div
+        style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}
+      >
+        <Badge tone={semantic} variant="soft" size="sm">
+          {statusLabel}
+        </Badge>
       </div>
 
       {/* O condutor so aparece quando existe: um "Motorista: —" fixo em toda
@@ -118,5 +127,5 @@ export default function VehicleMiniCard({ vehicle, currentLang, onClick }: Vehic
         />
       </div>
     </button>
-  )
+  );
 }

@@ -1,29 +1,39 @@
-'use client'
+'use client';
 
-import React, { ReactNode } from 'react'
-import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { XIcon } from 'lucide-react'
+import React, { ReactNode } from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { XIcon } from 'lucide-react';
 
 interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title: string
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
   /** Texto anunciado por leitor de tela logo apos o titulo, explicando o que
    *  o dialogo faz. Sem ele o Radix emite aviso e o usuario de leitor de tela
    *  ouve so o titulo, sem contexto do que a tela pede. */
-  description?: string
-  children: ReactNode
-  maxWidth?: string
+  description?: string;
+  children: ReactNode;
+  maxWidth?: string;
 }
 
-export default function Modal({ isOpen, onClose, title, description, children, maxWidth = '600px' }: ModalProps) {
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  description,
+  children,
+  maxWidth = '600px',
+}: ModalProps) {
   return (
-    <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
+    <DialogPrimitive.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogPrimitive.Portal>
         {/* Backdrop Overlay with smooth blur and fade */}
-        <DialogPrimitive.Overlay
-          className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm transition-opacity data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
-        />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm transition-opacity data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
 
         {/* Modal Container:
             - Mobile (<640px): Bottom Sheet with rounded-t-2xl, max-h-[88vh], drag handle, slide-in-from-bottom
@@ -41,7 +51,10 @@ export default function Modal({ isOpen, onClose, title, description, children, m
             sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:fade-out-0 sm:data-[state=open]:fade-in-0"
         >
           {/* Mobile Drag Handle Pill */}
-          <div className="sm:hidden w-12 h-1.5 bg-[var(--text-secondary)] rounded-full mx-auto mb-3 shrink-0 opacity-40" aria-hidden="true" />
+          <div
+            className="sm:hidden w-12 h-1.5 bg-[var(--text-secondary)] rounded-full mx-auto mb-3 shrink-0 opacity-40"
+            aria-hidden="true"
+          />
 
           {/* Modal Header */}
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-[var(--border)] shrink-0">
@@ -74,5 +87,5 @@ export default function Modal({ isOpen, onClose, title, description, children, m
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
-  )
+  );
 }

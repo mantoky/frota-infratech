@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import { ReactNode } from 'react'
-import { SemanticStatus, SEMANTIC_SOFT, SEMANTIC_TEXT } from '@/lib/statusColor'
+import { ReactNode } from 'react';
+import { SemanticStatus, SEMANTIC_SOFT, SEMANTIC_TEXT } from '@/lib/statusColor';
 
 interface StatCardProps {
-  label: string
-  value: ReactNode
-  hint?: string
-  icon?: ReactNode
-  tone?: SemanticStatus | 'neutral'
+  label: string;
+  value: ReactNode;
+  hint?: string;
+  icon?: ReactNode;
+  tone?: SemanticStatus | 'neutral';
   /** Torna o card clicavel (usado como filtro no Dashboard). */
-  onClick?: () => void
-  active?: boolean
+  onClick?: () => void;
+  active?: boolean;
 }
 
 /**
@@ -28,8 +28,8 @@ export default function StatCard({
   onClick,
   active = false,
 }: StatCardProps) {
-  const accent = tone === 'neutral' ? 'var(--brand-primary)' : SEMANTIC_TEXT[tone]
-  const accentSoft = tone === 'neutral' ? 'var(--brand-primary-soft)' : SEMANTIC_SOFT[tone]
+  const accent = tone === 'neutral' ? 'var(--brand-primary)' : SEMANTIC_TEXT[tone];
+  const accentSoft = tone === 'neutral' ? 'var(--brand-primary-soft)' : SEMANTIC_SOFT[tone];
 
   const content = (
     <>
@@ -42,7 +42,9 @@ export default function StatCard({
           marginBottom: 'var(--space-3)',
         }}
       >
-        <span className="eyebrow" style={{ minWidth: 0 }}>{label}</span>
+        <span className="eyebrow" style={{ minWidth: 0 }}>
+          {label}
+        </span>
         {icon && (
           <span
             style={{
@@ -74,24 +76,26 @@ export default function StatCard({
         {value}
       </div>
       {hint && (
-        <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{hint}</p>
+        <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+          {hint}
+        </p>
       )}
     </>
-  )
+  );
 
   const baseStyle = {
     padding: 'var(--space-4) var(--space-5)',
     textAlign: 'left' as const,
     width: '100%',
     borderTop: `3px solid ${active ? accent : 'transparent'}`,
-  }
+  };
 
   if (!onClick) {
     return (
       <div className="surface" style={baseStyle}>
         {content}
       </div>
-    )
+    );
   }
 
   return (
@@ -104,5 +108,5 @@ export default function StatCard({
     >
       {content}
     </button>
-  )
+  );
 }

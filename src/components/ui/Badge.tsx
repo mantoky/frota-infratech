@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { ReactNode } from 'react'
-import { SemanticStatus, SEMANTIC_COLORS, SEMANTIC_SOFT, SEMANTIC_TEXT } from '@/lib/statusColor'
+import { ReactNode } from 'react';
+import { SemanticStatus, SEMANTIC_COLORS, SEMANTIC_SOFT, SEMANTIC_TEXT } from '@/lib/statusColor';
 
 interface BadgeProps {
-  children: ReactNode
-  tone?: SemanticStatus | 'neutral'
+  children: ReactNode;
+  tone?: SemanticStatus | 'neutral';
   /** 'solid' = fundo cheio + texto branco. 'soft' = fundo tingido + texto colorido. */
-  variant?: 'solid' | 'soft'
-  icon?: ReactNode
-  size?: 'sm' | 'md'
+  variant?: 'solid' | 'soft';
+  icon?: ReactNode;
+  size?: 'sm' | 'md';
 }
 
 export default function Badge({
@@ -19,7 +19,7 @@ export default function Badge({
   icon,
   size = 'md',
 }: BadgeProps) {
-  const isNeutral = tone === 'neutral'
+  const isNeutral = tone === 'neutral';
 
   const palette = isNeutral
     ? variant === 'solid'
@@ -27,7 +27,7 @@ export default function Badge({
       : { background: 'var(--bg-inset)', color: 'var(--text-secondary)' }
     : variant === 'solid'
       ? { background: SEMANTIC_COLORS[tone], color: '#fff' }
-      : { background: SEMANTIC_SOFT[tone], color: SEMANTIC_TEXT[tone] }
+      : { background: SEMANTIC_SOFT[tone], color: SEMANTIC_TEXT[tone] };
 
   return (
     <span
@@ -49,5 +49,5 @@ export default function Badge({
       {icon}
       {children}
     </span>
-  )
+  );
 }

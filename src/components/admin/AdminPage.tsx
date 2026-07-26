@@ -1,22 +1,22 @@
-'use client'
+'use client';
 
-import { useState, CSSProperties } from 'react'
-import { t } from '@/lib/hooks/useTranslations'
-import { Vehicle, ChecklistField } from '@/types'
-import { SEMANTIC_COLORS, getVehicleSemanticStatus, getStatusLabelKey } from '@/lib/statusColor'
-import { Search, Pencil, Plus, X, UserPlus } from 'lucide-react'
-import ChecklistBuilder from '@/components/checklist/ChecklistBuilder'
-import PageHeader from '@/components/ui/PageHeader'
+import { useState, CSSProperties } from 'react';
+import { t } from '@/lib/hooks/useTranslations';
+import { Vehicle, ChecklistField } from '@/types';
+import { SEMANTIC_COLORS, getVehicleSemanticStatus, getStatusLabelKey } from '@/lib/statusColor';
+import { Search, Pencil, Plus, X, UserPlus } from 'lucide-react';
+import ChecklistBuilder from '@/components/checklist/ChecklistBuilder';
+import PageHeader from '@/components/ui/PageHeader';
 
 interface AdminPageProps {
-  vehicles: Vehicle[]
-  drivers: string[]
-  currentLang: string
-  checklistFields: ChecklistField[]
-  onManage: (vehicle: Vehicle) => void
-  onAddVehicle: () => void
-  onSaveDrivers: (drivers: string[]) => void
-  onSaveChecklistFields: (fields: ChecklistField[]) => void
+  vehicles: Vehicle[];
+  drivers: string[];
+  currentLang: string;
+  checklistFields: ChecklistField[];
+  onManage: (vehicle: Vehicle) => void;
+  onAddVehicle: () => void;
+  onSaveDrivers: (drivers: string[]) => void;
+  onSaveChecklistFields: (fields: ChecklistField[]) => void;
 }
 
 export default function AdminPage({
@@ -27,10 +27,10 @@ export default function AdminPage({
   onManage,
   onAddVehicle,
   onSaveDrivers,
-  onSaveChecklistFields
+  onSaveChecklistFields,
 }: AdminPageProps) {
-  const [search, setSearch] = useState('')
-  const [newDriver, setNewDriver] = useState('')
+  const [search, setSearch] = useState('');
+  const [newDriver, setNewDriver] = useState('');
 
   const styles: { [key: string]: CSSProperties } = {
     container: {
@@ -138,34 +138,36 @@ export default function AdminPage({
       alignItems: 'center',
       gap: '8px',
     },
-  }
+  };
 
   const getTagNumber = (tag: string) => {
-    const match = tag.match(/(\d+)/)
-    return match ? parseInt(match[1], 10) : 0
-  }
+    const match = tag.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
 
-  const query = search.trim().toLowerCase()
+  const query = search.trim().toLowerCase();
   const filteredVehicles = [...vehicles]
     .sort((a, b) => getTagNumber(a.tag) - getTagNumber(b.tag))
-    .filter(v => {
-      if (!query) return true
-      return v.tag.toLowerCase().includes(query) ||
+    .filter((v) => {
+      if (!query) return true;
+      return (
+        v.tag.toLowerCase().includes(query) ||
         v.plate.toLowerCase().includes(query) ||
         v.model.toLowerCase().includes(query) ||
         (v.driver || '').toLowerCase().includes(query)
-    })
+      );
+    });
 
   const handleAddDriver = () => {
-    const name = newDriver.trim()
-    if (!name || drivers.includes(name)) return
-    onSaveDrivers([...drivers, name])
-    setNewDriver('')
-  }
+    const name = newDriver.trim();
+    if (!name || drivers.includes(name)) return;
+    onSaveDrivers([...drivers, name]);
+    setNewDriver('');
+  };
 
   const handleRemoveDriver = (name: string) => {
-    onSaveDrivers(drivers.filter(d => d !== name))
-  }
+    onSaveDrivers(drivers.filter((d) => d !== name));
+  };
 
   return (
     <div className="page-shell">
@@ -189,7 +191,16 @@ export default function AdminPage({
         </h2>
 
         <div style={styles.searchBar}>
-          <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+          <Search
+            size={18}
+            style={{
+              position: 'absolute',
+              left: '14px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--text-secondary)',
+            }}
+          />
           <input
             type="text"
             value={search}
@@ -215,8 +226,8 @@ export default function AdminPage({
               </tr>
             </thead>
             <tbody>
-              {filteredVehicles.map(vehicle => {
-                const semantic = getVehicleSemanticStatus(vehicle)
+              {filteredVehicles.map((vehicle) => {
+                const semantic = getVehicleSemanticStatus(vehicle);
                 return (
                   <tr key={vehicle.id}>
                     <td style={{ ...styles.td, fontWeight: 700 }}>{vehicle.tag}</td>
@@ -228,7 +239,9 @@ export default function AdminPage({
                       </span>
                     </td>
                     <td style={styles.td}>{vehicle.km.toLocaleString()} km</td>
-                    <td style={styles.td}>{vehicle.maintenance ? vehicle.maintenance.toLocaleString() + ' km' : '-'}</td>
+                    <td style={styles.td}>
+                      {vehicle.maintenance ? vehicle.maintenance.toLocaleString() + ' km' : '-'}
+                    </td>
                     <td style={styles.td}>{vehicle.driver || t('none', currentLang)}</td>
                     <td style={styles.td}>{vehicle.lastLocation || '-'}</td>
                     <td style={styles.td}>
@@ -237,7 +250,7 @@ export default function AdminPage({
                       </button>
                     </td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </table>
@@ -245,26 +258,32 @@ export default function AdminPage({
       </div>
 
       <div style={{ marginBottom: '25px' }}>
-        <ChecklistBuilder
-          fields={checklistFields}
-          isAdmin
-          onSaveFields={onSaveChecklistFields}
-        />
+        <ChecklistBuilder fields={checklistFields} isAdmin onSaveFields={onSaveChecklistFields} />
       </div>
 
       {/* Drivers management */}
       <div style={styles.card}>
-        <h3 style={{ color: 'var(--text-primary)', marginBottom: '5px' }}>{t('adminDriversTitle', currentLang)}</h3>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '15px' }}>{t('adminDriversDesc', currentLang)}</p>
+        <h3 style={{ color: 'var(--text-primary)', marginBottom: '5px' }}>
+          {t('adminDriversTitle', currentLang)}
+        </h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '15px' }}>
+          {t('adminDriversDesc', currentLang)}
+        </p>
 
         {drivers.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '15px 0' }}>{t('adminNoDrivers', currentLang)}</p>
+          <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '15px 0' }}>
+            {t('adminNoDrivers', currentLang)}
+          </p>
         ) : (
           <div style={{ marginBottom: '15px' }}>
-            {drivers.map(name => (
+            {drivers.map((name) => (
               <div key={name} style={styles.driverRow}>
                 <span>{name}</span>
-                <button onClick={() => handleRemoveDriver(name)} style={styles.removeDriverButton} aria-label={t('btnRemove', currentLang)}>
+                <button
+                  onClick={() => handleRemoveDriver(name)}
+                  style={styles.removeDriverButton}
+                  aria-label={t('btnRemove', currentLang)}
+                >
                   <X size={14} />
                 </button>
               </div>
@@ -287,5 +306,5 @@ export default function AdminPage({
         </div>
       </div>
     </div>
-  )
+  );
 }

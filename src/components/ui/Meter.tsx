@@ -1,20 +1,20 @@
-'use client'
+'use client';
 
-import { SemanticStatus, SEMANTIC_COLORS } from '@/lib/statusColor'
+import { SemanticStatus, SEMANTIC_COLORS } from '@/lib/statusColor';
 
 interface MeterProps {
   /** 0 a 100. Valores fora da faixa sao clampeados. */
-  value: number
-  tone: SemanticStatus
-  label?: string
+  value: number;
+  tone: SemanticStatus;
+  label?: string;
   /** Texto exibido a direita do label. Quando ausente, mostra o percentual.
    *  Existe porque o combustivel e cadastrado em fracoes ("Cheio", "3/4") e
    *  exibir "3/4" e mais fiel ao que o motorista viu no painel do que o 75%
    *  que a barra usa internamente. */
-  valueLabel?: string
+  valueLabel?: string;
   /** Rotulo acessivel - obrigatorio quando nao ha label visivel. */
-  ariaLabel?: string
-  size?: 'sm' | 'md'
+  ariaLabel?: string;
+  size?: 'sm' | 'md';
 }
 
 /**
@@ -23,9 +23,16 @@ interface MeterProps {
  * nada a quem nao ve a cor - que e justamente o publico que mais precisa
  * do numero.
  */
-export default function Meter({ value, tone, label, valueLabel, ariaLabel, size = 'md' }: MeterProps) {
-  const clamped = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0))
-  const height = size === 'sm' ? 5 : 8
+export default function Meter({
+  value,
+  tone,
+  label,
+  valueLabel,
+  ariaLabel,
+  size = 'md',
+}: MeterProps) {
+  const clamped = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+  const height = size === 'sm' ? 5 : 8;
 
   return (
     <div>
@@ -71,5 +78,5 @@ export default function Meter({ value, tone, label, valueLabel, ariaLabel, size 
         />
       </div>
     </div>
-  )
+  );
 }

@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { ReactNode } from 'react'
-import { SemanticStatus, SEMANTIC_SOFT, SEMANTIC_TEXT } from '@/lib/statusColor'
+import { ReactNode } from 'react';
+import { SemanticStatus, SEMANTIC_SOFT, SEMANTIC_TEXT } from '@/lib/statusColor';
 
 interface AlertBannerProps {
-  tone: SemanticStatus
-  title: string
-  description?: string
-  icon?: ReactNode
-  action?: ReactNode
+  tone: SemanticStatus;
+  title: string;
+  description?: string;
+  icon?: ReactNode;
+  action?: ReactNode;
 }
 
 /**
@@ -33,7 +33,9 @@ export default function AlertBanner({ tone, title, description, icon, action }: 
         color: 'var(--text-primary)',
       }}
     >
-      {icon && <span style={{ color: SEMANTIC_TEXT[tone], display: 'flex', flexShrink: 0 }}>{icon}</span>}
+      {icon && (
+        <span style={{ color: SEMANTIC_TEXT[tone], display: 'flex', flexShrink: 0 }}>{icon}</span>
+      )}
       <div style={{ minWidth: 0, flex: 1 }}>
         <p style={{ margin: 0, fontWeight: 650, fontSize: '0.9rem' }}>{title}</p>
         {description && (
@@ -44,5 +46,5 @@ export default function AlertBanner({ tone, title, description, icon, action }: 
       </div>
       {action}
     </div>
-  )
+  );
 }

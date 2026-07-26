@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
-import PwaRegister from "@/components/PwaRegister";
+import type { Metadata } from 'next';
+import localFont from 'next/font/local';
+import './globals.css';
+import { Toaster } from '@/components/ui/toaster';
+import PwaRegister from '@/components/PwaRegister';
 
 // Inter auto-hospedada em vez de next/font/google.
 //
@@ -20,44 +20,44 @@ import PwaRegister from "@/components/PwaRegister";
 // carregamento, e nenhum dado de usuario indo para servidores do Google -
 // relevante para o cenario corporativo e para LGPD.
 const inter = localFont({
-  src: "./fonts/inter-latin-variable.woff2",
-  variable: "--font-inter",
-  weight: "100 900",
-  display: "swap",
+  src: './fonts/inter-latin-variable.woff2',
+  variable: '--font-inter',
+  weight: '100 900',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "Gestão de Frota Infratech",
-  description: "Sistema de Gestão de Frota da Infratech.",
-  keywords: ["Gestão de Frota", "Infratech", "Veículos"],
-  authors: [{ name: "Infratech Team" }],
-  manifest: "/manifest.webmanifest",
+  title: 'Gestão de Frota Infratech',
+  description: 'Sistema de Gestão de Frota da Infratech.',
+  keywords: ['Gestão de Frota', 'Infratech', 'Veículos'],
+  authors: [{ name: 'Infratech Team' }],
+  manifest: '/manifest.webmanifest',
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: "/apple-touch-icon.png",
+    apple: '/apple-touch-icon.png',
   },
   openGraph: {
-    title: "Gestão de Frota Infratech",
-    description: "Sistema de Gestão de Frota",
-    type: "website",
+    title: 'Gestão de Frota Infratech',
+    description: 'Sistema de Gestão de Frota',
+    type: 'website',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Gestão de Frota Infratech",
-    description: "Sistema de Gestão de Frota",
+    card: 'summary_large_image',
+    title: 'Gestão de Frota Infratech',
+    description: 'Sistema de Gestão de Frota',
   },
 };
 
 export const viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#00594c",
+  themeColor: '#00594c',
 };
 
 export default function RootLayout({
@@ -67,9 +67,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} antialiased bg-background text-foreground`}
-      >
+      <body className={`${inter.variable} antialiased bg-background text-foreground`}>
         {children}
         <Toaster />
         <PwaRegister />

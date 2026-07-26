@@ -1,32 +1,27 @@
-'use client'
+'use client';
 
-import { useState, FormEvent } from 'react'
-import { t } from '@/lib/hooks/useTranslations'
-import { Vehicle } from '@/types'
-import Modal from './Modal'
-import { parseIntSafe } from '@/lib/helpers'
-import { CSSProperties } from 'react'
+import { useState, FormEvent } from 'react';
+import { t } from '@/lib/hooks/useTranslations';
+import { Vehicle } from '@/types';
+import Modal from './Modal';
+import { parseIntSafe } from '@/lib/helpers';
+import { CSSProperties } from 'react';
 
 interface AddModalProps {
-  isOpen: boolean
-  onClose: () => void
-  currentLang: string
-  onAdd: (vehicle: Partial<Vehicle>) => void
+  isOpen: boolean;
+  onClose: () => void;
+  currentLang: string;
+  onAdd: (vehicle: Partial<Vehicle>) => void;
 }
 
-export default function AddModal({
-  isOpen,
-  onClose,
-  currentLang,
-  onAdd
-}: AddModalProps) {
-  const [tag, setTag] = useState('')
-  const [plate, setPlate] = useState('')
-  const [model, setModel] = useState('')
-  const [status, setStatus] = useState<'disp' | 'uso' | 'lav' | 'man'>('disp')
-  const [km, setKm] = useState('0')
-  const [fuel, setFuel] = useState('Reserva')
-  const [maintenance, setMaintenance] = useState('')
+export default function AddModal({ isOpen, onClose, currentLang, onAdd }: AddModalProps) {
+  const [tag, setTag] = useState('');
+  const [plate, setPlate] = useState('');
+  const [model, setModel] = useState('');
+  const [status, setStatus] = useState<'disp' | 'uso' | 'lav' | 'man'>('disp');
+  const [km, setKm] = useState('0');
+  const [fuel, setFuel] = useState('Reserva');
+  const [maintenance, setMaintenance] = useState('');
 
   const styles: { [key: string]: CSSProperties } = {
     formGroup: {
@@ -83,21 +78,21 @@ export default function AddModal({
       backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
-  }
+  };
 
   const getFuelPercent = (text: string): number => {
     const map: { [key: string]: number } = {
-      'Reserva': 10,
+      Reserva: 10,
       '1/4': 25,
       '2/4': 50,
       '3/4': 75,
-      'Cheio': 100
-    }
-    return map[text] || 50
-  }
+      Cheio: 100,
+    };
+    return map[text] || 50;
+  };
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     onAdd({
       id: Date.now(),
@@ -111,31 +106,29 @@ export default function AddModal({
       maintenance: parseIntSafe(maintenance),
       driver: '',
       lastLocation: '',
-      obs: ''
-    })
+      obs: '',
+    });
 
     // Reset form
-    setTag('')
-    setPlate('')
-    setModel('')
-    setStatus('disp')
-    setKm('0')
-    setFuel('Reserva')
-    setMaintenance('')
-  }
+    setTag('');
+    setPlate('');
+    setModel('');
+    setStatus('disp');
+    setKm('0');
+    setFuel('Reserva');
+    setMaintenance('');
+  };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t('modalAdd', currentLang)}
-      maxWidth="600px"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={t('modalAdd', currentLang)} maxWidth="600px">
       <form onSubmit={handleSubmit}>
         <div style={styles.grid}>
           <div style={styles.formGroup}>
-            <label htmlFor="ad-f1" style={styles.label}>{t('lblTag', currentLang)}</label>
-            <input id="ad-f1"
+            <label htmlFor="ad-f1" style={styles.label}>
+              {t('lblTag', currentLang)}
+            </label>
+            <input
+              id="ad-f1"
               type="text"
               value={tag}
               onChange={(e) => setTag(e.target.value)}
@@ -146,8 +139,11 @@ export default function AddModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="ad-f2" style={styles.label}>{t('lblPlate', currentLang)}</label>
-            <input id="ad-f2"
+            <label htmlFor="ad-f2" style={styles.label}>
+              {t('lblPlate', currentLang)}
+            </label>
+            <input
+              id="ad-f2"
               type="text"
               value={plate}
               onChange={(e) => setPlate(e.target.value)}
@@ -158,8 +154,11 @@ export default function AddModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="ad-f3" style={styles.label}>{t('lblModel', currentLang)}</label>
-            <input id="ad-f3"
+            <label htmlFor="ad-f3" style={styles.label}>
+              {t('lblModel', currentLang)}
+            </label>
+            <input
+              id="ad-f3"
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
@@ -170,8 +169,11 @@ export default function AddModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="ad-f4" style={styles.label}>{t('lblStatus', currentLang)}</label>
-            <select id="ad-f4"
+            <label htmlFor="ad-f4" style={styles.label}>
+              {t('lblStatus', currentLang)}
+            </label>
+            <select
+              id="ad-f4"
               value={status}
               onChange={(e) => setStatus(e.target.value as 'disp' | 'uso' | 'lav' | 'man')}
               style={styles.select}
@@ -185,8 +187,11 @@ export default function AddModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="ad-f5" style={styles.label}>{t('lblKm', currentLang)}</label>
-            <input id="ad-f5"
+            <label htmlFor="ad-f5" style={styles.label}>
+              {t('lblKm', currentLang)}
+            </label>
+            <input
+              id="ad-f5"
               type="number"
               value={km}
               onChange={(e) => setKm(e.target.value)}
@@ -197,8 +202,11 @@ export default function AddModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="ad-f6" style={styles.label}>{t('lblFuel', currentLang)}</label>
-            <select id="ad-f6"
+            <label htmlFor="ad-f6" style={styles.label}>
+              {t('lblFuel', currentLang)}
+            </label>
+            <select
+              id="ad-f6"
               value={fuel}
               onChange={(e) => setFuel(e.target.value)}
               style={styles.select}
@@ -213,8 +221,11 @@ export default function AddModal({
           </div>
 
           <div style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
-            <label htmlFor="ad-f7" style={styles.label}>{t('lblNextMaint', currentLang)}</label>
-            <input id="ad-f7"
+            <label htmlFor="ad-f7" style={styles.label}>
+              {t('lblNextMaint', currentLang)}
+            </label>
+            <input
+              id="ad-f7"
               type="number"
               value={maintenance}
               onChange={(e) => setMaintenance(e.target.value)}
@@ -233,14 +244,11 @@ export default function AddModal({
           >
             {t('btnCancel', currentLang)}
           </button>
-          <button
-            type="submit"
-            style={{ ...styles.button, ...styles.confirmButton }}
-          >
+          <button type="submit" style={{ ...styles.button, ...styles.confirmButton }}>
             {t('btnAdd', currentLang)}
           </button>
         </div>
       </form>
     </Modal>
-  )
+  );
 }
