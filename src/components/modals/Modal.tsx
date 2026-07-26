@@ -8,11 +8,15 @@ interface ModalProps {
   isOpen: boolean
   onClose: () => void
   title: string
+  /** Texto anunciado por leitor de tela logo apos o titulo, explicando o que
+   *  o dialogo faz. Sem ele o Radix emite aviso e o usuario de leitor de tela
+   *  ouve so o titulo, sem contexto do que a tela pede. */
+  description?: string
   children: ReactNode
   maxWidth?: string
 }
 
-export default function Modal({ isOpen, onClose, title, children, maxWidth = '600px' }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, description, children, maxWidth = '600px' }: ModalProps) {
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogPrimitive.Portal>
@@ -41,9 +45,20 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '60
 
           {/* Modal Header */}
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-[var(--border)] shrink-0">
-            <DialogPrimitive.Title className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
-              {title}
-            </DialogPrimitive.Title>
+            <div className="min-w-0">
+              <DialogPrimitive.Title className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
+                {title}
+              </DialogPrimitive.Title>
+              {/* Sempre renderizada: quando nao ha texto proprio, fica so para
+                  leitor de tela. Isso mantem o aria-describedby ligado a um no
+                  real, que e o que o Radix exige - e evita o dialogo ser
+                  anunciado apenas pelo titulo, sem dizer o que ele faz. */}
+              <DialogPrimitive.Description
+                className={description ? 'mt-1 text-sm text-[var(--text-secondary)]' : 'sr-only'}
+              >
+                {description || `Janela de ${title.toLowerCase()}. Pressione Esc para fechar.`}
+              </DialogPrimitive.Description>
+            </div>
             <DialogPrimitive.Close
               className="p-1.5 rounded-full hover:bg-[var(--bg-main)] text-[var(--text-secondary)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] cursor-pointer"
               aria-label="Fechar modal"

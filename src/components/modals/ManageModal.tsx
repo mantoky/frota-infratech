@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react'
 import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
 import Modal from './Modal'
+import { parseIntSafe } from '@/lib/helpers'
 import { CSSProperties } from 'react'
 import { Ban, Truck, Unlock, Lock, AlertTriangle } from 'lucide-react'
 import { SEMANTIC_COLORS } from '@/lib/statusColor'
@@ -208,7 +209,7 @@ export default function ManageModal({
     if (!vehicle) return
 
     // Only admin can change maintenance km
-    const maintenanceValue = isAdmin ? parseInt(maintenance) || 0 : vehicle.maintenance
+    const maintenanceValue = isAdmin ? parseIntSafe(maintenance) : vehicle.maintenance
 
     onSave({
       id: vehicle.id,
@@ -217,7 +218,7 @@ export default function ManageModal({
       model,
       status,
       driver,
-      km: parseInt(km),
+      km: parseIntSafe(km, vehicle.km),
       fuel: getFuelPercent(fuel),
       fuelText: fuel,
       maintenance: maintenanceValue,
@@ -321,8 +322,8 @@ export default function ManageModal({
       <form onSubmit={handleSubmit}>
         <div style={styles.grid}>
           <div style={styles.formGroup}>
-            <label style={styles.label}>{t('lblTag', currentLang)}</label>
-            <input
+            <label htmlFor="mg-f1" style={styles.label}>{t('lblTag', currentLang)}</label>
+            <input id="mg-f1"
               type="text"
               value={tag}
               onChange={(e) => setTag(e.target.value)}
@@ -332,8 +333,8 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>{t('lblPlate', currentLang)}</label>
-            <input
+            <label htmlFor="mg-f2" style={styles.label}>{t('lblPlate', currentLang)}</label>
+            <input id="mg-f2"
               type="text"
               value={plate}
               onChange={(e) => setPlate(e.target.value)}
@@ -343,8 +344,8 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>{t('lblModel', currentLang)}</label>
-            <input
+            <label htmlFor="mg-f3" style={styles.label}>{t('lblModel', currentLang)}</label>
+            <input id="mg-f3"
               type="text"
               value={model}
               onChange={(e) => setModel(e.target.value)}
@@ -354,8 +355,8 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>{t('lblStatus', currentLang)}</label>
-            <select
+            <label htmlFor="mg-f4" style={styles.label}>{t('lblStatus', currentLang)}</label>
+            <select id="mg-f4"
               value={status}
               onChange={(e) => setStatus(e.target.value as 'disp' | 'uso' | 'lav' | 'man' | 'mobilizacao')}
               style={styles.select}
@@ -377,8 +378,8 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>{t('lblDriverLabel', currentLang)}</label>
-            <input
+            <label htmlFor="mg-f5" style={styles.label}>{t('lblDriverLabel', currentLang)}</label>
+            <input id="mg-f5"
               type="text"
               value={driver}
               onChange={(e) => setDriver(e.target.value)}
@@ -387,8 +388,8 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>{t('lblKm', currentLang)}</label>
-            <input
+            <label htmlFor="mg-f6" style={styles.label}>{t('lblKm', currentLang)}</label>
+            <input id="mg-f6"
               type="number"
               value={km}
               onChange={(e) => setKm(e.target.value)}
@@ -399,8 +400,8 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>{t('lblFuel', currentLang)}</label>
-            <select
+            <label htmlFor="mg-f7" style={styles.label}>{t('lblFuel', currentLang)}</label>
+            <select id="mg-f7"
               value={fuel}
               onChange={(e) => setFuel(e.target.value)}
               style={styles.select}
@@ -415,11 +416,11 @@ export default function ManageModal({
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>
+            <label htmlFor="mg-f8" style={styles.label}>
               {t('lblNextMaint', currentLang)}
               {!isAdmin && <span style={styles.adminOnlyBadge}>APENAS ADMIN</span>}
             </label>
-            <input
+            <input id="mg-f8"
               type="number"
               value={maintenance}
               onChange={(e) => isAdmin && setMaintenance(e.target.value)}
@@ -438,8 +439,8 @@ export default function ManageModal({
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblObs', currentLang)}</label>
-          <textarea
+          <label htmlFor="mg-f9" style={styles.label}>{t('lblObs', currentLang)}</label>
+          <textarea id="mg-f9"
             value={obs}
             onChange={(e) => setObs(e.target.value)}
             style={styles.textarea}

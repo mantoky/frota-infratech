@@ -2,9 +2,15 @@
 
 import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
-import { CSSProperties } from 'react'
+import { CSSProperties, ReactNode } from 'react'
 import { Ban, Truck, AlertCircle, Key, Wrench, Droplet, Undo2, Lock, Pencil } from 'lucide-react'
-import { SEMANTIC_COLORS, getVehicleSemanticStatus, getStatusLabelKey } from '@/lib/statusColor'
+import {
+  SEMANTIC_COLORS, SEMANTIC_TEXT, getVehicleSemanticStatus, getStatusLabelKey, getFuelSemanticStatus
+} from '@/lib/statusColor'
+import Badge from '@/components/ui/Badge'
+import Meter from '@/components/ui/Meter'
+import AlertBanner from '@/components/ui/AlertBanner'
+import { getVehicleImage } from '@/lib/vehicleImage'
 
 interface VehicleCardProps {
   vehicle: Vehicle
@@ -17,6 +23,20 @@ interface VehicleCardProps {
   onManage: (vehicle: Vehicle) => void
 }
 
+function DataPoint({ label, value, tone }: { label: string; value: ReactNode; tone?: string }) {
+  return (
+    <div>
+      <span className="field-label">{label}</span>
+      <p
+        className="tabular"
+        style={{ margin: 0, fontWeight: 650, fontSize: '0.92rem', color: tone || 'var(--text-primary)' }}
+      >
+        {value}
+      </p>
+    </div>
+  )
+}
+
 export default function VehicleCard({
   vehicle,
   currentLang,
@@ -27,265 +47,205 @@ export default function VehicleCard({
   onService,
   onManage
 }: VehicleCardProps) {
+  const fuelSemantic = getFuelSemanticStatus(vehicle.fuel)
+  const remainingKm = vehicle.maintenance - vehicle.km
+  const isMaintAlert = remainingKm >= 0 && remainingKm <= 1000
+  const isBlocked = Boolean(vehicle.blocked)
+  const isMobilization = vehicle.status === 'mobilizacao'
+  const semanticStatus = getVehicleSemanticStatus(vehicle)
+
   const styles: { [key: string]: CSSProperties } = {
-    vehicleCard: {
-      borderRadius: '12px',
-      padding: '20px',
-      borderLeft: `5px solid ${SEMANTIC_COLORS.ok}`,
-      transition: 'transform 0.3s',
+    root: {
+      display: 'grid',
+      gap: 'var(--space-4)',
+      backgroundColor: embedded ? 'transparent' : 'var(--bg-card)',
+      border: embedded ? 'none' : '1px solid var(--border)',
+      borderLeft: embedded ? 'none' : `4px solid ${SEMANTIC_COLORS[semanticStatus]}`,
+      borderRadius: embedded ? 0 : 'var(--radius-m)',
+      boxShadow: embedded ? 'none' : 'var(--shadow-sm)',
+      padding: embedded ? 0 : 'var(--space-5)',
+    },
+    image: {
+      width: 64,
+      height: 64,
+      borderRadius: 'var(--radius-m)',
+      objectFit: 'cover',
+      border: '1px solid var(--border)',
+      backgroundColor: 'var(--bg-inset)',
+      filter: isBlocked ? 'grayscale(100%)' : 'none',
+      flexShrink: 0,
+    },
+    dataGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+      gap: 'var(--space-4)',
+      padding: 'var(--space-4)',
+      borderRadius: 'var(--radius-s)',
+      backgroundColor: 'var(--bg-inset)',
+      border: '1px solid var(--border-subtle)',
+    },
+    actions: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+      gap: 'var(--space-2)',
     },
   }
 
-  const getVehicleImage = (model: string): string => {
-    const modelLower = model.toLowerCase()
-    if (modelLower.includes('hilux')) {
-      return '/vehicles/hilux.png'
-    } else if (modelLower.includes('nivus')) {
-      return '/vehicles/nivus.png'
-    } else if (modelLower.includes('s10')) {
-      return '/vehicles/s10.png'
-    } else if (modelLower.includes('ranger')) {
-      return '/vehicles/ranger.png'
-    }
-    return '/vehicles/generic.png'
-  }
-
-  const fuelSemantic = vehicle.fuel >= 75 ? 'ok' : vehicle.fuel >= 30 ? 'alerta' : 'anormal'
-  const remainingKm = vehicle.maintenance - vehicle.km
-  const isMaintAlert = remainingKm >= 0 && remainingKm <= 1000
-  const isBlocked = vehicle.blocked
-  const isMobilization = vehicle.status === 'mobilizacao'
-  const semanticStatus = getVehicleSemanticStatus(vehicle)
-  const statusColor = SEMANTIC_COLORS[semanticStatus]
-
-  const btnStyle: CSSProperties = {
-    flex: 1,
-    padding: '12px',
-    border: 'none',
-    borderRadius: '8px',
-    fontWeight: 600,
-    cursor: isBlocked ? 'not-allowed' : 'pointer',
-    transition: 'all 0.3s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    minWidth: '120px',
-    opacity: isBlocked ? 0.5 : 1,
-  }
+  const actionsDisabled = isBlocked
 
   return (
-    <div
-      style={{
-        ...styles.vehicleCard,
-        backgroundColor: embedded ? 'transparent' : 'var(--bg-card)',
-        boxShadow: embedded ? 'none' : '0 4px 15px rgba(0,0,0,0.1)',
-        borderLeftColor: statusColor,
-        border: isBlocked ? `2px solid ${SEMANTIC_COLORS.anormal}` : isMaintAlert ? `2px solid ${SEMANTIC_COLORS.alerta}` : undefined,
-        opacity: isBlocked ? 0.7 : 1,
-        position: 'relative',
-      }}
-    >
-      {/* Blocked Alert */}
+    <div style={styles.root}>
       {isBlocked && (
-        <div style={{
-          backgroundColor: SEMANTIC_COLORS.anormal,
-          borderRadius: '8px',
-          padding: '10px',
-          marginBottom: '15px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}>
-          <Ban size={16} style={{ color: '#fff' }} />
-          <div>
-            <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.85rem' }}>
-              Veículo Bloqueado
-            </span>
-            {vehicle.blockedReason && (
-              <p style={{ color: '#fff', fontSize: '0.75rem', margin: 0, opacity: 0.9 }}>
-                {vehicle.blockedReason}
-              </p>
-            )}
-          </div>
-        </div>
+        <AlertBanner
+          tone="anormal"
+          icon={<Ban size={17} />}
+          title="Veículo bloqueado"
+          description={
+            vehicle.blockedReason
+              ? `${vehicle.blockedReason}${vehicle.blockedBy ? ` · por ${vehicle.blockedBy}` : ''}`
+              : undefined
+          }
+        />
       )}
 
-      {/* Mobilization Alert */}
-      {isMobilization && (
-        <div style={{
-          backgroundColor: SEMANTIC_COLORS.alerta,
-          borderRadius: '8px',
-          padding: '10px',
-          marginBottom: '15px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}>
-          <Truck size={16} style={{ color: '#fff' }} />
-          <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.85rem' }}>
-            Veículo em Processo de Mobilização
-          </span>
-        </div>
+      {isMobilization && !isBlocked && (
+        <AlertBanner
+          tone="alerta"
+          icon={<Truck size={17} />}
+          title="Veículo em processo de mobilização"
+          description="Indisponível para retirada até a conclusão."
+        />
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '70px',
-            height: '70px',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-            border: '2px solid var(--border)',
-          }}>
-            <img
-              src={getVehicleImage(vehicle.model)}
-              alt={vehicle.model}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                filter: isBlocked ? 'grayscale(100%)' : 'none',
-              }}
-            />
-          </div>
-          <div>
-            <h3 style={{ fontSize: '1.3rem', color: 'var(--text-primary)' }}>{vehicle.tag}</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{vehicle.model}</p>
-          </div>
-        </div>
-        <span style={{
-          padding: '5px 12px',
-          borderRadius: '20px',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          backgroundColor: statusColor,
-          color: '#fff',
-        }}>
-          {t(getStatusLabelKey(vehicle), currentLang)}
-        </span>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '15px' }}>
-        <div>
-          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '3px' }}>{t('lblMileage', currentLang)}</label>
-          <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{vehicle.km.toLocaleString()} km</p>
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '3px' }}>{t('lblPlateLabel', currentLang)}</label>
-          <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{vehicle.plate}</p>
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '3px' }}>{t('lblNextMaintLabel', currentLang)}</label>
-          <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{vehicle.maintenance ? vehicle.maintenance.toLocaleString() + ' km' : '-'}</p>
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '3px' }}>{t('lblDriverLabel', currentLang)}</label>
-          <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{vehicle.driver || t('none', currentLang)}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- export estatico com images.unoptimized */}
+        <img src={getVehicleImage(vehicle.model)} alt="" style={styles.image} />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <h3
+            style={{
+              margin: 0,
+              fontSize: '1.2rem',
+              fontWeight: 750,
+              letterSpacing: '-0.02em',
+              color: 'var(--text-primary)',
+            }}
+          >
+            {vehicle.tag}
+          </h3>
+          {/* So o modelo aqui: a placa ja tem lugar proprio na grade de dados
+              logo abaixo, e repetir os dois no cabecalho fazia o mesmo numero
+              aparecer duas vezes na mesma dobra. */}
+          <p style={{ margin: '2px 0 8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+            {vehicle.model}
+          </p>
+          <Badge tone={semanticStatus} variant="solid" size="sm">
+            {t(getStatusLabelKey(vehicle), currentLang)}
+          </Badge>
         </div>
       </div>
 
-      {vehicle.lastLocation && (
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '3px' }}>{t('lblLastLocation', currentLang)}</label>
-          <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{vehicle.lastLocation}</p>
-        </div>
-      )}
+      <div style={styles.dataGrid}>
+        <DataPoint label={t('lblMileage', currentLang)} value={`${vehicle.km.toLocaleString('pt-BR')} km`} />
+        <DataPoint label={t('lblPlateLabel', currentLang)} value={vehicle.plate} />
+        <DataPoint
+          label={t('lblNextMaintLabel', currentLang)}
+          value={vehicle.maintenance ? `${vehicle.maintenance.toLocaleString('pt-BR')} km` : '—'}
+          tone={isMaintAlert ? SEMANTIC_TEXT.alerta : undefined}
+        />
+        <DataPoint label={t('lblDriverLabel', currentLang)} value={vehicle.driver || t('none', currentLang)} />
+        {vehicle.lastLocation && (
+          <DataPoint label={t('lblLastLocation', currentLang)} value={vehicle.lastLocation} />
+        )}
+      </div>
 
       {isMaintAlert && (
-        <div style={{ color: SEMANTIC_COLORS.alerta, fontWeight: 'bold', marginBottom: '10px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <AlertCircle size={16} /> {t('maintIn', currentLang)} {remainingKm}km
+        <p
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            margin: 0,
+            fontSize: '0.85rem',
+            fontWeight: 650,
+            color: SEMANTIC_TEXT.alerta,
+          }}
+        >
+          <AlertCircle size={15} />
+          {t('maintIn', currentLang)} {remainingKm.toLocaleString('pt-BR')}km
+        </p>
+      )}
+
+      <Meter
+        value={vehicle.fuel}
+        tone={fuelSemantic}
+        label={t('lblFuelLabel', currentLang)}
+        valueLabel={vehicle.fuelText}
+        ariaLabel={`Combustível ${vehicle.tag}`}
+      />
+
+      {vehicle.obs && (
+        <div>
+          <span className="field-label">Observações</span>
+          <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+            {vehicle.obs}
+          </p>
         </div>
       )}
 
-      <div style={{ backgroundColor: 'var(--border)', height: '8px', borderRadius: '4px', overflow: 'hidden', marginBottom: '15px' }}>
-        <div style={{ height: '100%', borderRadius: '4px', width: `${vehicle.fuel}%`, backgroundColor: SEMANTIC_COLORS[fuelSemantic] }} />
-      </div>
-
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '15px' }}>
-        {t('lblFuelLabel', currentLang)} {vehicle.fuelText}
-      </p>
-
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        {/* Only show action buttons if not blocked OR if user is admin */}
+      <div style={styles.actions}>
+        {/* Veiculo bloqueado esconde as acoes de operacao para quem nao e
+            admin. Antes o botao aparecia desabilitado, o que so gera
+            tentativa repetida em campo sem explicar o motivo. */}
         {(!isBlocked || isAdmin) ? (
           vehicle.status === 'disp' ? (
             <>
               <button
-                onClick={() => !isBlocked && onWithdraw(vehicle)}
-                style={{ ...btnStyle, backgroundColor: 'var(--brand-primary)', color: 'white' }}
-                disabled={isBlocked}
+                type="button"
+                className="btn btn-primary"
+                onClick={() => !actionsDisabled && onWithdraw(vehicle)}
+                disabled={actionsDisabled}
               >
                 <Key size={16} /> {t('btnWithdraw', currentLang)}
               </button>
               <button
-                onClick={() => !isBlocked && onService('man', vehicle)}
-                style={{ ...btnStyle, backgroundColor: 'var(--brand-gray)', color: 'white' }}
-                disabled={isBlocked}
+                type="button"
+                className="btn btn-outline"
+                onClick={() => !actionsDisabled && onService('man', vehicle)}
+                disabled={actionsDisabled}
               >
                 <Wrench size={16} /> {t('btnMaint', currentLang)}
               </button>
               <button
-                onClick={() => !isBlocked && onService('lav', vehicle)}
-                style={{ ...btnStyle, backgroundColor: 'var(--brand-gray)', color: 'white' }}
-                disabled={isBlocked}
+                type="button"
+                className="btn btn-outline"
+                onClick={() => !actionsDisabled && onService('lav', vehicle)}
+                disabled={actionsDisabled}
               >
                 <Droplet size={16} /> {t('btnWash', currentLang)}
               </button>
             </>
           ) : (
             <button
-              onClick={() => !isBlocked && onReturn(vehicle)}
-              style={{ ...btnStyle, backgroundColor: 'var(--brand-secondary)', color: 'white' }}
-              disabled={isBlocked}
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => !actionsDisabled && onReturn(vehicle)}
+              disabled={actionsDisabled}
             >
               <Undo2 size={16} /> {t('btnReturn', currentLang)}
             </button>
           )
         ) : (
-          <div style={{
-            ...btnStyle,
-            backgroundColor: SEMANTIC_COLORS.anormal,
-            color: '#fff',
-            cursor: 'not-allowed',
-          }}>
+          <div
+            className="btn"
+            aria-disabled="true"
+            style={{ backgroundColor: 'var(--state-danger-soft)', color: SEMANTIC_TEXT.anormal, cursor: 'not-allowed' }}
+          >
             <Lock size={16} /> Bloqueado
           </div>
         )}
-        <button
-          onClick={() => onManage(vehicle)}
-          style={{
-            ...btnStyle,
-            backgroundColor: 'var(--brand-gray)',
-            color: 'white',
-            flex: 'none',
-            minWidth: 'auto',
-            padding: '10px 16px',
-            position: 'relative',
-          }}
-        >
-          <Pencil size={16} />
-          <span>{t('btnEdit', currentLang)}</span>
-          {isBlocked && (
-            <span style={{
-              position: 'absolute',
-              top: '-5px',
-              right: '-5px',
-              backgroundColor: SEMANTIC_COLORS.anormal,
-              color: 'white',
-              borderRadius: '50%',
-              width: '20px',
-              height: '20px',
-              fontSize: '0.7rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Lock size={10} />
-            </span>
-          )}
+
+        <button type="button" className="btn btn-ghost" onClick={() => onManage(vehicle)}>
+          <Pencil size={16} /> {t('btnEdit', currentLang)}
         </button>
       </div>
     </div>

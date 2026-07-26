@@ -359,6 +359,11 @@
     "en": "Enter",
     "es": "Entrar"
   },
+  "btnEnterAdmin": {
+    "pt": "Entrar como administrador",
+    "en": "Sign in as administrator",
+    "es": "Entrar como administrador"
+  },
   "btnConfirmService": {
     "pt": "Confirmar Envio",
     "en": "Confirm Send",

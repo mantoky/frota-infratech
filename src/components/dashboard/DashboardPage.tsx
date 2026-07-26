@@ -2,11 +2,15 @@
 
 import { t } from '@/lib/hooks/useTranslations'
 import { FilterType, Vehicle } from '@/types'
-import { CSSProperties, useState } from 'react'
+import { CSSProperties, useMemo, useState } from 'react'
 import VehicleMiniCard from '@/components/vehicles/VehicleMiniCard'
 import VehicleDetailModal from '@/components/vehicles/VehicleDetailModal'
-import { AlertTriangle, Ban, Search } from 'lucide-react'
-import { SEMANTIC_COLORS } from '@/lib/statusColor'
+import PageHeader from '@/components/ui/PageHeader'
+import StatCard from '@/components/ui/StatCard'
+import FilterChips, { FilterChipOption } from '@/components/ui/FilterChips'
+import AlertBanner from '@/components/ui/AlertBanner'
+import EmptyState from '@/components/ui/EmptyState'
+import { AlertTriangle, Ban, Search, Truck, CheckCircle2, Clock, Wrench, X, SearchX } from 'lucide-react'
 
 interface DashboardPageProps {
   vehicles: Vehicle[]
@@ -18,6 +22,11 @@ interface DashboardPageProps {
   onReturn: (vehicle: Vehicle) => void
   onService: (type: 'man' | 'lav', vehicle: Vehicle) => void
   onManage: (vehicle: Vehicle) => void
+}
+
+const getTagNumber = (tag: string) => {
+  const match = tag.match(/(\d+)/)
+  return match ? parseInt(match[1], 10) : 0
 }
 
 export default function DashboardPage({
@@ -35,70 +44,31 @@ export default function DashboardPage({
   const [detailVehicle, setDetailVehicle] = useState<Vehicle | null>(null)
 
   const styles: { [key: string]: CSSProperties } = {
-    container_padding: {
-      padding: '25px',
-      maxWidth: '1400px',
-      margin: '0 auto',
+    statGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+      gap: 'var(--space-3)',
+    },
+    toolbar: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 'var(--space-3)',
+      flexWrap: 'wrap',
+      marginBottom: 'var(--space-5)',
     },
     searchBar: {
       position: 'relative',
-      marginBottom: '20px',
-      maxWidth: '420px',
-    },
-    searchInput: {
-      width: '100%',
-      padding: '12px 16px 12px 42px',
-      borderRadius: '10px',
-      border: '2px solid var(--border)',
-      backgroundColor: 'var(--bg-card)',
-      color: 'var(--text-primary)',
-      fontSize: '0.95rem',
-    },
-    filterBar: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '8px',
-      marginBottom: '25px',
-    },
-    filterPill: {
-      backgroundColor: 'var(--bg-card)',
-      padding: '8px 16px',
-      borderRadius: '20px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-      cursor: 'pointer',
-      border: '2px solid transparent',
-      fontSize: '0.9rem',
-      fontWeight: 600,
-      whiteSpace: 'nowrap',
+      flex: '1 1 280px',
+      maxWidth: '380px',
     },
     vehiclesGrid: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-      gap: '12px',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+      gap: 'var(--space-3)',
     },
   }
 
-  const getTagNumber = (tag: string) => {
-    const match = tag.match(/(\d+)/)
-    return match ? parseInt(match[1], 10) : 0
-  }
-  const sortedVehicles = [...vehicles].sort((a, b) => getTagNumber(a.tag) - getTagNumber(b.tag))
-
-  const filteredVehicles = currentFilter === 'all'
-    ? sortedVehicles
-    : sortedVehicles.filter(v => v.status === currentFilter)
-
-  const searchQuery = search.trim().toLowerCase()
-  const searchedVehicles = searchQuery
-    ? filteredVehicles.filter(v =>
-        v.tag.toLowerCase().includes(searchQuery) ||
-        v.plate.toLowerCase().includes(searchQuery) ||
-        v.model.toLowerCase().includes(searchQuery) ||
-        (v.driver || '').toLowerCase().includes(searchQuery)
-      )
-    : filteredVehicles
-
-  const counts = {
+  const counts = useMemo(() => ({
     all: vehicles.length,
     disp: vehicles.filter(v => v.status === 'disp').length,
     uso: vehicles.filter(v => v.status === 'uso').length,
@@ -106,81 +76,215 @@ export default function DashboardPage({
     man: vehicles.filter(v => v.status === 'man').length,
     mobilizacao: vehicles.filter(v => v.status === 'mobilizacao').length,
     blocked: vehicles.filter(v => v.blocked).length,
-  }
+  }), [vehicles])
 
-  const maintenanceAlerts = vehicles.filter(v => {
-    const remaining = v.maintenance - v.km
-    return remaining >= 0 && remaining <= 1000
-  })
+  const maintenanceAlerts = useMemo(
+    () => vehicles.filter(v => {
+      const remaining = v.maintenance - v.km
+      return remaining >= 0 && remaining <= 1000
+    }),
+    [vehicles]
+  )
 
-  const blockedAlerts = vehicles.filter(v => v.blocked)
+  const searchQuery = search.trim().toLowerCase()
 
-  const filterOptions: FilterType[] = ['all', 'disp', 'uso', 'lav', 'man']
+  const visibleVehicles = useMemo(() => {
+    const sorted = [...vehicles].sort((a, b) => getTagNumber(a.tag) - getTagNumber(b.tag))
+    const byStatus = currentFilter === 'all' ? sorted : sorted.filter(v => v.status === currentFilter)
+    if (!searchQuery) return byStatus
+    return byStatus.filter(v =>
+      v.tag.toLowerCase().includes(searchQuery) ||
+      v.plate.toLowerCase().includes(searchQuery) ||
+      v.model.toLowerCase().includes(searchQuery) ||
+      (v.driver || '').toLowerCase().includes(searchQuery)
+    )
+  }, [vehicles, currentFilter, searchQuery])
+
+  const filterOptions: FilterChipOption<FilterType>[] = [
+    { value: 'all', label: t('statAll', currentLang), count: counts.all },
+    { value: 'disp', label: t('statAvailable', currentLang), count: counts.disp, tone: 'ok' },
+    { value: 'uso', label: t('statInUse', currentLang), count: counts.uso, tone: 'ok' },
+    { value: 'lav', label: t('statWash', currentLang), count: counts.lav, tone: 'alerta' },
+    { value: 'man', label: t('statMaintenance', currentLang), count: counts.man, tone: 'anormal' },
+  ]
+
+  // Percentual de frota efetivamente utilizavel agora: o gestor pergunta
+  // "quantos carros eu tenho pra dar?", nao "quantos carros existem".
+  const availabilityRate = counts.all > 0 ? Math.round((counts.disp / counts.all) * 100) : 0
 
   return (
-    <div style={styles.container_padding}>
-      <h1 className="page-title">{t('dashboardTitle', currentLang)}</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>{t('dashboardSubtitle', currentLang)}</p>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Operação"
+        title={t('dashboardTitle', currentLang)}
+        description={t('dashboardSubtitle', currentLang)}
+        // Indicadores de leitura, nao controles. Os cards e a barra de filtros
+        // abaixo mostravam a mesma contagem e disparavam o mesmo filtro, um
+        // embaixo do outro - duas formas de fazer a mesma coisa na mesma tela.
+        // Os cards ficaram com o resumo (que os chips nao dao, como a taxa de
+        // disponibilidade e a quebra de indisponiveis) e o filtro ficou num
+        // lugar so.
+        meta={
+          <div style={styles.statGrid}>
+            <StatCard
+              label="Frota total"
+              value={counts.all}
+              hint={`${availabilityRate}% disponível agora`}
+              icon={<Truck size={17} />}
+            />
+            <StatCard
+              label={t('statAvailable', currentLang)}
+              value={counts.disp}
+              hint="Prontos para retirada"
+              icon={<CheckCircle2 size={17} />}
+              tone="ok"
+            />
+            <StatCard
+              label={t('statInUse', currentLang)}
+              value={counts.uso}
+              hint="Em rota com condutor"
+              icon={<Clock size={17} />}
+              tone="ok"
+            />
+            <StatCard
+              label="Indisponíveis"
+              value={counts.man + counts.lav + counts.blocked}
+              hint={`${counts.man} manutenção · ${counts.lav} lavagem · ${counts.blocked} bloqueio`}
+              icon={<Wrench size={17} />}
+              tone={counts.man + counts.blocked > 0 ? 'anormal' : 'alerta'}
+            />
+          </div>
+        }
+      />
 
-      {/* Maintenance Alert Banner */}
-      {maintenanceAlerts.length > 0 && (
-        <div style={{ backgroundColor: SEMANTIC_COLORS.alerta, color: '#fff', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
-          <AlertTriangle size={18} />
-          <span>{t('maintenanceAlert', currentLang)}</span>
+      {(maintenanceAlerts.length > 0 || counts.blocked > 0) && (
+        <div style={{ display: 'grid', gap: 'var(--space-2)', marginBottom: 'var(--space-5)' }}>
+          {maintenanceAlerts.length > 0 && (
+            <AlertBanner
+              tone="alerta"
+              icon={<AlertTriangle size={17} />}
+              title={t('maintenanceAlert', currentLang)}
+              description={maintenanceAlerts.map(v => v.tag).join(', ')}
+            />
+          )}
+          {counts.blocked > 0 && (
+            <AlertBanner
+              tone="anormal"
+              icon={<Ban size={17} />}
+              title={`${counts.blocked} ${counts.blocked === 1 ? 'veículo bloqueado' : 'veículos bloqueados'}`}
+              description={vehicles.filter(v => v.blocked).map(v => v.tag).join(', ')}
+            />
+          )}
         </div>
       )}
 
-      {/* Blocked Alert Banner */}
-      {blockedAlerts.length > 0 && (
-        <div style={{ backgroundColor: SEMANTIC_COLORS.anormal, color: '#fff', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600 }}>
-          <Ban size={18} />
-          <span>{blockedAlerts.length} {currentLang === 'pt' ? 'veículo(s) bloqueado(s)' : currentLang === 'en' ? 'vehicle(s) blocked' : 'vehículo(s) bloqueado(s)'}</span>
+      <div style={styles.toolbar}>
+        <div style={styles.searchBar}>
+          <Search
+            size={17}
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              left: 'var(--space-3)',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--text-muted)',
+              pointerEvents: 'none',
+            }}
+          />
+          <input
+            type="search"
+            className="field"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('searchPlaceholder', currentLang)}
+            aria-label={t('searchPlaceholder', currentLang)}
+            style={{ paddingLeft: 'calc(var(--space-3) * 2 + 17px)', paddingRight: search ? 40 : undefined }}
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              aria-label="Limpar busca"
+              style={{
+                position: 'absolute',
+                right: 6,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 32,
+                height: 32,
+                minHeight: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+                background: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+              }}
+            >
+              <X size={15} />
+            </button>
+          )}
         </div>
-      )}
 
-      {/* Search */}
-      <div style={styles.searchBar}>
-        <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('searchPlaceholder', currentLang)}
-          style={styles.searchInput}
+        <FilterChips
+          options={filterOptions}
+          value={currentFilter}
+          onChange={onFilterChange}
+          ariaLabel="Filtrar frota por situação"
         />
       </div>
 
-      {/* Filter Bar */}
-      <div style={styles.filterBar}>
-        {filterOptions.map(filter => {
-          const color = filter === 'all' ? 'var(--text-primary)' : filter === 'disp' ? SEMANTIC_COLORS.ok : filter === 'uso' ? SEMANTIC_COLORS.ok : filter === 'lav' ? SEMANTIC_COLORS.alerta : SEMANTIC_COLORS.anormal
-          return (
-            <div
-              key={filter}
-              onClick={() => onFilterChange(filter)}
-              style={{
-                ...styles.filterPill,
-                borderColor: currentFilter === filter ? color : 'transparent',
-                color: currentFilter === filter ? color : 'var(--text-secondary)',
-              }}
-            >
-              {t(filter === 'all' ? 'statAll' : filter === 'disp' ? 'statAvailable' : filter === 'uso' ? 'statInUse' : filter === 'lav' ? 'statWash' : 'statMaintenance', currentLang)} ({counts[filter as keyof typeof counts]})
-            </div>
-          )
-        })}
-      </div>
+      {/* Contagem do resultado: sem ela, um filtro que devolve 2 de 13
+          veiculos parece que a tela nao carregou o resto. */}
+      <p
+        aria-live="polite"
+        style={{
+          fontSize: '0.82rem',
+          color: 'var(--text-secondary)',
+          margin: '0 0 var(--space-3)',
+        }}
+      >
+        {visibleVehicles.length} de {counts.all} {counts.all === 1 ? 'veículo' : 'veículos'}
+        {searchQuery && ` para “${search.trim()}”`}
+      </p>
 
-      {/* Vehicles Grid */}
-      <div style={styles.vehiclesGrid}>
-        {searchedVehicles.map(vehicle => (
-          <VehicleMiniCard
-            key={vehicle.id}
-            vehicle={vehicle}
-            currentLang={currentLang}
-            onClick={() => setDetailVehicle(vehicle)}
+      {visibleVehicles.length === 0 ? (
+        <div className="surface">
+          <EmptyState
+            icon={<SearchX size={24} />}
+            title="Nenhum veículo encontrado"
+            description={
+              searchQuery
+                ? 'Tente outra tag, placa, modelo ou nome de condutor.'
+                : 'Nenhum veículo nesta situação no momento.'
+            }
+            action={
+              (searchQuery || currentFilter !== 'all') && (
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => { setSearch(''); onFilterChange('all') }}
+                >
+                  Limpar filtros
+                </button>
+              )
+            }
           />
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div style={styles.vehiclesGrid}>
+          {visibleVehicles.map(vehicle => (
+            <VehicleMiniCard
+              key={vehicle.id}
+              vehicle={vehicle}
+              currentLang={currentLang}
+              onClick={() => setDetailVehicle(vehicle)}
+            />
+          ))}
+        </div>
+      )}
 
       <VehicleDetailModal
         vehicle={detailVehicle}

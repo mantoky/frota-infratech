@@ -120,113 +120,556 @@
   }
 }
 
-/* Identidade visual Vale (aproximação a partir de Pantone 328C/124C/Cool Gray 9C) */
+/* ==========================================================================
+   DESIGN TOKENS - Frota Infratech
+   Fonte unica de verdade do visual. Qualquer cor, sombra, raio ou espacamento
+   usado nos componentes deve sair daqui, nunca de um valor solto no JSX.
+   Os nomes legados (--bg-main, --bg-card, --text-primary, --text-secondary,
+   --border, --brand-*) foram mantidos de proposito: varios estilos inline
+   ainda dependem deles, e trocar tudo de uma vez seria risco sem ganho.
+   ========================================================================== */
+
 :root {
-  --brand-primary: #002e4d;
-  --brand-primary-dark: #001a2c;
+  /* --- Marca (aproximacao de Pantone 328C / 124C / Cool Gray 9C) --- */
+  --brand-primary: #00365c;
+  --brand-primary-dark: #001f36;
+  --brand-primary-soft: rgba(0, 54, 92, 0.08);
   --brand-secondary: #00594c;
+  --brand-secondary-dark: #00382f;
+  --brand-secondary-soft: rgba(0, 89, 76, 0.1);
   --brand-accent: #eaaa00;
-  --brand-gray: #75787b;
-}
+  --brand-accent-soft: rgba(234, 170, 0, 0.14);
+  --brand-gray: #5f6b73;
 
-/* No modo escuro as cores de marca clareiam o suficiente pra continuarem
-   legiveis como texto/borda sobre os fundos escuros (--bg-card/--bg-main) -
-   sem isso, qualquer uso de --brand-primary como cor de texto some (bug ja
-   visto uma vez no botao de Configuracoes do TopBar). */
-.dark {
-  --brand-primary: #1c4870;
-  --brand-primary-dark: #143654;
-  --brand-secondary: #1f7a63;
-  --brand-accent: #eaaa00;
-  --brand-gray: #9a9ea1;
-}
-
-/* Custom theme variables */
-:root {
-  --bg-main: #f5f7fa;
+  /* --- Superficies --- */
+  --bg-main: #f2f5f8;
   --bg-card: #ffffff;
-  --bg-sidebar: #2c3e50;
-  --text-primary: #2c3e50;
-  --text-secondary: #7f8c8d;
-  --text-light: #ecf0f1;
-  --border: #e1e8ed;
+  --bg-subtle: #f7f9fb;
+  --bg-inset: #eef2f6;
+  --bg-sidebar: #0b2135;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.07);
+  --bg-sidebar-active: rgba(255, 255, 255, 0.12);
+  --bg-overlay: rgba(8, 20, 30, 0.55);
+
+  /* --- Texto --- */
+  --text-primary: #17232e;
+  --text-secondary: #5b6b7a;
+  --text-muted: #8494a1;
+  --text-light: #eef3f7;
+  --text-on-brand: #ffffff;
+
+  /* --- Bordas --- */
+  --border: #dde5ec;
+  --border-strong: #c4d0da;
+  --border-subtle: #e9eff4;
+
+  /* --- Feedback ---
+     Cada estado tem tres variantes com papeis distintos, e trocar uma pela
+     outra quebra contraste:
+       --state-X        texto/icone sobre superficie de card
+       --state-X-solid  fundo preenchido, sempre com texto branco por cima
+       --state-X-soft   fundo tingido, com --state-X por cima
+     Sem essa separacao o modo escuro fica impossivel: um verde legivel como
+     texto no escuro e claro demais pra receber texto branco em cima. */
+  --state-ok: #1e8e3e;
+  --state-ok-solid: #1e8e3e;
+  --state-ok-soft: rgba(30, 142, 62, 0.12);
+  --state-alert: #a16207;
+  --state-alert-solid: #a16207;
+  --state-alert-soft: rgba(161, 98, 7, 0.12);
+  --state-danger: #c62828;
+  --state-danger-solid: #c62828;
+  --state-danger-soft: rgba(198, 40, 40, 0.12);
+  --state-info: #0b6bcb;
+  --state-info-solid: #0b6bcb;
+  --state-info-soft: rgba(11, 107, 203, 0.12);
+
+  --alert-bg: #fff8e6;
+  --alert-text: #7a5300;
+
+  /* --- Elevacao --- */
+  --shadow-xs: 0 1px 2px rgba(16, 31, 44, 0.06);
+  --shadow-sm: 0 1px 3px rgba(16, 31, 44, 0.08), 0 1px 2px rgba(16, 31, 44, 0.04);
+  --shadow-md: 0 4px 12px rgba(16, 31, 44, 0.08), 0 2px 4px rgba(16, 31, 44, 0.04);
+  --shadow-lg: 0 12px 28px rgba(16, 31, 44, 0.12), 0 4px 8px rgba(16, 31, 44, 0.06);
+  --shadow-xl: 0 24px 48px rgba(16, 31, 44, 0.18);
+
+  /* --- Geometria --- */
+  --radius-xs: 6px;
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-pill: 999px;
+
+  /* --- Ritmo (escala de 4px) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* --- Layout --- */
+  --content-max: 1440px;
+  --sidebar-width: 272px;
+  --topbar-height: 64px;
+
+  /* --- Movimento --- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
 }
 
 .dark {
-  --bg-main: #1a1a2e;
-  --bg-card: #16213e;
-  --bg-sidebar: #0f0f23;
-  --text-primary: #ecf0f1;
-  --text-secondary: #bdc3c7;
-  --text-light: #ecf0f1;
-  --border: #34495e;
+  --brand-primary: #4a90c4;
+  --brand-primary-dark: #2c6389;
+  --brand-primary-soft: rgba(74, 144, 196, 0.16);
+  --brand-secondary: #2f9c81;
+  --brand-secondary-dark: #1c6a58;
+  --brand-secondary-soft: rgba(47, 156, 129, 0.16);
+  --brand-accent: #f5bd28;
+  --brand-accent-soft: rgba(245, 189, 40, 0.18);
+  --brand-gray: #9aa7b1;
+
+  --bg-main: #0d1520;
+  --bg-card: #16202e;
+  --bg-subtle: #1a2534;
+  --bg-inset: #101a26;
+  --bg-sidebar: #080f18;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --bg-sidebar-active: rgba(255, 255, 255, 0.11);
+  --bg-overlay: rgba(0, 0, 0, 0.68);
+
+  --text-primary: #e8eef4;
+  --text-secondary: #a3b1bf;
+  --text-muted: #7a8896;
+  --text-light: #e8eef4;
+  --text-on-brand: #ffffff;
+
+  --border: #26333f;
+  --border-strong: #37485a;
+  --border-subtle: #1d2836;
+
+  /* Como texto, os tons do modo claro nao alcancam AA sobre fundo escuro -
+     por isso clareiam. Ja as variantes -solid continuam escuras: elas
+     recebem texto branco em cima e clarear ali destruiria o contraste. */
+  --state-ok: #4ade80;
+  --state-ok-solid: #1a7d37;
+  --state-ok-soft: rgba(74, 222, 128, 0.14);
+  --state-alert: #fbbf24;
+  --state-alert-solid: #8a5406;
+  --state-alert-soft: rgba(251, 191, 36, 0.14);
+  --state-danger: #f87171;
+  --state-danger-solid: #b02525;
+  --state-danger-soft: rgba(248, 113, 113, 0.14);
+  --state-info: #60a5fa;
+  --state-info-solid: #0a5ba8;
+  --state-info-soft: rgba(96, 165, 250, 0.14);
+
+  --alert-bg: #3a2f05;
+  --alert-text: #fbbf24;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
 }
 
-/* Alert backgrounds */
-:root {
-  --alert-bg: #fff3cd;
-  --alert-text: #856404;
-}
+/* ==========================================================================
+   BASE
+   ========================================================================== */
 
-.dark {
-  --alert-bg: #4a3f00;
-  --alert-text: #ffc107;
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-  body {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  body {
-    font-size: 13px;
-  }
-}
-
-/* Touch-friendly buttons */
-button {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
-/* Better touch targets */
-input, select, textarea {
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  letter-spacing: -0.006em;
+}
+
+/* Foco visivel e consistente em tudo que recebe teclado. O outline padrao do
+   browser some sobre os fundos escuros da sidebar, entao usamos um anel de
+   marca com offset - requisito de WCAG 2.4.7. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-secondary);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Alvos de toque de 44px (WCAG 2.5.5). */
+button {
   min-height: 44px;
-  font-size: 16px; /* Prevents iOS zoom on focus */
+  font-family: inherit;
 }
 
-/* Mobile sidebar */
-@media (max-width: 768px) {
-  .sidebar-overlay {
-    background-color: rgba(0, 0, 0, 0.7);
+input,
+select,
+textarea {
+  min-height: 44px;
+  font-size: 16px; /* evita o zoom automatico do iOS no foco */
+  font-family: inherit;
+}
+
+::selection {
+  background-color: var(--brand-secondary-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* Titulo de pagina: peso forte + leve compressao de letras + uma barra de
-   destaque na marca - efeito discreto, sem ser chamativo. */
+/* ==========================================================================
+   TIPOGRAFIA
+   ========================================================================== */
+
 .page-title {
-  font-size: 1.9rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-size: clamp(1.5rem, 1.2rem + 1.1vw, 1.9rem);
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.022em;
   color: var(--text-primary);
-  border-left: 4px solid var(--brand-secondary);
-  padding-left: 14px;
-  margin-bottom: 10px;
+  margin: 0;
 }
 
-/* Hide scrollbar but allow scrolling */
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 68ch;
+  margin: var(--space-2) 0 0;
+}
+
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.014em;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.field-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   LAYOUT
+   ========================================================================== */
+
+.page-shell {
+  padding: var(--space-6) var(--space-5) var(--space-10);
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .page-shell {
+    padding: var(--space-8) var(--space-8) var(--space-10);
+  }
+}
+
+/* --- Sidebar: gaveta no mobile, coluna fixa no desktop ---
+   A regra de qual dos dois comportamentos vale mora aqui, nao no React. Se o
+   JS decidisse isso via matchMedia teriamos duas fontes de verdade pro mesmo
+   layout, e um resize entre elas deixaria o conteudo deslocado sem sidebar. */
+.app-sidebar {
+  transform: translateX(-100%);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.app-sidebar--open {
+  transform: translateX(0);
+  box-shadow: var(--shadow-xl);
+}
+
+@media (min-width: 1024px) {
+  .app-sidebar {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* No desktop a sidebar nunca fecha, entao o X e o overlay nao fazem
+     sentido - e o overlay chegaria a bloquear cliques no conteudo. */
+  .app-sidebar__close,
+  .app-sidebar__overlay {
+    display: none !important;
+  }
+
+  .app-main--docked {
+    margin-left: var(--sidebar-width);
+  }
+
+  /* Sidebar sempre visivel torna o hamburguer redundante. */
+  .topbar__menu-toggle {
+    display: none !important;
+  }
+}
+
+/* Em telas estreitas a barra de topo prioriza as acoes: rotulos secundarios
+   somem antes que os botoes comecem a se espremer ou quebrar linha. */
+@media (max-width: 560px) {
+  .topbar__subtitle,
+  .topbar__role-label,
+  .topbar__add-label {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   SUPERFICIES
+   ========================================================================== */
+
+.surface {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-sm);
+}
+
+.surface-flat {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+}
+
+.surface-inset {
+  background-color: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-s);
+}
+
+.surface-interactive {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out);
+}
+
+.surface-interactive:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+
+.surface-interactive:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ==========================================================================
+   CONTROLES
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-s);
+  font-size: 0.9rem;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: var(--text-on-brand);
+  box-shadow: var(--shadow-xs);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--brand-primary-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary {
+  background-color: var(--brand-secondary);
+  color: var(--text-on-brand);
+  box-shadow: var(--shadow-xs);
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--brand-secondary-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-outline {
+  background-color: var(--bg-card);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--bg-inset);
+  border-color: var(--brand-primary);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--bg-inset);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background-color: var(--state-danger);
+  color: #fff;
+}
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.btn-sm {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  font-size: 0.83rem;
+}
+
+.btn-icon {
+  width: 44px;
+  padding: 0;
+}
+
+.field {
+  width: 100%;
+  padding: 0 var(--space-3);
+  height: 44px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-s);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.field::placeholder {
+  color: var(--text-muted);
+}
+
+.field:hover:not(:disabled) {
+  border-color: var(--brand-primary);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--brand-secondary);
+  box-shadow: 0 0 0 3px var(--brand-secondary-soft);
+}
+
+textarea.field {
+  padding: var(--space-3);
+  height: auto;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* ==========================================================================
+   UTILITARIOS
+   ========================================================================== */
+
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-inset) 25%,
+    var(--bg-subtle) 37%,
+    var(--bg-inset) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-sweep 1.4s ease infinite;
+  border-radius: var(--radius-s);
+}
+
+/* Entrada do painel lateral de historico. Vivia num bloco `<style jsx>` dentro
+   do componente, mas o styled-jsx nao esta habilitado no projeto: o React
+   apenas emitia aviso e a animacao nunca rodava. */
+@keyframes panel-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

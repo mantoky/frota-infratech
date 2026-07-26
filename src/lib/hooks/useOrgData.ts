@@ -39,6 +39,9 @@ export function useOrgData() {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- a estrutura organizacional
+       vem do localStorage, indisponivel no build estatico. Ler no useState
+       quebraria a hidratacao. Mesma justificativa de useFleetData. */
     const backup = readOrg()
     if (backup) {
       setRegionais(backup.regionais?.length ? backup.regionais : initialRegionais)
@@ -47,6 +50,7 @@ export function useOrgData() {
       setChecklistFields(backup.checklistFields?.length ? backup.checklistFields : initialChecklistFields)
     }
     setReady(true)
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
 
   const persist = useCallback((next: Partial<OrgBackup>) => {

@@ -25,10 +25,47 @@ import MetricsPage from '@/components/metrics/MetricsPage'
 import ForumPage from '@/components/forum/ForumPage'
 import RegionaisPage from '@/components/org/RegionaisPage'
 import { useInstallPrompt } from '@/lib/hooks/useInstallPrompt'
+import PageHeader from '@/components/ui/PageHeader'
+import Card, { CardHeader } from '@/components/ui/Card'
+import EmptyState from '@/components/ui/EmptyState'
+import { FileDown, Trophy, Users, Sun, Moon, Download, LogOut } from 'lucide-react'
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>
   return translationsData[key]?.[lang] || translationsData[key]?.['pt'] || key
+}
+
+/** Linha de configuracao: rotulo/descricao a esquerda, controle a direita.
+ *  No mobile o controle desce pra baixo do texto em vez de espremer os dois
+ *  na mesma linha, que era o que fazia o select de idioma ficar cortado. */
+function SettingRow({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description: string
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 'var(--space-4)',
+        flexWrap: 'wrap',
+        padding: 'var(--space-5)',
+        borderBottom: '1px solid var(--border-subtle)',
+      }}
+    >
+      <div style={{ minWidth: 220, flex: 1 }}>
+        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 650, color: 'var(--text-primary)' }}>{title}</h3>
+        <p style={{ margin: '2px 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{description}</p>
+      </div>
+      {children}
+    </div>
+  )
 }
 
 export default function FrotaInfratech() {
@@ -64,6 +101,11 @@ export default function FrotaInfratech() {
   const [pendingVehicleData, setPendingVehicleData] = useState<Partial<Vehicle> | null>(null)
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- preferencias e sessao
+       moram no localStorage, que nao existe no build estatico. Ler no useState
+       quebraria a hidratacao: o HTML pre-renderizado nunca teve acesso a ele,
+       mas o primeiro render no navegador teria, gerando arvores diferentes.
+       Mesma justificativa ja documentada em useFleetData. */
     const storedLang = localStorage.getItem('frota_lang')
     const storedTheme = localStorage.getItem('theme')
     const storedAdmin = localStorage.getItem('isAdmin')
@@ -73,6 +115,7 @@ export default function FrotaInfratech() {
     if (storedAdmin === 'true') setIsAdmin(true)
     if (storedEntered === 'true') setAppEntered(true)
     setAuthChecked(true)
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
 
   useEffect(() => {
@@ -246,15 +289,31 @@ export default function FrotaInfratech() {
   }
 
   if (loading) {
+    // Skeleton no formato da grade real em vez de um spinner: em rede fraca o
+    // usuario ja enxerga onde o conteudo vai cair, e a troca pro conteudo
+    // final nao reposiciona a pagina inteira.
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg-main)' }}>
-        <div style={{ textAlign: 'center' }}><div style={{ fontSize: '3rem' }}>⏳</div><p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Carregando...</p></div>
+      <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg-main)' }}>
+        <div className="page-shell" aria-busy="true" aria-label="Carregando frota">
+          <div className="skeleton" style={{ height: 34, width: 280, marginBottom: 12 }} />
+          <div className="skeleton" style={{ height: 18, width: 420, maxWidth: '80%', marginBottom: 28 }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--space-3)', marginBottom: 'var(--space-6)' }}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="skeleton" style={{ height: 116 }} />
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 'var(--space-3)' }}>
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="skeleton" style={{ height: 148 }} />
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)' }}>
+    <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)' }}>
       <Sidebar
         currentPage={currentPage}
         currentFilter={currentFilter}
@@ -267,12 +326,16 @@ export default function FrotaInfratech() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <main style={{ marginLeft: 0, minHeight: '100vh' }}>
+      {/* app-main--docked reserva a coluna da sidebar a partir de 1024px.
+          A regra e puramente CSS - ver globals.css. */}
+      <main className="app-main--docked" style={{ minHeight: '100dvh' }}>
         <TopBar
           sidebarOpen={sidebarOpen}
           currentLang={currentLang}
           isAdmin={isAdmin}
+          theme={theme}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onToggleTheme={toggleTheme}
           onNavigate={setCurrentPage}
           onAddVehicle={() => setAddModal(true)}
         />
@@ -311,6 +374,7 @@ export default function FrotaInfratech() {
             gerencias={gerencias}
             vehicles={vehicles}
             isAdmin={isAdmin}
+            currentLang={currentLang}
             onCreateRegional={handleCreateRegional}
             onCreateGerencia={createGerencia}
           />
@@ -330,71 +394,132 @@ export default function FrotaInfratech() {
         )}
 
         {currentPage === 'drivers' && (
-          <div style={{ padding: '25px', maxWidth: '1400px', margin: '0 auto' }}>
-            <h1 className="page-title">{t('driversTitle', currentLang)}</h1>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>{t('driversSubtitle', currentLang)}</p>
-            <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ marginBottom: '15px' }}>🏆 {t('topDrivers', currentLang)}</h3>
+          <div className="page-shell">
+            <PageHeader
+              eyebrow="Relatórios"
+              title={t('driversTitle', currentLang)}
+              description={t('driversSubtitle', currentLang)}
+              actions={
+                <button type="button" className="btn btn-outline btn-sm" onClick={downloadPDF}>
+                  <FileDown size={15} /> {t('btnDownloadHistory', currentLang)}
+                </button>
+              }
+            />
+            <Card>
+              <CardHeader
+                title={t('topDrivers', currentLang)}
+                description="Ranking por número de retiradas nos últimos 30 dias."
+                icon={<Trophy size={18} />}
+              />
               {getDriverStats(history).length === 0 ? (
-                <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{t('noRecords', currentLang)}</p>
+                <EmptyState
+                  icon={<Users size={24} />}
+                  title={t('noRecords', currentLang)}
+                  description="O ranking é montado a partir das retiradas registradas. Assim que houver movimentação, ela aparece aqui."
+                />
               ) : (
-                getDriverStats(history).map((driver, index) => (
-                  <div key={driver[0]} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', marginBottom: '8px', backgroundColor: 'var(--bg-main)', borderRadius: '8px', borderLeft: '4px solid var(--brand-primary)' }}>
-                    <span>
-                      <span style={{ marginRight: '10px' }}>{index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅'}</span>
-                      {driver[0]}
-                    </span>
-                    <span><strong>{driver[1]} {t('withdrawals', currentLang)}</strong> - {calculateDriverKm(driver[0], history).toLocaleString()} km</span>
-                  </div>
-                ))
+                <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--space-2)' }}>
+                  {getDriverStats(history).map((driver, index) => (
+                    <li
+                      key={driver[0]}
+                      className="surface-inset"
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 'var(--space-3)',
+                        padding: 'var(--space-3)',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', minWidth: 0 }}>
+                        {/* Posicao em numero, nao so medalha: a partir do 4o
+                            lugar todos usavam o mesmo emoji e nao dava pra
+                            saber quem era 4o e quem era 9o. */}
+                        <span
+                          className="tabular"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 28,
+                            height: 28,
+                            flexShrink: 0,
+                            borderRadius: 'var(--radius-pill)',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            backgroundColor: index < 3 ? 'var(--brand-accent-soft)' : 'var(--bg-card)',
+                            color: index < 3 ? 'var(--alert-text)' : 'var(--text-secondary)',
+                            border: '1px solid var(--border)',
+                          }}
+                        >
+                          {index + 1}
+                        </span>
+                        <strong style={{ fontWeight: 650 }}>{driver[0]}</strong>
+                      </span>
+                      <span className="tabular" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        <strong style={{ color: 'var(--text-primary)' }}>{driver[1]}</strong> {t('withdrawals', currentLang)}
+                        {' · '}
+                        {calculateDriverKm(driver[0], history).toLocaleString('pt-BR')} km
+                      </span>
+                    </li>
+                  ))}
+                </ol>
               )}
-              <button onClick={downloadPDF} style={{ backgroundColor: 'var(--brand-primary)', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginTop: '15px', width: '100%' }}>
-                📄 {t('btnDownloadHistory', currentLang)}
-              </button>
-            </div>
+            </Card>
           </div>
         )}
 
         {currentPage === 'settings' && (
-          <div style={{ padding: '25px', maxWidth: '1400px', margin: '0 auto' }}>
-            <h1 className="page-title">{t('settingsTitle', currentLang)}</h1>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>{t('settingsSubtitle', currentLang)}</p>
-            <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '12px', padding: '30px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
-              <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h3 style={{ marginBottom: '5px' }}>{t('setLang', currentLang)}</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t('setLangDesc', currentLang)}</p>
-                </div>
-                <select value={currentLang} onChange={(e) => changeLanguage(e.target.value)} style={{ padding: '8px', borderRadius: '5px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-                  <option value="pt">Portugues</option><option value="en">English</option><option value="es">Espanol</option>
+          <div className="page-shell">
+            <PageHeader
+              eyebrow="Sistema"
+              title={t('settingsTitle', currentLang)}
+              description={t('settingsSubtitle', currentLang)}
+            />
+            <Card padding="none">
+              <SettingRow title={t('setLang', currentLang)} description={t('setLangDesc', currentLang)}>
+                <label htmlFor="lang-select" className="sr-only">{t('setLang', currentLang)}</label>
+                <select
+                  id="lang-select"
+                  className="field"
+                  style={{ width: 'auto', minWidth: 150 }}
+                  value={currentLang}
+                  onChange={(e) => changeLanguage(e.target.value)}
+                >
+                  <option value="pt">Português</option>
+                  <option value="en">English</option>
+                  <option value="es">Español</option>
                 </select>
-              </div>
-              <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
-                <div>
-                  <h3 style={{ marginBottom: '5px' }}>{t('setTheme', currentLang)}</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{theme === 'dark' ? t('setThemeDark', currentLang) : t('setThemeLight', currentLang)}</p>
-                </div>
-                <button onClick={toggleTheme} style={{ padding: '8px 16px', borderRadius: '5px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}>
-                  {theme === 'dark' ? `🌙 ${t('setThemeDark', currentLang)}` : `☀️ ${t('setThemeLight', currentLang)}`}
+              </SettingRow>
+
+              <SettingRow
+                title={t('setTheme', currentLang)}
+                description={theme === 'dark' ? t('setThemeDark', currentLang) : t('setThemeLight', currentLang)}
+              >
+                <button type="button" className="btn btn-outline btn-sm" onClick={toggleTheme}>
+                  {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                  {theme === 'dark' ? t('setThemeLight', currentLang) : t('setThemeDark', currentLang)}
                 </button>
-              </div>
+              </SettingRow>
+
               {canInstall && (
-                <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
-                  <div>
-                    <h3 style={{ marginBottom: '5px' }}>{t('setInstallApp', currentLang)}</h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t('setInstallAppDesc', currentLang)}</p>
-                  </div>
-                  <button onClick={promptInstall} style={{ padding: '8px 16px', borderRadius: '5px', border: 'none', background: 'var(--brand-secondary)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
-                    {t('btnInstallApp', currentLang)}
+                <SettingRow title={t('setInstallApp', currentLang)} description={t('setInstallAppDesc', currentLang)}>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={promptInstall}>
+                    <Download size={15} /> {t('btnInstallApp', currentLang)}
                   </button>
-                </div>
+                </SettingRow>
               )}
-              <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
-                <button onClick={logout} style={{ padding: '10px 16px', borderRadius: '5px', border: 'none', background: 'var(--brand-gray)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
-                  {t('btnLogout', currentLang)}
+
+              <SettingRow
+                title="Encerrar sessão"
+                description="Sai do aplicativo e exige nova autenticação no próximo acesso."
+              >
+                <button type="button" className="btn btn-outline btn-sm" onClick={logout}>
+                  <LogOut size={15} /> {t('btnLogout', currentLang)}
                 </button>
-              </div>
-            </div>
+              </SettingRow>
+            </Card>
           </div>
         )}
       </main>

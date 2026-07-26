@@ -11,6 +11,24 @@ export const isValidAdminPin = (pin: string): boolean => {
   return validPins.includes(pin)
 }
 
+/**
+ * Converte o texto de um campo numerico para inteiro seguro.
+ *
+ * Existe por causa de um bug real: `parseInt('')` devolve NaN, e a guarda
+ * `if (kmValue < vehicle.km)` nao pega NaN - qualquer comparacao com NaN e
+ * false. O resultado era um veiculo gravado com `km: NaN`, que se propaga
+ * para o calculo de manutencao (`maintenance - km`), aparece como "NaN" na
+ * tela e vira `null` ao serializar para o Firestore. Corrupcao silenciosa.
+ *
+ * A validacao nativa do HTML (`required`, `type="number"`) cobre o caso comum
+ * no navegador, mas nao vale como unica barreira: ela nao roda em submit
+ * programatico e nao existe fora do browser.
+ */
+export const parseIntSafe = (value: string, fallback = 0): number => {
+  const parsed = parseInt(value, 10)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 export const getFuelPercent = (text: string): number => {
   const map: { [key: string]: number } = {
     'Reserva': 10,

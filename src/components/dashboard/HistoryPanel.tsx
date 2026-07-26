@@ -2,8 +2,8 @@
 
 import { t } from '@/lib/hooks/useTranslations'
 import { HistoryItem } from '@/types'
-import { CSSProperties } from 'react'
-import { History, Inbox, Download } from 'lucide-react'
+import { CSSProperties, useEffect } from 'react'
+import { History, Inbox, Download, X } from 'lucide-react'
 import { SEMANTIC_COLORS } from '@/lib/statusColor'
 
 interface HistoryPanelProps {
@@ -21,6 +21,15 @@ export default function HistoryPanel({
   currentLang,
   onDownloadPdf
 }: HistoryPanelProps) {
+  // O painel cobre a tela inteira com um overlay, entao precisa fechar com Esc
+  // como qualquer dialogo - antes so fechava clicando fora ou no X.
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
   const styles: { [key: string]: CSSProperties } = {
     overlay: {
       position: 'fixed',
@@ -41,7 +50,7 @@ export default function HistoryPanel({
       boxShadow: '-4px 0 20px rgba(0,0,0,0.2)',
       display: 'flex',
       flexDirection: 'column',
-      animation: 'slideIn 0.3s ease',
+      animation: 'panel-slide-in var(--duration-base) var(--ease-out)',
     },
     header: {
       padding: '20px',
@@ -149,14 +158,20 @@ export default function HistoryPanel({
 
   return (
     <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.panel} onClick={e => e.stopPropagation()}>
+      <div
+        style={styles.panel}
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="history-panel-title"
+      >
         <div style={styles.header}>
-          <h2 style={styles.title}>
+          <h2 id="history-panel-title" style={styles.title}>
             <History size={20} />
             {t('historyTitle', currentLang)}
           </h2>
-          <button onClick={onClose} style={styles.closeButton}>
-            &times;
+          <button onClick={onClose} style={styles.closeButton} aria-label="Fechar histórico">
+            <X size={20} />
           </button>
         </div>
         
@@ -206,19 +221,6 @@ export default function HistoryPanel({
           )}
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
   )
 }

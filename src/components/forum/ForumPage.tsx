@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { ForumPost } from '@/types'
 import { MessageSquare, ThumbsUp, Send, Plus, AlertCircle, Info, Wrench, Megaphone } from 'lucide-react'
+import PageHeader from '@/components/ui/PageHeader'
 
 interface ForumPageProps {
   posts: ForumPost[]
@@ -55,19 +56,17 @@ export default function ForumPage({
   }
 
   return (
-    <div style={{ padding: '25px', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px', marginBottom: '25px' }}>
-        <div>
-          <h1 className="page-title">Fórum Operacional</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Avisos de rota, alertas e comunicação da equipe de campo</p>
-        </div>
-        <button
-          onClick={() => setShowNewPostModal(true)}
-          style={{ backgroundColor: 'var(--brand-primary)', color: '#fff', padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-        >
-          <Plus size={18} /> Nova Mensagem
-        </button>
-      </div>
+    <div className="page-shell" style={{ maxWidth: 1200 }}>
+      <PageHeader
+        eyebrow="Comunicação"
+        title="Fórum Operacional"
+        description="Avisos de rota, alertas e comunicação da equipe de campo."
+        actions={
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => setShowNewPostModal(true)}>
+            <Plus size={15} /> Nova mensagem
+          </button>
+        }
+      />
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '25px', overflowX: 'auto' }}>
         {['all', 'Aviso', 'Alerta', 'Manutenção', 'Geral'].map(cat => (

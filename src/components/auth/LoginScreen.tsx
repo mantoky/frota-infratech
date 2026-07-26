@@ -2,8 +2,8 @@
 
 import { useState, FormEvent, CSSProperties } from 'react'
 import { t } from '@/lib/hooks/useTranslations'
-import { Lock, ChevronDown, Download } from 'lucide-react'
-import { SEMANTIC_COLORS } from '@/lib/statusColor'
+import { Lock, ChevronDown, Download, Truck, AlertCircle, ArrowRight } from 'lucide-react'
+import { SEMANTIC_TEXT, SEMANTIC_SOFT } from '@/lib/statusColor'
 
 interface LoginScreenProps {
   currentLang: string
@@ -27,109 +27,52 @@ export default function LoginScreen({
 
   const styles: { [key: string]: CSSProperties } = {
     page: {
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
+      padding: 'var(--space-6)',
+      // Fundo com profundidade sutil: dois brilhos de marca bem diluidos
+      // sobre a cor base. Da um ar corporativo sem virar papel de parede.
       backgroundColor: 'var(--bg-main)',
-      padding: '24px',
+      backgroundImage:
+        'radial-gradient(60rem 40rem at 15% -10%, var(--brand-secondary-soft), transparent 60%),' +
+        'radial-gradient(50rem 35rem at 110% 110%, var(--brand-primary-soft), transparent 55%)',
     },
     card: {
       width: '100%',
-      maxWidth: '360px',
+      maxWidth: '400px',
       backgroundColor: 'var(--bg-card)',
-      borderRadius: '16px',
-      padding: '40px 32px',
-      boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-      textAlign: 'center',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-l)',
+      padding: 'var(--space-8)',
+      boxShadow: 'var(--shadow-lg)',
     },
-    icon: {
-      width: '64px',
-      height: '64px',
-      borderRadius: '16px',
-      margin: '0 auto 20px',
-      display: 'block',
-    },
-    title: {
-      fontSize: '1.5rem',
-      fontWeight: 700,
-      color: 'var(--text-primary)',
-      marginBottom: '4px',
-    },
-    subtitle: {
-      color: 'var(--text-secondary)',
-      marginBottom: '32px',
-    },
-    enterButton: {
-      width: '100%',
-      padding: '14px',
-      border: 'none',
-      borderRadius: '8px',
-      backgroundColor: 'var(--brand-secondary)',
-      color: 'white',
-      fontSize: '1rem',
-      fontWeight: 600,
-      cursor: 'pointer',
-    },
-    adminToggle: {
-      display: 'flex',
+    logo: {
+      display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '6px',
-      width: '100%',
-      marginTop: '20px',
-      padding: '8px',
-      border: 'none',
-      background: 'none',
-      color: 'var(--text-secondary)',
-      fontSize: '0.9rem',
-      cursor: 'pointer',
+      width: 54,
+      height: 54,
+      borderRadius: 'var(--radius-m)',
+      background: 'linear-gradient(140deg, #00594c, #001f36)',
+      color: '#fff',
+      marginBottom: 'var(--space-5)',
     },
-    input: {
+    pinInput: {
       width: '100%',
-      padding: '14px',
-      border: `2px solid ${error ? SEMANTIC_COLORS.anormal : 'var(--border)'}`,
-      borderRadius: '8px',
-      backgroundColor: 'var(--bg-main)',
+      padding: 'var(--space-3)',
+      border: `1px solid ${error ? SEMANTIC_TEXT.anormal : 'var(--border-strong)'}`,
+      borderRadius: 'var(--radius-s)',
+      backgroundColor: 'var(--bg-inset)',
       color: 'var(--text-primary)',
-      fontSize: '1.4rem',
+      fontSize: '1.35rem',
       textAlign: 'center',
-      letterSpacing: '8px',
+      letterSpacing: '0.6em',
+      textIndent: '0.6em',
       fontWeight: 700,
-      marginBottom: '12px',
-    },
-    error: {
-      color: SEMANTIC_COLORS.anormal,
-      fontSize: '0.85rem',
-      marginBottom: '12px',
-      fontWeight: 600,
-    },
-    adminSubmit: {
-      width: '100%',
-      padding: '12px',
-      border: 'none',
-      borderRadius: '8px',
-      backgroundColor: 'var(--brand-secondary)',
-      color: 'white',
-      fontWeight: 600,
-      cursor: 'pointer',
-    },
-    installButton: {
-      width: '100%',
-      padding: '12px',
-      border: '2px solid var(--brand-secondary)',
-      borderRadius: '8px',
-      backgroundColor: 'transparent',
-      color: 'var(--brand-secondary)',
-      fontSize: '0.95rem',
-      fontWeight: 600,
-      cursor: 'pointer',
-      marginTop: '12px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '8px',
+      fontVariantNumeric: 'tabular-nums',
     },
   }
 
@@ -144,51 +87,163 @@ export default function LoginScreen({
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <img src="/icon.svg" alt="" style={styles.icon} />
-        <h1 style={styles.title}>Frota Infratech</h1>
-        <p style={styles.subtitle}>{t('loginSubtitle', currentLang)}</p>
+        <span style={styles.logo}>
+          <Truck size={26} />
+        </span>
 
-        <button style={styles.enterButton} onClick={onEnterCommon}>
+        <p className="eyebrow" style={{ marginBottom: 'var(--space-1)' }}>Infratech</p>
+        <h1
+          style={{
+            fontSize: '1.55rem',
+            fontWeight: 750,
+            letterSpacing: '-0.026em',
+            color: 'var(--text-primary)',
+            margin: 0,
+          }}
+        >
+          Gestão de Frota
+        </h1>
+        <p
+          style={{
+            color: 'var(--text-secondary)',
+            fontSize: '0.92rem',
+            lineHeight: 1.5,
+            margin: 'var(--space-2) 0 var(--space-6)',
+          }}
+        >
+          {t('loginSubtitle', currentLang)}
+        </p>
+
+        <button
+          type="button"
+          className="btn btn-secondary"
+          style={{ width: '100%' }}
+          onClick={onEnterCommon}
+        >
           {t('btnEnter', currentLang)}
+          <ArrowRight size={17} />
         </button>
 
         {canInstall && (
-          <button style={styles.installButton} onClick={onInstall}>
+          <button
+            type="button"
+            className="btn btn-outline"
+            style={{ width: '100%', marginTop: 'var(--space-2)' }}
+            onClick={onInstall}
+          >
             <Download size={16} />
             {t('btnInstallApp', currentLang)}
           </button>
         )}
 
-        <button
-          style={styles.adminToggle}
-          onClick={() => setShowAdminForm(!showAdminForm)}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-3)',
+            margin: 'var(--space-5) 0 var(--space-2)',
+          }}
         >
+          <span style={{ flex: 1, height: 1, backgroundColor: 'var(--border)' }} />
+          <span className="eyebrow">ou</span>
+          <span style={{ flex: 1, height: 1, backgroundColor: 'var(--border)' }} />
+        </div>
+
+        <button
+          type="button"
+          className="btn btn-ghost"
+          style={{ width: '100%' }}
+          onClick={() => setShowAdminForm(!showAdminForm)}
+          aria-expanded={showAdminForm}
+          aria-controls="admin-pin-form"
+        >
+          <Lock size={15} />
           {t('btnAdminAccess', currentLang)}
-          <ChevronDown size={16} style={{ transform: showAdminForm ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          <ChevronDown
+            size={16}
+            style={{
+              transform: showAdminForm ? 'rotate(180deg)' : 'none',
+              transition: 'transform var(--duration-base) var(--ease-out)',
+            }}
+          />
         </button>
 
         {showAdminForm && (
-          <form onSubmit={handleAdminSubmit} style={{ marginTop: '16px', textAlign: 'left' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', color: 'var(--text-primary)' }}>
-              <Lock size={32} />
-            </div>
+          <form
+            id="admin-pin-form"
+            onSubmit={handleAdminSubmit}
+            style={{
+              marginTop: 'var(--space-4)',
+              padding: 'var(--space-4)',
+              borderRadius: 'var(--radius-s)',
+              backgroundColor: 'var(--bg-subtle)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <label htmlFor="admin-pin" className="field-label" style={{ textAlign: 'center' }}>
+              PIN de administrador
+            </label>
             <input
+              id="admin-pin"
               type="password"
+              inputMode="numeric"
+              autoComplete="one-time-code"
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              style={styles.input}
+              style={styles.pinInput}
               placeholder="••••"
               maxLength={4}
               autoFocus
               required
+              aria-invalid={error}
+              aria-describedby={error ? 'admin-pin-error' : undefined}
             />
-            {error && <p style={styles.error}>{t('pinError', currentLang)}</p>}
-            <button type="submit" style={styles.adminSubmit} disabled={pin.length < 4}>
-              {t('btnEnter', currentLang)}
+            {error && (
+              <p
+                id="admin-pin-error"
+                role="alert"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  margin: 'var(--space-2) 0 0',
+                  padding: 'var(--space-2)',
+                  borderRadius: 'var(--radius-xs)',
+                  backgroundColor: SEMANTIC_SOFT.anormal,
+                  color: SEMANTIC_TEXT.anormal,
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                }}
+              >
+                <AlertCircle size={14} />
+                {t('pinError', currentLang)}
+              </p>
+            )}
+            {/* Rotulo distinto do botao de entrada comum. Dois botoes "Entrar"
+                na mesma tela sao indistinguiveis por leitor de tela e por
+                navegacao por voz. */}
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: 'var(--space-3)' }}
+              disabled={pin.length < 4}
+            >
+              {t('btnEnterAdmin', currentLang)}
             </button>
           </form>
         )}
       </div>
+
+      <p
+        style={{
+          marginTop: 'var(--space-6)',
+          fontSize: '0.75rem',
+          color: 'var(--text-muted)',
+          textAlign: 'center',
+        }}
+      >
+        Uso restrito a colaboradores autorizados · Atividades são registradas
+      </p>
     </div>
   )
 }

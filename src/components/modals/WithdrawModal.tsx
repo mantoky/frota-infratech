@@ -4,8 +4,9 @@ import { useState, FormEvent, CSSProperties } from 'react'
 import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle, ChecklistField, ChecklistPhoto } from '@/types'
 import Modal from './Modal'
+import { parseIntSafe } from '@/lib/helpers'
 import { captureLocation, GeoPoint } from '@/lib/geolocation'
-import { SEMANTIC_COLORS } from '@/lib/statusColor'
+import { SEMANTIC_TEXT } from '@/lib/statusColor'
 import PhotoUploader from '@/components/checklist/PhotoUploader'
 
 interface WithdrawModalProps {
@@ -54,7 +55,7 @@ export default function WithdrawModal({
     input: { width: '100%', padding: '12px', border: '2px solid var(--border)', borderRadius: '8px', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '1rem' },
     select: { width: '100%', padding: '12px', border: '2px solid var(--border)', borderRadius: '8px', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '1rem' },
     textarea: { width: '100%', padding: '12px', border: '2px solid var(--border)', borderRadius: '8px', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '1rem', minHeight: '100px', resize: 'vertical' as const },
-    error: { color: SEMANTIC_COLORS.anormal, fontSize: '0.875rem', marginTop: '5px' },
+    error: { color: SEMANTIC_TEXT.anormal, fontSize: '0.875rem', marginTop: '5px' },
     buttonGroup: { display: 'flex', gap: '10px', marginTop: '20px' },
     button: { flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' },
     confirmButton: { backgroundColor: 'var(--brand-primary)', color: 'white' },
@@ -70,7 +71,9 @@ export default function WithdrawModal({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!vehicle) return
-    const kmValue = parseInt(km)
+    const kmValue = parseIntSafe(km, -1)
+    // -1 como fallback faz um campo vazio/invalido cair na mesma guarda de
+    // quilometragem menor que a atual, em vez de passar como NaN.
     if (kmValue < vehicle.km) {
       setKmError(true)
       return
@@ -89,22 +92,22 @@ export default function WithdrawModal({
     <Modal isOpen={isOpen} onClose={onClose} title={t('modalWithdraw', currentLang)}>
       <form onSubmit={handleSubmit}>
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblVehicle', currentLang)}</label>
+          <span style={styles.label}>{t('lblVehicle', currentLang)}</span>
           <p style={{ fontWeight: 600 }}>{vehicle.tag} - {vehicle.model}</p>
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblDriver', currentLang)}</label>
-          <input type="text" value={driver} onChange={(e) => setDriver(e.target.value)} style={styles.input} list="drivers-datalist" required />
+          <label htmlFor="wd-f1" style={styles.label}>{t('lblDriver', currentLang)}</label>
+          <input id="wd-f1" type="text" value={driver} onChange={(e) => setDriver(e.target.value)} style={styles.input} list="drivers-datalist" required />
           <datalist id="drivers-datalist">{drivers.map(name => <option key={name} value={name} />)}</datalist>
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblKm', currentLang)}</label>
-          <input type="number" value={km} onChange={(e) => { setKm(e.target.value); setKmError(false) }} style={styles.input} min={vehicle.km} required />
+          <label htmlFor="wd-f2" style={styles.label}>{t('lblKm', currentLang)}</label>
+          <input id="wd-f2" type="number" value={km} onChange={(e) => { setKm(e.target.value); setKmError(false) }} style={styles.input} min={vehicle.km} required />
           {kmError && <p style={styles.error}>{t('errorKm', currentLang)}</p>}
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblFuel', currentLang)}</label>
-          <select value={fuel} onChange={(e) => setFuel(e.target.value)} style={styles.select} required>
+          <label htmlFor="wd-f3" style={styles.label}>{t('lblFuel', currentLang)}</label>
+          <select id="wd-f3" value={fuel} onChange={(e) => setFuel(e.target.value)} style={styles.select} required>
             <option value="Reserva">Reserva</option>
             <option value="1/4">1/4</option>
             <option value="2/4">2/4</option>
@@ -112,11 +115,18 @@ export default function WithdrawModal({
             <option value="Cheio">Cheio</option>
           </select>
         </div>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Checklist de Saída</label>
+        {/* Grupo de checkboxes, nao um campo unico: o titulo e o nome do
+            grupo (role="group" + aria-labelledby) e cada item ja tem
+            associacao implicita por estar dentro do proprio <label>. */}
+        <div style={styles.formGroup} role="group" aria-labelledby="wd-checklist-title">
+          <span id="wd-checklist-title" style={styles.label}>Checklist de Saída</span>
           {activeFields.map(field => (
             <label key={field.id} style={styles.checkItem}>
-              <input type="checkbox" checked={!!checks[field.id]} onChange={e => setChecks(prev => ({ ...prev, [field.id]: e.target.checked }))} />
+              <input
+                type="checkbox"
+                checked={!!checks[field.id]}
+                onChange={e => setChecks(prev => ({ ...prev, [field.id]: e.target.checked }))}
+              />
               <span>{field.label}</span>
             </label>
           ))}
@@ -125,12 +135,27 @@ export default function WithdrawModal({
           <PhotoUploader photos={photos} onChange={setPhotos} maxPhotos={5} />
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblObs', currentLang)}</label>
-          <textarea value={obs} onChange={(e) => setObs(e.target.value)} style={styles.textarea} />
+          <label htmlFor="wd-f5" style={styles.label}>{t('lblObs', currentLang)}</label>
+          <textarea id="wd-f5" value={obs} onChange={(e) => setObs(e.target.value)} style={styles.textarea} />
         </div>
         <div style={styles.buttonGroup}>
           <button type="button" onClick={onClose} style={{ ...styles.button, ...styles.cancelButton }}>{t('btnCancel', currentLang)}</button>
-          <button type="submit" disabled={!allChecked} style={{ ...styles.button, ...styles.confirmButton, ...(!allChecked ? { backgroundColor: '#ccc', cursor: 'not-allowed' } : {}) }}>{t('btnConfirm', currentLang)}</button>
+          {/* Desabilitado usa opacidade sobre a propria cor, nao um cinza fixo:
+              o #ccc anterior virava um botao claro e aparentemente ativo no
+              tema escuro. O title explica o porque do bloqueio, que antes o
+              usuario tinha que adivinhar. */}
+          <button
+            type="submit"
+            disabled={!allChecked}
+            title={!allChecked ? 'Conclua o checklist de saída para liberar a retirada' : undefined}
+            style={{
+              ...styles.button,
+              ...styles.confirmButton,
+              ...(!allChecked ? { opacity: 0.45, cursor: 'not-allowed' } : {}),
+            }}
+          >
+            {t('btnConfirm', currentLang)}
+          </button>
         </div>
       </form>
     </Modal>

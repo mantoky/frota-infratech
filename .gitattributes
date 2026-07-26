@@ -1,0 +1,19 @@
+# O repositorio e editado no Windows, mas o build roda em Linux (Netlify) e o
+# Git guardava LF enquanto a working tree tinha CRLF. Resultado: todo arquivo
+# aparecia como modificado mesmo sem mudanca de conteudo, e qualquer commit
+# vinha com milhares de linhas de ruido que inutilizam o `git blame` e tornam
+# o code review impossivel.
+#
+# `text=auto eol=lf` normaliza: LF no repositorio, sempre; o checkout local
+# continua funcionando normalmente no Windows.
+* text=auto eol=lf
+
+# Binarios nunca devem sofrer conversao de fim de linha.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

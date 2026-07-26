@@ -24,7 +24,8 @@ import {
   Copy,
   Check
 } from 'lucide-react'
-import { SEMANTIC_COLORS } from '@/lib/statusColor'
+import { SEMANTIC_TEXT } from '@/lib/statusColor'
+import PageHeader from '@/components/ui/PageHeader'
 
 interface MetricsPageProps {
   vehicles: Vehicle[]
@@ -61,18 +62,19 @@ export default function MetricsPage({ vehicles, history }: MetricsPageProps) {
   }
 
   return (
-    <div style={{ padding: '25px', maxWidth: '1400px', margin: '0 auto' }}>
-      <h1 className="page-title">Métricas de Uso e Telemetria da Frota</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>
-        Indicadores operacionais de uso, tempo de inatividade, picos de saída e integração Grafana.
-      </p>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Inteligência operacional"
+        title="Métricas de Uso e Telemetria da Frota"
+        description="Indicadores operacionais de uso, tempo de inatividade, picos de saída e integração Grafana."
+      />
 
       {/* Metric Cards Top */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', marginBottom: '30px' }}>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '12px', borderLeft: `5px solid ${SEMANTIC_COLORS.ok}`, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '12px', borderLeft: `5px solid ${SEMANTIC_TEXT.ok}`, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>
             <span>Veículos Ativos / Uso</span>
-            <Activity size={18} color={SEMANTIC_COLORS.ok} />
+            <Activity size={18} color={SEMANTIC_TEXT.ok} />
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{grafanaData.summary.uso} / {grafanaData.summary.total}</div>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -80,10 +82,10 @@ export default function MetricsPage({ vehicles, history }: MetricsPageProps) {
           </span>
         </div>
 
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '12px', borderLeft: `5px solid ${SEMANTIC_COLORS.alerta}`, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '12px', borderLeft: `5px solid ${SEMANTIC_TEXT.alerta}`, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>
             <span>Tempo Médio Parado (Idle)</span>
-            <Clock size={18} color={SEMANTIC_COLORS.alerta} />
+            <Clock size={18} color={SEMANTIC_TEXT.alerta} />
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>
             {Math.round(timeMetrics.reduce((acc, curr) => acc + curr.idleHours, 0) / (timeMetrics.filter(t => t.idleHours > 0).length || 1))}h
@@ -91,10 +93,10 @@ export default function MetricsPage({ vehicles, history }: MetricsPageProps) {
           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Média de espera na área disponível</span>
         </div>
 
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '12px', borderLeft: `5px solid ${SEMANTIC_COLORS.anormal}`, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '20px', borderRadius: '12px', borderLeft: `5px solid ${SEMANTIC_TEXT.anormal}`, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px' }}>
             <span>Na Oficina / Manutenção</span>
-            <Wrench size={18} color={SEMANTIC_COLORS.anormal} />
+            <Wrench size={18} color={SEMANTIC_TEXT.anormal} />
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{grafanaData.summary.man} veículo(s)</div>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Aguardando reparos operacionais</span>
@@ -208,27 +210,27 @@ export default function MetricsPage({ vehicles, history }: MetricsPageProps) {
                       fontSize: '0.78rem',
                       fontWeight: 700,
                       backgroundColor: item.status === 'disp' ? 'rgba(46,204,113,0.15)' : item.status === 'uso' ? 'rgba(52,152,219,0.15)' : item.status === 'man' ? 'rgba(231,76,60,0.15)' : 'rgba(241,196,15,0.15)',
-                      color: item.status === 'disp' ? SEMANTIC_COLORS.ok : item.status === 'uso' ? '#2980b9' : item.status === 'man' ? SEMANTIC_COLORS.anormal : SEMANTIC_COLORS.alerta
+                      color: item.status === 'disp' ? SEMANTIC_TEXT.ok : item.status === 'uso' ? '#2980b9' : item.status === 'man' ? SEMANTIC_TEXT.anormal : SEMANTIC_TEXT.alerta
                     }}>
                       {item.status === 'disp' ? 'Disponível' : item.status === 'uso' ? 'Em Uso' : item.status === 'man' ? 'Oficina' : 'Lavador'}
                     </span>
                   </td>
                   <td style={{ padding: '12px 10px' }}>
                     {item.idleHours > 0 ? (
-                      <strong style={{ color: item.idleHours > 48 ? SEMANTIC_COLORS.alerta : 'inherit' }}>
+                      <strong style={{ color: item.idleHours > 48 ? SEMANTIC_TEXT.alerta : 'inherit' }}>
                         {item.idleHours} horas
                       </strong>
                     ) : '-'}
                   </td>
                   <td style={{ padding: '12px 10px' }}>
                     {item.workshopHours > 0 ? (
-                      <strong style={{ color: SEMANTIC_COLORS.anormal }}>
+                      <strong style={{ color: SEMANTIC_TEXT.anormal }}>
                         {item.workshopHours} horas
                       </strong>
                     ) : '-'}
                   </td>
                   <td style={{ padding: '12px 10px' }}>
-                    <span style={{ color: item.daysSinceWash > 14 ? SEMANTIC_COLORS.alerta : 'inherit' }}>
+                    <span style={{ color: item.daysSinceWash > 14 ? SEMANTIC_TEXT.alerta : 'inherit' }}>
                       {item.daysSinceWash === 0 ? 'Hoje' : `${item.daysSinceWash} dia(s) atrás`} ({item.lastWashedFormatted})
                     </span>
                   </td>
@@ -368,7 +370,7 @@ export default function MetricsPage({ vehicles, history }: MetricsPageProps) {
                 cursor: 'pointer'
               }}
             >
-              {copiedPrometheus ? <Check size={16} color={SEMANTIC_COLORS.ok} /> : <Copy size={16} />}
+              {copiedPrometheus ? <Check size={16} color={SEMANTIC_TEXT.ok} /> : <Copy size={16} />}
               {copiedPrometheus ? 'Copiado!' : 'Copiar Métricas'}
             </button>
 

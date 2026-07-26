@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Vehicle, ModalType } from '@/types'
+import { Vehicle } from '@/types'
 
 export function useModals() {
   const [withdrawModal, setWithdrawModal] = useState(false)

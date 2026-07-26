@@ -6,6 +6,7 @@ import { Vehicle, ChecklistField } from '@/types'
 import { SEMANTIC_COLORS, getVehicleSemanticStatus, getStatusLabelKey } from '@/lib/statusColor'
 import { Search, Pencil, Plus, X, UserPlus } from 'lucide-react'
 import ChecklistBuilder from '@/components/checklist/ChecklistBuilder'
+import PageHeader from '@/components/ui/PageHeader'
 
 interface AdminPageProps {
   vehicles: Vehicle[]
@@ -167,18 +168,25 @@ export default function AdminPage({
   }
 
   return (
-    <div style={styles.container}>
-      <h1 className="page-title">{t('adminTitle', currentLang)}</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '25px' }}>{t('adminSubtitle', currentLang)}</p>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Administração"
+        title={t('adminTitle', currentLang)}
+        description={t('adminSubtitle', currentLang)}
+        actions={
+          <button type="button" className="btn btn-primary btn-sm" onClick={onAddVehicle}>
+            <Plus size={15} /> {t('btnAdd', currentLang)}
+          </button>
+        }
+      />
 
       {/* Vehicles management */}
       <div style={styles.card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '15px' }}>
-          <h3 style={{ color: 'var(--text-primary)' }}>{t('adminVehiclesTitle', currentLang)}</h3>
-          <button onClick={onAddVehicle} style={{ ...styles.addDriverButton, backgroundColor: 'var(--brand-secondary)' }}>
-            <Plus size={16} /> {t('btnAdd', currentLang)}
-          </button>
-        </div>
+        {/* O botao de adicionar veiculo agora vive no cabecalho da pagina -
+            manter uma copia aqui daria duas acoes identicas na mesma tela. */}
+        <h2 className="section-title" style={{ marginBottom: 'var(--space-4)' }}>
+          {t('adminVehiclesTitle', currentLang)}
+        </h2>
 
         <div style={styles.searchBar}>
           <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />

@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react'
 import { t } from '@/lib/hooks/useTranslations'
 import { Vehicle } from '@/types'
 import Modal from './Modal'
+import { parseIntSafe } from '@/lib/helpers'
 import { CSSProperties } from 'react'
 
 interface ServiceModalProps {
@@ -100,7 +101,7 @@ export default function ServiceModal({
 
     onConfirm({
       driver,
-      km: parseInt(km),
+      km: parseIntSafe(km, vehicle.km),
       obs
     })
 
@@ -124,13 +125,13 @@ export default function ServiceModal({
     >
       <form onSubmit={handleSubmit}>
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblVehicle', currentLang)}</label>
+          <span style={styles.label}>{t('lblVehicle', currentLang)}</span>
           <p style={{ fontWeight: 600 }}>{vehicle.tag} - {vehicle.model}</p>
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblDriver', currentLang)}</label>
-          <input
+          <label htmlFor="sv-f1" style={styles.label}>{t('lblDriver', currentLang)}</label>
+          <input id="sv-f1"
             type="text"
             value={driver}
             onChange={(e) => setDriver(e.target.value)}
@@ -139,8 +140,8 @@ export default function ServiceModal({
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblKm', currentLang)}</label>
-          <input
+          <label htmlFor="sv-f2" style={styles.label}>{t('lblKm', currentLang)}</label>
+          <input id="sv-f2"
             type="number"
             value={km}
             onChange={(e) => setKm(e.target.value)}
@@ -151,8 +152,8 @@ export default function ServiceModal({
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>{t('lblObs', currentLang)}</label>
-          <textarea
+          <label htmlFor="sv-f3" style={styles.label}>{t('lblObs', currentLang)}</label>
+          <textarea id="sv-f3"
             value={obs}
             onChange={(e) => setObs(e.target.value)}
             style={styles.textarea}
