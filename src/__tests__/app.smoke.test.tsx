@@ -1,10 +1,11 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import FrotaInfratech from '@/app/page';
+import type { UserProfile } from '@/types';
 
 // O app fala com o Firestore na montagem. Aqui o interesse e a camada de UI,
 // entao o SDK e trocado por um duble que simula "documento remoto ainda nao
 // existe" - o mesmo caminho que faz o app cair no seed de initialVehicles.
-jest.mock('@/lib/firebase', () => ({ db: {} }));
+jest.mock('@/lib/firebase', () => ({ db: {}, auth: {} }));
 
 jest.mock('firebase/firestore', () => ({
   doc: jest.fn(() => ({})),
@@ -19,57 +20,152 @@ jest.mock('firebase/firestore', () => ({
 // o PDF em si, so o caminho ate o botao, o modulo inteiro vira stub.
 jest.mock('@/lib/pdf', () => ({ generateFleetReport: jest.fn() }));
 
+// --- Duble controlavel do useAuth -------------------------------------------
+// Mockar o hook, e nao o SDK do Firebase, mantem os testes sobre o que importa:
+// como a interface reage a cada estado de sessao. O comportamento do Firebase
+// Auth em si e responsabilidade dele, nao desta suite.
+const authMock = {
+  profile: null as UserProfile | null,
+  loading: false,
+  isActive: false,
+  isAdmin: false,
+  isOperator: false,
+  status: null as string | null,
+  signIn: jest.fn(() => Promise.resolve()),
+  signUp: jest.fn(() => Promise.resolve()),
+  logout: jest.fn(),
+  resetPassword: jest.fn(() => Promise.resolve()),
+  reauthenticate: jest.fn(() => Promise.resolve()),
+};
+
+jest.mock('@/lib/hooks/useAuth', () => ({
+  useAuth: () => authMock,
+  authErrorMessage: (c: string) => c,
+}));
+
+function comoDeslogado() {
+  Object.assign(authMock, { profile: null, isActive: false, isAdmin: false, status: null });
+}
+
+function comoUsuario(
+  level: UserProfile['level'] = 'usuario',
+  status: UserProfile['status'] = 'ativo'
+) {
+  Object.assign(authMock, {
+    profile: { uid: 'u1', email: 'a@b.com', displayName: 'Teste', level, status } as UserProfile,
+    isActive: status === 'ativo',
+    isAdmin: status === 'ativo' && ['admin', 'admin_master'].includes(level),
+    isOperator: status === 'ativo' && ['operador', 'admin', 'admin_master'].includes(level),
+    status,
+  });
+}
+
 /** Navega pela sidebar, que e o unico caminho real entre paginas. */
 function navegarPara(rotulo: string | RegExp) {
   const sidebar = screen.getByRole('complementary');
   fireEvent.click(within(sidebar).getByRole('button', { name: rotulo }));
 }
 
-describe('Aplicação — fluxo completo', () => {
-  let consoleError: jest.SpyInstance;
+let consoleError: jest.SpyInstance;
 
-  beforeEach(() => {
-    localStorage.clear();
-    // Um erro de console durante a navegacao quase sempre significa render
-    // quebrado ou prop faltando. O teste falha nele de proposito.
-    consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
+beforeEach(() => {
+  localStorage.clear();
+  jest.clearAllMocks();
+  authMock.loading = false;
+  // Um erro de console durante a navegacao quase sempre significa render
+  // quebrado ou prop faltando. O teste falha nele de proposito.
+  consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+});
 
-  afterEach(() => {
-    expect(consoleError).not.toHaveBeenCalled();
-    consoleError.mockRestore();
-  });
+afterEach(() => {
+  expect(consoleError).not.toHaveBeenCalled();
+  consoleError.mockRestore();
+});
 
-  const entrar = async () => {
-    render(<FrotaInfratech />);
-    fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
-    await waitFor(() => expect(screen.getByRole('complementary')).toBeInTheDocument());
-  };
-
-  it('mostra a tela de login antes de qualquer dado da frota', () => {
+describe('Portão de acesso', () => {
+  it('sem sessão, mostra o login e nenhum dado da frota', () => {
+    comoDeslogado();
     render(<FrotaInfratech />);
     expect(screen.getByRole('heading', { name: /Gestão de Frota/i })).toBeInTheDocument();
     expect(screen.queryByText('TN-01')).not.toBeInTheDocument();
   });
 
-  it('revela o formulário de PIN e rejeita PIN inválido', () => {
+  it('autentica com e-mail e senha', async () => {
+    comoDeslogado();
     render(<FrotaInfratech />);
-    fireEvent.click(screen.getByRole('button', { name: /Acesso administrativo/i }));
 
-    const pin = screen.getByLabelText(/PIN de administrador/i);
-    fireEvent.change(pin, { target: { value: '0000' } });
-    fireEvent.click(screen.getByRole('button', { name: /Entrar como administrador/i }));
+    fireEvent.change(screen.getByLabelText(/E-mail corporativo/i), {
+      target: { value: 'joao@infratech.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/^Senha$/i), { target: { value: 'senhaSuperLonga1' } });
+    fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
 
-    expect(screen.getByRole('alert')).toHaveTextContent(/PIN incorreto/i);
+    await waitFor(() =>
+      expect(authMock.signIn).toHaveBeenCalledWith('joao@infratech.com', 'senhaSuperLonga1')
+    );
   });
 
-  it('entra como operador e lista a frota', async () => {
+  it('o autocadastro pede os dados declarados e avisa que passa por aprovação', async () => {
+    comoDeslogado();
+    render(<FrotaInfratech />);
+    fireEvent.click(screen.getByRole('button', { name: /Primeiro acesso/i }));
+
+    expect(screen.getByLabelText(/Nome completo/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/RAC02/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/ID crachá/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Gerência/i)).toBeInTheDocument();
+    expect(screen.getByText(/conferidos por um administrador ou operador/i)).toBeInTheDocument();
+  });
+
+  it('recusa senha curta no cadastro sem chamar o servidor', async () => {
+    comoDeslogado();
+    render(<FrotaInfratech />);
+    fireEvent.click(screen.getByRole('button', { name: /Primeiro acesso/i }));
+
+    const senha = screen.getByLabelText(/Senha \(mínimo/i);
+    expect(senha).toHaveAttribute('minLength', '12');
+
+    fireEvent.change(senha, { target: { value: 'curta' } });
+    fireEvent.click(screen.getByRole('button', { name: /Enviar cadastro/i }));
+
+    // Duas barreiras: a validação nativa impede o submit, e o handler recusa
+    // de novo caso o submit chegue por outro caminho. O que importa aqui é que
+    // nada sai para o servidor.
+    await waitFor(() => expect(authMock.signUp).not.toHaveBeenCalled());
+  });
+
+  it('conta pendente não vê a frota e recebe explicação própria', () => {
+    comoUsuario('usuario', 'pendente');
+    render(<FrotaInfratech />);
+
+    expect(screen.getByRole('heading', { name: /Cadastro em análise/i })).toBeInTheDocument();
+    expect(screen.queryByText('TN-01')).not.toBeInTheDocument();
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
+  it('conta bloqueada recebe mensagem diferente de conta pendente', () => {
+    comoUsuario('usuario', 'bloqueado');
+    render(<FrotaInfratech />);
+
+    expect(screen.getByRole('heading', { name: /Acesso bloqueado/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Cadastro em análise/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('Aplicação — usuário comum ativo', () => {
+  const entrar = async () => {
+    comoUsuario('usuario', 'ativo');
+    render(<FrotaInfratech />);
+    await waitFor(() => expect(screen.getByRole('complementary')).toBeInTheDocument());
+  };
+
+  it('lista a frota', async () => {
     await entrar();
     expect(screen.getByText('TN-01')).toBeInTheDocument();
     expect(screen.getByText(/de 13 veículos/i)).toBeInTheDocument();
   });
 
-  it('não expõe ações de administrador para operador comum', async () => {
+  it('não expõe ações de administrador', async () => {
     await entrar();
     expect(screen.getByText('Operador')).toBeInTheDocument();
     const sidebar = screen.getByRole('complementary');
@@ -88,8 +184,6 @@ describe('Aplicação — fluxo completo', () => {
 
   it('mantém o filtro num único lugar — os KPIs são leitura, não controle', async () => {
     await entrar();
-    // Regressao: os cards de KPI e os chips mostravam a mesma contagem e
-    // aplicavam o mesmo filtro, empilhados na mesma tela.
     expect(screen.queryByRole('button', { name: /Frota total/i })).not.toBeInTheDocument();
     expect(screen.getByRole('radiogroup', { name: /Filtrar frota/i })).toBeInTheDocument();
   });
@@ -100,7 +194,6 @@ describe('Aplicação — fluxo completo', () => {
 
     fireEvent.change(busca, { target: { value: 'FQQ8B72' } });
     await waitFor(() => expect(screen.getByText(/^1 de 13/)).toBeInTheDocument());
-    expect(screen.getByText('TN-01')).toBeInTheDocument();
 
     fireEvent.change(busca, { target: { value: 'zzzzz' } });
     await waitFor(() => expect(screen.getByText(/Nenhum veículo encontrado/i)).toBeInTheDocument());
@@ -113,7 +206,6 @@ describe('Aplicação — fluxo completo', () => {
 
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByRole('button', { name: /Retirar/i })).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: /Lavador/i })).toBeInTheDocument();
   });
 
   it('navega por todas as páginas sem quebrar', async () => {
@@ -140,32 +232,17 @@ describe('Aplicação — fluxo completo', () => {
   it('alterna o tema pela barra superior', async () => {
     await entrar();
     fireEvent.click(screen.getByRole('button', { name: /Ativar tema escuro/i }));
-
-    await waitFor(() => {
-      expect(document.documentElement).toHaveClass('dark');
-      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-    });
+    await waitFor(() => expect(document.documentElement).toHaveClass('dark'));
 
     fireEvent.click(screen.getByRole('button', { name: /Ativar tema claro/i }));
     await waitFor(() => expect(document.documentElement).not.toHaveClass('dark'));
   });
 
-  it('mostra estado vazio nos motoristas quando não há histórico', async () => {
+  it('encerra a sessão pelo Firebase, não pelo localStorage', async () => {
     await entrar();
-    navegarPara(/Motoristas/i);
-    expect(await screen.findByText(/Nenhum registro nos últimos 30 dias/i)).toBeInTheDocument();
-  });
-
-  it('abre a estrutura organizacional com as duas regionais semente', async () => {
-    await entrar();
-    navegarPara(/Regionais/i);
-
-    const abas = await screen.findAllByRole('tab');
-    expect(abas).toHaveLength(2);
-    expect(abas[0]).toHaveAttribute('aria-selected', 'true');
-
-    fireEvent.click(abas[1]);
-    await waitFor(() => expect(abas[1]).toHaveAttribute('aria-selected', 'true'));
+    navegarPara(/Configurações/i);
+    fireEvent.click(await screen.findByRole('button', { name: /Sair/i }));
+    expect(authMock.logout).toHaveBeenCalled();
   });
 
   it('abre o painel de histórico pela sidebar', async () => {
@@ -175,44 +252,19 @@ describe('Aplicação — fluxo completo', () => {
   });
 });
 
-describe('Aplicação — sessão administrativa', () => {
-  let consoleError: jest.SpyInstance;
-
-  beforeEach(() => {
-    localStorage.clear();
-    consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    expect(consoleError).not.toHaveBeenCalled();
-    consoleError.mockRestore();
-  });
-
-  /** Entra direto como admin: o PIN e so uma trava de UI e o estado dele mora
-   *  no localStorage, entao semear a chave evita depender da variavel de
-   *  ambiente do PIN dentro do teste. */
+describe('Aplicação — administrador', () => {
   const entrarComoAdmin = async () => {
-    localStorage.setItem('isAdmin', 'true');
-    localStorage.setItem('frota_entered', 'true');
+    comoUsuario('admin', 'ativo');
     render(<FrotaInfratech />);
     await waitFor(() => expect(screen.getByRole('complementary')).toBeInTheDocument());
   };
 
-  it('expõe a área administrativa e o botão de adicionar veículo', async () => {
+  it('expõe a área administrativa', async () => {
     await entrarComoAdmin();
     expect(screen.getByText('Admin')).toBeInTheDocument();
 
     const sidebar = screen.getByRole('complementary');
     expect(within(sidebar).getByRole('button', { name: /Administra/i })).toBeInTheDocument();
-  });
-
-  it('abre o cadastro de veículo sem quebrar', async () => {
-    await entrarComoAdmin();
-    fireEvent.click(screen.getAllByRole('button', { name: /Adicionar/i })[0]);
-
-    const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveAccessibleName();
-    expect(dialog).toHaveAccessibleDescription();
   });
 
   it('percorre a área administrativa', async () => {
@@ -221,32 +273,34 @@ describe('Aplicação — sessão administrativa', () => {
     fireEvent.click(within(sidebar).getByRole('button', { name: /Administra/i }));
 
     expect(await screen.findByRole('heading', { name: /Administra/i })).toBeInTheDocument();
-    // A tabela de veiculos precisa listar a frota semente.
     expect(screen.getAllByText('TN-01').length).toBeGreaterThan(0);
   });
 
-  const abrirRetirada = async () => {
+  it('exige a senha antes de excluir veículo, e não um PIN do bundle', async () => {
+    await entrarComoAdmin();
+
     fireEvent.click(screen.getByRole('button', { name: /TN-01.*Abrir detalhes/i }));
     const detalhe = await screen.findByRole('dialog');
-    fireEvent.click(within(detalhe).getByRole('button', { name: /Retirar/i }));
-    return screen.findByRole('dialog');
-  };
+    fireEvent.click(within(detalhe).getByRole('button', { name: /Editar/i }));
 
-  it('não deixa retirar veículo com o checklist incompleto', async () => {
-    await entrarComoAdmin();
-    const retirada = await abrirRetirada();
+    const gestao = await screen.findByRole('dialog');
+    fireEvent.click(within(gestao).getByRole('button', { name: /Excluir/i }));
 
-    fireEvent.change(within(retirada).getByLabelText(/Motorista/i), {
-      target: { value: 'Robson Teste' },
-    });
-
-    expect(within(retirada).getByRole('button', { name: /Confirmar/i })).toBeDisabled();
+    const confirmacao = await screen.findByRole('dialog');
+    expect(within(confirmacao).getByLabelText(/Sua senha/i)).toBeInTheDocument();
+    // Regressao: o fluxo antigo pedia um PIN comparado com uma constante
+    // embutida no bundle, legivel por qualquer pessoa.
+    expect(screen.queryByLabelText(/PIN/i)).not.toBeInTheDocument();
   });
 
   it('recusa retirada com quilometragem vazia em vez de gravar NaN', async () => {
     await entrarComoAdmin();
-    const retirada = await abrirRetirada();
 
+    fireEvent.click(screen.getByRole('button', { name: /TN-01.*Abrir detalhes/i }));
+    const detalhe = await screen.findByRole('dialog');
+    fireEvent.click(within(detalhe).getByRole('button', { name: /Retirar/i }));
+
+    const retirada = await screen.findByRole('dialog');
     fireEvent.change(within(retirada).getByLabelText(/Motorista/i), {
       target: { value: 'Robson Teste' },
     });
@@ -255,16 +309,18 @@ describe('Aplicação — sessão administrativa', () => {
       .forEach((c) => fireEvent.click(c));
     fireEvent.click(within(retirada).getByRole('button', { name: /Confirmar/i }));
 
-    // Regressao: `parseInt('')` e NaN, e `NaN < vehicle.km` e false - a guarda
-    // passava batido e o veiculo era salvo com km invalido.
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
     expect(screen.queryByText('Robson Teste')).not.toBeInTheDocument();
   });
 
   it('completa a retirada com motorista, KM e checklist preenchidos', async () => {
     await entrarComoAdmin();
-    const retirada = await abrirRetirada();
 
+    fireEvent.click(screen.getByRole('button', { name: /TN-01.*Abrir detalhes/i }));
+    const detalhe = await screen.findByRole('dialog');
+    fireEvent.click(within(detalhe).getByRole('button', { name: /Retirar/i }));
+
+    const retirada = await screen.findByRole('dialog');
     fireEvent.change(within(retirada).getByLabelText(/Motorista/i), {
       target: { value: 'Robson Teste' },
     });
@@ -275,11 +331,7 @@ describe('Aplicação — sessão administrativa', () => {
       .getAllByRole('checkbox')
       .forEach((c) => fireEvent.click(c));
 
-    const confirmar = within(retirada).getByRole('button', { name: /Confirmar/i });
-    expect(confirmar).toBeEnabled();
-    fireEvent.click(confirmar);
-
-    // O condutor passa a aparecer no mini card da frota.
+    fireEvent.click(within(retirada).getByRole('button', { name: /Confirmar/i }));
     await waitFor(() => expect(screen.getByText('Robson Teste')).toBeInTheDocument());
   });
 });

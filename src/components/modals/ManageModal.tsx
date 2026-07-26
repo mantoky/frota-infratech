@@ -16,10 +16,8 @@ interface ManageModalProps {
   currentLang: string;
   isAdmin: boolean;
   onSave: (data: Partial<Vehicle>) => void;
-  onDelete: () => void;
   onRequestPin: (action: 'delete' | 'unblock') => void;
   onBlock: (reason: string) => void;
-  onUnblock: () => void;
 }
 
 export default function ManageModal({
@@ -29,10 +27,8 @@ export default function ManageModal({
   currentLang,
   isAdmin,
   onSave,
-  onDelete,
   onRequestPin,
   onBlock,
-  onUnblock,
 }: ManageModalProps) {
   const [tag, setTag] = useState('');
   const [plate, setPlate] = useState('');
@@ -228,12 +224,13 @@ export default function ManageModal({
     });
   };
 
+  // A confirmacao vale principalmente PARA o administrador, nao contra ele.
+  // Antes a logica estava invertida: o botao so aparecia para admin, e para
+  // admin chamava onDelete() direto - ou seja, a acao mais destrutiva do app
+  // era a unica sem nenhuma confirmacao, e o pedido de senha ficava reservado
+  // a quem nem enxergava o botao.
   const handleDelete = () => {
-    if (!isAdmin) {
-      onRequestPin('delete');
-    } else {
-      onDelete();
-    }
+    onRequestPin('delete');
   };
 
   const handleBlock = () => {
@@ -250,14 +247,12 @@ export default function ManageModal({
     }
   };
 
+  // Mesma inversao do handleDelete: desbloquear libera um veiculo que alguem
+  // tirou de circulacao por um motivo, entao confirma sempre.
   const handleUnblock = () => {
-    if (!isAdmin) {
-      onRequestPin('unblock');
-    } else {
-      onUnblock();
-      setBlocked(false);
-      setBlockedReason('');
-    }
+    onRequestPin('unblock');
+    setBlocked(false);
+    setBlockedReason('');
   };
 
   if (!vehicle) return null;

@@ -21,6 +21,39 @@ export interface Vehicle {
   lastWashedAt?: string;
 }
 
+/** Escala de privilegio. Ortogonal ao escopo organizacional: o nivel diz o QUE
+ *  a pessoa pode fazer, o escopo diz SOBRE QUAL pedaco da arvore.
+ *  Ver docs/RBAC_AUDITORIA.md secao 1. */
+export type UserLevel = 'usuario' | 'operador' | 'admin' | 'admin_master' | 'auditor';
+
+/** `pendente` e `bloqueado` sao estados diferentes de proposito: o primeiro
+ *  nunca teve acesso e aguarda aprovacao; o segundo teve e foi suspenso.
+ *  Um booleano `active` perderia justamente a informacao que a auditoria usa. */
+export type UserStatus = 'pendente' | 'ativo' | 'bloqueado' | 'inativo';
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  level: UserLevel;
+  status: UserStatus;
+  declarado?: {
+    gerencia?: string;
+    coordenador?: string;
+    gestorStaff?: string;
+    funcao?: string;
+    empresa?: string;
+    idCracha?: string;
+    rac02?: string;
+    prontosCadastrado?: boolean;
+  };
+  preferencias?: {
+    popupNovasMensagens?: boolean;
+    idioma?: string;
+    tema?: string;
+  };
+}
+
 export interface ChecklistPhoto {
   id: string;
   title: string;

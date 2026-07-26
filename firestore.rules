@@ -1,20 +1,104 @@
 rules_version = '2';
 
-// O app hoje nao usa Firebase Auth - o PIN de admin e so uma trava de UI
-// (variavel NEXT_PUBLIC_ADMIN_PIN_*, visivel no bundle estatico). Ate a
-// "gestao completa de usuarios" ser implementada (item adiado do backlog),
-// estas regras sao a unica camada real de protecao dos dados, entao ficam
-// deliberadamente restritas ao unico documento que o app le/escreve hoje.
+// FASE 0 - CONTENCAO DE SEGURANCA
+//
+// A versao anterior declarava `allow read: if true` no documento da frota.
+// Como o `projectId` esta no bundle JavaScript por construcao, isso significava
+// que qualquer pessoa com o endereco do app lia a frota inteira: placas,
+// condutores, quilometragem, observacoes e coordenadas de GPS. Fechado aqui.
+//
+// LIMITACAO CONHECIDA DESTA FASE: o nivel de acesso e lido do documento
+// `users/{uid}` via `get()`, e nao de custom claim. Isso custa UMA LEITURA por
+// avaliacao de regra e nao e o desenho final - as claims entram na Fase 1,
+// junto com as Cloud Functions que sabem grava-las. A escolha aqui e
+// deliberada: sem Functions ainda, `get()` e a unica forma correta de
+// verificar nivel, e correto-e-caro vence rapido-e-inseguro.
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /frota/data {
-      allow read: if true;
-      allow write: if request.resource.data.keys().hasAll(['vehicles', 'history'])
-        && request.resource.data.vehicles is list
-        && request.resource.data.history is list;
+
+    // ---------- helpers ----------
+
+    function signedIn() {
+      return request.auth != null;
     }
 
-    // Nega qualquer outro documento/colecao por padrao.
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function profileExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Estar autenticado nao basta: a conta precisa ter sido aprovada. Todo
+    // autocadastro nasce `pendente` e nao enxerga nada ate um administrador
+    // ou operador liberar. Ver docs/REQUISITOS_V2.md secao 1.2.
+    function ativo() {
+      return signedIn() && profileExists() && profile().status == 'ativo';
+    }
+
+    function nivel() {
+      return profile().level;
+    }
+
+    function ehAdmin() {
+      return ativo() && nivel() in ['admin', 'admin_master'];
+    }
+
+    function ehOperadorOuAcima() {
+      return ativo() && nivel() in ['operador', 'admin', 'admin_master'];
+    }
+
+    // ---------- users ----------
+
+    match /users/{uid} {
+      // O proprio perfil sempre; os demais, apenas operador ou acima - e quem
+      // precisa aprovar cadastros e administrar pessoas.
+      allow read: if signedIn() && (request.auth.uid == uid || ehOperadorOuAcima());
+
+      // Autocadastro: a pessoa cria o proprio documento, e SO com nivel comum
+      // e status pendente. Sem esta trava, bastaria uma escrita direta pelo SDK
+      // para nascer administrador - exatamente o tipo de falha que uma regra
+      // permissiva demais produz.
+      allow create: if signedIn()
+                    && request.auth.uid == uid
+                    && request.resource.data.level == 'usuario'
+                    && request.resource.data.status == 'pendente'
+                    && request.resource.data.email == request.auth.token.email;
+
+      // O usuario comum edita apenas dados seus que nao afetam permissao.
+      // `level` e `status` ficam de fora de proposito: sao o que define poder.
+      allow update: if signedIn()
+                    && request.auth.uid == uid
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['displayName', 'declarado', 'preferencias', 'lastLoginAt']);
+
+      // Administrador aprova, bloqueia e ajusta nivel. A invariante "ninguem
+      // concede nivel igual ou superior ao seu" ainda nao cabe aqui: depende de
+      // comparar postos, que e trabalho de Function. Entra na Fase 1.
+      allow update: if ehAdmin();
+
+      // Exclusao e sempre logica (status: 'inativo'). Apagar o documento
+      // quebraria toda referencia de historico e auditoria.
+      allow delete: if false;
+    }
+
+    // ---------- frota (documento unico, ainda da v1) ----------
+
+    match /frota/data {
+      allow read: if ativo();
+
+      allow write: if ativo()
+                   && request.resource.data.keys().hasAll(['vehicles', 'history'])
+                   && request.resource.data.vehicles is list
+                   && request.resource.data.history is list;
+    }
+
+    // ---------- padrao ----------
+
+    // Nega qualquer outro documento ou colecao. As colecoes da Fase 1
+    // (orgUnits, vehicles, movements, auditLogs) entram com regra propria.
     match /{document=**} {
       allow read, write: if false;
     }

@@ -1,5 +1,10 @@
 # 🚀 Deploy no Netlify - Drag and Drop
 
+> **Ambiente de desenvolvimento:** <https://frota-infratech-dev.netlify.app/>
+>
+> Antes de publicar mudancas de acesso, leia [`FASE0_ATIVACAO.md`](./FASE0_ATIVACAO.md) — a ordem
+> entre criar o primeiro administrador e publicar as Security Rules importa.
+
 ## Pré-requisitos
 
 - Node.js 20+ instalado
@@ -23,7 +28,7 @@ Isso vai criar a pasta `out/` com os arquivos otimizados.
 
 3. Aguarde o upload (pode levar alguns segundos)
 
-4. Pronto! Seu site estará disponível em um link como: `https://seu-nome.netlify.app`
+4. Pronto! Seu site estará disponível em um link como: `https://frota-infratech-dev.netlify.app`
 
 ## Passo 3: Configurar Variáveis de Ambiente
 

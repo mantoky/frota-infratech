@@ -11,7 +11,6 @@ import {
   findLastWithdrawal,
   haversineKm,
   parseDateTime,
-  isValidAdminPin,
 } from '@/lib/helpers';
 import { GeoPoint } from '@/lib/geolocation';
 import { useFleetData } from '@/lib/hooks/useFleetData';
@@ -26,13 +25,15 @@ import ReturnModal from '@/components/modals/ReturnModal';
 import ServiceModal from '@/components/modals/ServiceModal';
 import ManageModal from '@/components/modals/ManageModal';
 import AddModal from '@/components/modals/AddModal';
-import PinModal from '@/components/modals/PinModal';
+import ConfirmPasswordModal from '@/components/modals/ConfirmPasswordModal';
 import LoginScreen from '@/components/auth/LoginScreen';
+import AccessPending from '@/components/auth/AccessPending';
 import AdminPage from '@/components/admin/AdminPage';
 import MetricsPage from '@/components/metrics/MetricsPage';
 import ForumPage from '@/components/forum/ForumPage';
 import RegionaisPage from '@/components/org/RegionaisPage';
 import { useInstallPrompt } from '@/lib/hooks/useInstallPrompt';
+import { useAuth } from '@/lib/hooks/useAuth';
 import PageHeader from '@/components/ui/PageHeader';
 import Card, { CardHeader } from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
@@ -98,45 +99,53 @@ export default function FrotaInfratech() {
     likeForumPost,
   } = useOrgData();
   const { canInstall, promptInstall } = useInstallPrompt();
+
+  // A sessao passa a mandar em quem e admin. Antes isso vinha de
+  // localStorage.isAdmin, que o proprio usuario podia editar no console do
+  // navegador - e do PIN, que estava em texto claro no bundle.
+  const {
+    profile,
+    loading: authLoading,
+    isActive,
+    isAdmin,
+    status: authStatus,
+    signIn,
+    signUp,
+    logout: signOutUser,
+    resetPassword,
+    reauthenticate,
+  } = useAuth();
+
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
-  const [isAdmin, setIsAdmin] = useState(false);
   const [currentLang, setCurrentLang] = useState('pt');
   const [theme, setTheme] = useState('light');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
-  const [appEntered, setAppEntered] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [loginPinError, setLoginPinError] = useState(false);
 
   const [withdrawModal, setWithdrawModal] = useState(false);
   const [returnModal, setReturnModal] = useState(false);
   const [serviceModal, setServiceModal] = useState(false);
   const [manageModal, setManageModal] = useState(false);
   const [addModal, setAddModal] = useState(false);
-  const [pinModal, setPinModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(false);
 
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [serviceType, setServiceType] = useState<'man' | 'lav'>('man');
-  const [pinError, setPinError] = useState(false);
+  const [confirmError, setConfirmError] = useState('');
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [pendingVehicleData, setPendingVehicleData] = useState<Partial<Vehicle> | null>(null);
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- preferencias e sessao
-       moram no localStorage, que nao existe no build estatico. Ler no useState
+    /* eslint-disable react-hooks/set-state-in-effect -- preferencias moram no
+       localStorage, que nao existe no build estatico. Ler no useState
        quebraria a hidratacao: o HTML pre-renderizado nunca teve acesso a ele,
        mas o primeiro render no navegador teria, gerando arvores diferentes.
        Mesma justificativa ja documentada em useFleetData. */
     const storedLang = localStorage.getItem('frota_lang');
     const storedTheme = localStorage.getItem('theme');
-    const storedAdmin = localStorage.getItem('isAdmin');
-    const storedEntered = localStorage.getItem('frota_entered');
     if (storedLang) setCurrentLang(storedLang);
     if (storedTheme) setTheme(storedTheme);
-    if (storedAdmin === 'true') setIsAdmin(true);
-    if (storedEntered === 'true') setAppEntered(true);
-    setAuthChecked(true);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
@@ -151,39 +160,29 @@ export default function FrotaInfratech() {
     setCurrentLang(lang);
     localStorage.setItem('frota_lang', lang);
   };
-  const enterCommon = () => {
-    setAppEntered(true);
-    localStorage.setItem('frota_entered', 'true');
-  };
-  const enterAdmin = (pin: string) => {
-    if (isValidAdminPin(pin)) {
-      setLoginPinError(false);
-      setIsAdmin(true);
-      localStorage.setItem('isAdmin', 'true');
-      setAppEntered(true);
-      localStorage.setItem('frota_entered', 'true');
-    } else setLoginPinError(true);
-  };
   const logout = () => {
-    setIsAdmin(false);
-    localStorage.removeItem('isAdmin');
-    setAppEntered(false);
-    localStorage.removeItem('frota_entered');
+    signOutUser();
+    setCurrentPage('dashboard');
   };
 
-  const verifyPin = (pin: string) => {
-    if (isValidAdminPin(pin)) {
-      setPinError(false);
-      setPinModal(false);
-      if (pendingAction === 'login') {
-        setIsAdmin(true);
-        localStorage.setItem('isAdmin', 'true');
-      } else if (pendingAction === 'delete' && selectedVehicle) deleteVehicle();
-      else if (pendingAction === 'add' && pendingVehicleData) addNewVehicle(pendingVehicleData);
-      else if (pendingAction === 'unblock' && selectedVehicle) unblockVehicle();
-      setPendingAction(null);
-      setPendingVehicleData(null);
-    } else setPinError(true);
+  // Step-up de verdade no lugar do PIN: antes de uma acao destrutiva, o
+  // Firebase reconfirma a senha contra o servidor de autenticacao. O PIN
+  // anterior era uma constante embutida no bundle - qualquer pessoa que
+  // abrisse o JavaScript o encontrava.
+  const confirmSensitiveAction = async (senha: string) => {
+    setConfirmError('');
+    try {
+      await reauthenticate(senha);
+    } catch {
+      setConfirmError('Senha incorreta.');
+      return;
+    }
+    setConfirmModal(false);
+    if (pendingAction === 'delete' && selectedVehicle) deleteVehicle();
+    else if (pendingAction === 'add' && pendingVehicleData) addNewVehicle(pendingVehicleData);
+    else if (pendingAction === 'unblock' && selectedVehicle) unblockVehicle();
+    setPendingAction(null);
+    setPendingVehicleData(null);
   };
 
   const deleteVehicle = () => {
@@ -386,18 +385,18 @@ export default function FrotaInfratech() {
   };
 
   const handleAddVehicle = (data: Partial<Vehicle>) => {
-    if (!isAdmin) {
-      setPendingAction('add');
-      setPendingVehicleData(data);
-      setPinModal(true);
-      setAddModal(false);
-    } else addNewVehicle(data);
+    // Quem nao e administrador simplesmente nao cadastra veiculo - e as rules
+    // recusam a escrita mesmo que a interface deixasse passar. Antes isso era
+    // "pede o PIN", o que dava a falsa impressao de barreira.
+    if (!isAdmin) return;
+    addNewVehicle(data);
   };
 
-  const requestPin = (action: 'delete' | 'unblock') => {
+  const requestSensitiveAction = (action: 'delete' | 'unblock') => {
     setPendingAction(action);
+    setConfirmError('');
     if (action === 'delete') setManageModal(false);
-    setPinModal(true);
+    setConfirmModal(true);
   };
 
   const downloadPDF = () => generateFleetReport(vehicles, history);
@@ -410,19 +409,31 @@ export default function FrotaInfratech() {
     });
   };
 
-  if (!authChecked)
-    return <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-main)' }} />;
+  // Enquanto o Firebase nao responde se ha sessao, nada e renderizado. Mostrar
+  // a tela de login por um instante e depois trocar pelo app produz um flash
+  // que ja foi bug reportado neste projeto.
+  if (authLoading)
+    return <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg-main)' }} />;
 
-  if (!appEntered) {
+  if (!profile && authStatus === null) {
     return (
       <LoginScreen
         currentLang={currentLang}
-        error={loginPinError}
-        onEnterCommon={enterCommon}
-        onEnterAdmin={enterAdmin}
         canInstall={canInstall}
         onInstall={promptInstall}
+        onSignIn={signIn}
+        onSignUp={signUp}
+        onResetPassword={resetPassword}
       />
+    );
+  }
+
+  // Autenticado mas nao liberado. Estados distintos merecem mensagens
+  // distintas: quem aguarda aprovacao precisa saber que basta esperar; quem
+  // foi bloqueado precisa saber que deve procurar o administrador.
+  if (!isActive) {
+    return (
+      <AccessPending status={authStatus} nome={profile?.displayName || ''} onLogout={logout} />
     );
   }
 
@@ -761,10 +772,8 @@ export default function FrotaInfratech() {
         currentLang={currentLang}
         isAdmin={isAdmin}
         onSave={handleManageSave}
-        onDelete={deleteVehicle}
-        onRequestPin={requestPin}
+        onRequestPin={requestSensitiveAction}
         onBlock={blockVehicle}
-        onUnblock={unblockVehicle}
       />
       <AddModal
         isOpen={addModal}
@@ -772,16 +781,16 @@ export default function FrotaInfratech() {
         currentLang={currentLang}
         onAdd={handleAddVehicle}
       />
-      <PinModal
-        isOpen={pinModal}
+      <ConfirmPasswordModal
+        isOpen={confirmModal}
         onClose={() => {
-          setPinModal(false);
+          setConfirmModal(false);
           setPendingAction(null);
-          setPinError(false);
+          setConfirmError('');
         }}
-        currentLang={currentLang}
-        error={pinError}
-        onVerify={verifyPin}
+        acao={pendingAction}
+        erro={confirmError}
+        onConfirm={confirmSensitiveAction}
       />
     </div>
   );

@@ -25,6 +25,12 @@ Nada aqui é evolução; é parar o sangramento. Deve começar imediatamente.
 **Critério de saída:** nenhuma leitura ou escrita anônima possível, verificado por teste
 automatizado contra o Emulator Suite.
 
+> **Situação: 0.1, 0.2 e 0.3 implementados.** Firebase Auth com e-mail/senha, autocadastro nascendo
+> `pendente`, rules exigindo sessão e conta aprovada, PINs removidos do bundle e do `.env.example`,
+> e reautenticação por senha no lugar do PIN nas ações destrutivas. Os itens 0.4 (App Check) e 0.5
+> (rotação de credenciais) dependem apenas de console — passo a passo em
+> [`FASE0_ATIVACAO.md`](./FASE0_ATIVACAO.md).
+
 ---
 
 ## Fase 1 — Fundação organizacional (2–3 semanas)
