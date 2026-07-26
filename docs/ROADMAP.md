@@ -29,19 +29,20 @@ automatizado contra o Emulator Suite.
 
 ## Fase 1 — Fundação organizacional (2–3 semanas)
 
-| #   | Entrega                                                                   |
-| --- | ------------------------------------------------------------------------- |
-| 1.1 | Coleção `orgUnits` com `path[]` e `depth`, escrita exclusiva por Function |
-| 1.2 | Migração de `regionais` e `gerencias` do localStorage para o Firestore    |
-| 1.3 | Níveis `subgerencia` e `coordenacao` habilitados                          |
-| 1.4 | Coleção `users` + Function `setUserScope` gravando custom claims          |
-| 1.5 | Sete papéis implementados; UI reage à claim `role`                        |
-| 1.6 | Security Rules com `inScope()`; suíte de testes das rules no CI           |
-| 1.7 | Tela de gestão de estrutura organizacional (árvore navegável)             |
-| 1.8 | Seletor de escopo na TopBar (o espaço já está reservado no layout)        |
+| #   | Entrega                                                                                |
+| --- | -------------------------------------------------------------------------------------- |
+| 1.1 | Coleção `orgUnits` com `path[]` e `depth`, escrita exclusiva por Function              |
+| 1.2 | Migração de `regionais` e `gerencias` do localStorage para o Firestore                 |
+| 1.3 | Níveis `subgerencia` e `coordenacao` habilitados                                       |
+| 1.4 | Coleção `users` + Function `setUserScope` gravando custom claims                       |
+| 1.5 | Níveis `usuario`/`operador`/`admin`/`admin_master`/`auditor`; UI reage à claim `level` |
+| 1.6 | Security Rules com `inScope()`; suíte de testes das rules no CI                        |
+| 1.7 | Tela de gestão de estrutura organizacional (árvore navegável)                          |
+| 1.8 | Seletor de escopo na TopBar (o espaço já está reservado no layout)                     |
+| 1.9 | Líderes por unidade: gerência regional, coordenação local e área da frota              |
 
-**Critério de saída:** um coordenador de Carajás não consegue — nem pela UI, nem por chamada direta
-ao SDK — ler um veículo de Vitória.
+**Critério de saída:** um usuário de Carajás não consegue — nem pela UI, nem por chamada direta ao
+SDK — ler um veículo de Vitória.
 
 ---
 
@@ -101,28 +102,90 @@ em qual setor — nos últimos 12 meses.
 
 ---
 
-## Fase 5 — Inteligência operacional (3 semanas)
+## Fase 5 — Identidade e acesso (3 semanas) · _requisitos v2_
 
-| #   | Entrega                                                                    |
-| --- | -------------------------------------------------------------------------- |
-| 5.1 | Agregações pré-calculadas por setor (Function agendada)                    |
-| 5.2 | Dashboards Looker Studio por nível hierárquico                             |
-| 5.3 | Grafana via plugin BigQuery, aposentando o `.prom` manual                  |
-| 5.4 | Alertas proativos: manutenção próxima, veículo parado, checklist reprovado |
-| 5.5 | Comparativo entre setores (disponibilidade, km/veículo, tempo parado)      |
-| 5.6 | Relatório mensal automático por e-mail para responsáveis de setor          |
+Detalhamento em [`REQUISITOS_V2.md`](./REQUISITOS_V2.md) §1 e §5.
+
+| #   | Entrega                                                                       |
+| --- | ----------------------------------------------------------------------------- |
+| 5.1 | Autocadastro pelo celular com os 11 campos declarados                         |
+| 5.2 | Conta nasce `pendente`, sem acesso a dado nenhum                              |
+| 5.3 | Fila de aprovação por área, com registro de quem validou RAC02/Prontos/crachá |
+| 5.4 | Rejeição com motivo obrigatório, também auditada                              |
+| 5.5 | TOTP em Cloud Function: cadastro, verificação, códigos de recuperação         |
+| 5.6 | _Throttling_ e bloqueio progressivo por tentativa inválida                    |
+| 5.7 | Segredo TOTP cifrado com Cloud KMS                                            |
+| 5.8 | Expiração de senha em 45 dias, com Function agendada                          |
+| 5.9 | Alerta automático de vencimento de RAC02 declarado                            |
+
+**Critério de saída:** uma conta recém-cadastrada e não aprovada não lê um único documento — provado
+por teste de rules, não por inspeção de tela.
 
 ---
 
-## Fase 6 — Integração corporativa (3–4 semanas)
+## Fase 6 — Comunicação (2 semanas) · _requisitos v2_
+
+Detalhamento em [`REQUISITOS_V2.md`](./REQUISITOS_V2.md) §2.
+
+| #   | Entrega                                                                   |
+| --- | ------------------------------------------------------------------------- |
+| 6.1 | Fórum restrito à área, com `orgPath` governando a visibilidade            |
+| 6.2 | Autoria vinda do token; remoção do campo de autor digitável               |
+| 6.3 | Editar e apagar a própria mensagem; administrador apaga de qualquer um    |
+| 6.4 | Edição e remoção lógicas, preservando a trilha                            |
+| 6.5 | Mensagem privada com o grafo por nível, validado na Function `openThread` |
+| 6.6 | Sincronização em tempo real via `onSnapshot`                              |
+| 6.7 | Ícone com contador de não lidas na TopBar                                 |
+| 6.8 | Pop-up de novas mensagens, ativado por padrão e desativável               |
+
+**Critério de saída:** um condutor não consegue abrir conversa com outro condutor nem com
+administrador, por nenhum caminho — incluindo chamada direta à Function.
+
+---
+
+## Fase 7 — Checklist e administração (3 semanas) · _requisitos v2_
+
+Detalhamento em [`REQUISITOS_V2.md`](./REQUISITOS_V2.md) §3 e §4.
+
+| #   | Entrega                                                                        |
+| --- | ------------------------------------------------------------------------------ |
+| 7.1 | Checklist carrega os dados do usuário autenticado, sem digitação               |
+| 7.2 | Confirmação obrigatória de Prontos executado e CRM realizado                   |
+| 7.3 | Justificativa de aptidão assinada pelo **gestor**, nunca pelo próprio condutor |
+| 7.4 | `required` nasce `true`; só administrador desmarca, com auditoria              |
+| 7.5 | Painel administrativo responsivo para desktop, com tabelas densas              |
+| 7.6 | Gestão de usuários: criar, editar, bloquear, desativar, forçar troca de senha  |
+| 7.7 | Mensagem individual do administrador para usuário                              |
+| 7.8 | _Force update key_ via `config/security.sessionEpoch`                          |
+| 7.9 | Aceite de atualização no login; release de segurança aplica sem perguntar      |
+
+**Critério de saída:** o administrador de uma regional administra tudo da sua área e nada da área
+vizinha, e toda ação administrativa aparece em `auditLogs`.
+
+---
+
+## Fase 8 — Inteligência operacional (3 semanas)
+
+| #   | Entrega                                                                    |
+| --- | -------------------------------------------------------------------------- |
+| 8.1 | Agregações pré-calculadas por setor (Function agendada)                    |
+| 8.2 | Dashboards Looker Studio por nível hierárquico                             |
+| 8.3 | Grafana via plugin BigQuery, aposentando o `.prom` manual                  |
+| 8.4 | Alertas proativos: manutenção próxima, veículo parado, checklist reprovado |
+| 8.5 | Comparativo entre setores (disponibilidade, km/veículo, tempo parado)      |
+| 8.6 | Relatório mensal automático por e-mail para responsáveis de setor          |
+
+---
+
+## Fase 9 — Integração corporativa (3–4 semanas)
 
 | #   | Entrega                                                             |
 | --- | ------------------------------------------------------------------- |
-| 6.1 | SSO Microsoft Entra ID via Identity Platform                        |
-| 6.2 | Provisionamento e desligamento automáticos a partir do RH           |
-| 6.3 | Integração de centro de custo com o ERP                             |
-| 6.4 | Webhooks para sistemas de manutenção terceirizados                  |
-| 6.5 | API pública versionada e documentada (OpenAPI) para consumo interno |
+| 9.1 | SSO Microsoft Entra ID via Identity Platform                        |
+| 9.2 | Provisionamento e desligamento automáticos a partir do RH           |
+| 9.3 | Integração de centro de custo com o ERP                             |
+| 9.4 | Webhooks para sistemas de manutenção terceirizados                  |
+| 9.5 | API pública versionada e documentada (OpenAPI) para consumo interno |
 
 ---
 
@@ -131,21 +194,33 @@ em qual setor — nos últimos 12 meses.
 ```
 Fase 0 ─── Contenção de segurança
    │
-Fase 1 ─── Estrutura organizacional + RBAC
+Fase 1 ─── Estrutura organizacional + níveis de acesso
    │
 Fase 2 ─── Migração do modelo de dados
    │
 Fase 3 ─── Regras de negócio no servidor
    │
    ├────── Fase 4 ─── Auditoria e conformidade
+   │          │
+   │       Fase 5 ─── Identidade e acesso        (autocadastro, TOTP, senha)
+   │          │
+   │          ├─── Fase 6 ─── Comunicação        (fórum e mensagem privada)
+   │          │
+   │          └─── Fase 7 ─── Checklist e administração
    │
-   ├────── Fase 5 ─── Inteligência operacional   (paralelizável com a 4)
+   ├────── Fase 8 ─── Inteligência operacional   (paralelizável com a 4)
    │
-   └────── Fase 6 ─── Integração corporativa     (depende da 1 e da 4)
+   └────── Fase 9 ─── Integração corporativa     (exige VPS - ver HOSPEDAGEM.md)
 ```
 
-Total até a Fase 4 (plataforma corporativa auditável e operante): **~10 a 12 semanas**. As fases 5 e
-6 agregam valor, mas o sistema já é defensável em auditoria ao fim da Fase 4.
+Total até a Fase 4 (plataforma corporativa auditável e operante): **~10 a 12 semanas**. Total até a
+Fase 7 (requisitos v2 completos): **~18 a 20 semanas**.
+
+As fases 8 e 9 agregam valor, mas o sistema já é defensável em auditoria ao fim da Fase 4 e atende
+ao escopo pedido na v2 ao fim da Fase 7.
+
+**A Fase 9 é a única que exige VPS.** Todas as anteriores rodam no arranjo atual (Netlify +
+Firebase) — a análise está em [`HOSPEDAGEM.md`](./HOSPEDAGEM.md).
 
 ---
 

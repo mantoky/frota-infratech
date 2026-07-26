@@ -5,53 +5,128 @@
 
 ---
 
-## 1. Papéis
+## 1. Níveis de acesso e escopo
 
-Sete papéis. A escala de privilégio é ortogonal ao escopo: o papel diz **o que** a pessoa pode
-fazer, o escopo diz **sobre qual pedaço da árvore**.
+**Duas dimensões independentes.** O nível diz **o que** a pessoa pode fazer; o escopo diz **sobre
+qual pedaço da árvore organizacional**. Um `admin` de Carajás e um `admin` de Vitória têm exatamente
+o mesmo poder e nenhum acesso ao setor do outro.
 
-| Papel             | Escopo típico            | Pode                                                                                 |
-| ----------------- | ------------------------ | ------------------------------------------------------------------------------------ |
-| `super_admin`     | global                   | Tudo, inclusive criar regionais e conceder papéis. Uso restrito a 2–3 pessoas.       |
-| `gestor_regional` | uma regional             | Gerir toda a subárvore: setores, veículos, usuários abaixo de si, relatórios.        |
-| `gerente`         | uma gerência/subgerência | Gerir setores filhos, veículos e operação da sua subárvore.                          |
-| `coordenador`     | uma coordenação          | Operar e administrar os veículos do seu setor. Bloquear/desbloquear.                 |
-| `operador`        | uma coordenação          | Registrar retirada, devolução, envio a lavador/manutenção. Não altera cadastro.      |
-| `motorista`       | uma coordenação          | Retirar e devolver o veículo que estiver conduzindo. Só enxerga o próprio histórico. |
-| `auditor`         | qualquer nó              | **Somente leitura**, incluindo `auditLogs`. Não escreve nada, em lugar nenhum.       |
+Manter as duas separadas é o que evita a explosão combinatória: sem isso, seriam necessários papéis
+como "admin de Carajás", "admin de Vitória", um para cada setor criado.
 
-**`auditor` é papel separado de propósito.** Se auditar exigisse ser admin, todo auditor teria poder
-de alterar o que audita — o conflito de interesse que a função existe para evitar.
+| Nível          | Nome no pedido | Escopo típico   | Faz                                                                     |
+| -------------- | -------------- | --------------- | ----------------------------------------------------------------------- |
+| `usuario`      | editor         | uma coordenação | Retira e devolve veículo, participa do fórum, mensagem para operador    |
+| `operador`     | curador        | uma coordenação | Tudo do usuário, mais: valida cadastros, opera a frota, modera o fórum  |
+| `admin`        | full           | uma regional    | Administra a própria área por inteiro: usuários, veículos, checklist    |
+| `admin_master` | master         | global          | Cria administradores e operadores; dispara _force update key_           |
+| `auditor`      | —              | qualquer nó     | **Somente leitura**, incluindo `auditLogs`. Não escreve em lugar nenhum |
+
+**`auditor` é nível separado de propósito.** Se auditar exigisse ser administrador, todo auditor
+teria poder de alterar o que audita — o conflito de interesse que a função existe para evitar.
+
+> **Equivalência com a v1.** Os sete papéis anteriores continuam válidos conceitualmente e mapeiam
+> assim: `motorista` → `usuario`; `operador` → `operador`; `coordenador`, `gerente` e
+> `gestor_regional` → `admin` com escopo no nó correspondente; `super_admin` → `admin_master`. A
+> distinção entre coordenador, gerente e gestor regional **não se perde**: ela passou a ser expressa
+> pelo escopo, que é onde ela sempre esteve de fato.
 
 ### 1.1 Matriz de permissões
 
 `P` = próprio, `E` = dentro do escopo, `—` = negado.
 
-| Ação                             | super_admin | gestor_regional | gerente | coordenador | operador | motorista | auditor |
-| -------------------------------- | :---------: | :-------------: | :-----: | :---------: | :------: | :-------: | :-----: |
-| Ver veículos                     |      E      |        E        |    E    |      E      |    E     |     E     |    E    |
-| Retirar / devolver               |      E      |        E        |    E    |      E      |    E     |     P     |    —    |
-| Enviar a lavador/manutenção      |      E      |        E        |    E    |      E      |    E     |     —     |    —    |
-| Bloquear / desbloquear           |      E      |        E        |    E    |      E      |    —     |     —     |    —    |
-| Criar / editar veículo           |      E      |        E        |    E    |      E      |    —     |     —     |    —    |
-| Excluir veículo                  |      E      |        E        |    —    |      —      |    —     |     —     |    —    |
-| Transferir veículo entre setores |      E      |        E        |    E    |      —      |    —     |     —     |    —    |
-| Criar regional                   |      ✔      |        —        |    —    |      —      |    —     |     —     |    —    |
-| Criar setor filho                |      E      |        E        |    E    |      —      |    —     |     —     |    —    |
-| Gerir usuários                   |      E      |        E        |    E    |      —      |    —     |     —     |    —    |
-| Conceder papel ≥ o próprio       |      ✔      |        —        |    —    |      —      |    —     |     —     |    —    |
-| Editar checklist                 |      E      |        E        |    E    |      E      |    —     |     —     |    —    |
-| Ver relatórios                   |      E      |        E        |    E    |      E      |    E     |     P     |    E    |
-| Exportar dados                   |      E      |        E        |    E    |      —      |    —     |     —     |    E    |
-| Ler `auditLogs`                  |      ✔      |        E        |    —    |      —      |    —     |     —     |    E    |
-| Escrever `auditLogs`             |      —      |        —        |    —    |      —      |    —     |     —     |    —    |
+| Ação                             | admin_master | admin | operador | usuario | auditor |
+| -------------------------------- | :----------: | :---: | :------: | :-----: | :-----: |
+| Ver veículos                     |      E       |   E   |    E     |    E    |    E    |
+| Retirar / devolver               |      E       |   E   |    E     |    P    |    —    |
+| Enviar a lavador/manutenção      |      E       |   E   |    E     |    —    |    —    |
+| Bloquear / desbloquear           |      E       |   E   |    E     |    —    |    —    |
+| Criar / editar veículo           |      E       |   E   |    —     |    —    |    —    |
+| Excluir veículo                  |      E       |   E   |    —     |    —    |    —    |
+| Transferir veículo entre setores |      E       |   E   |    —     |    —    |    —    |
+| Criar regional                   |      ✔       |   —   |    —     |    —    |    —    |
+| Criar setor filho                |      E       |   E   |    —     |    —    |    —    |
+| **Aprovar / rejeitar cadastro**  |      E       |   E   |    E     |    —    |    —    |
+| **Criar usuário**                |      E       |   E   |    —     |    —    |    —    |
+| **Bloquear / desativar usuário** |      E       |   E   |    —     |    —    |    —    |
+| **Forçar troca de senha**        |      E       |   E   |    —     |    —    |    —    |
+| **Criar admin ou operador**      |      ✔       |   —   |    —     |    —    |    —    |
+| **Force update key (global)**    |      ✔       |   —   |    —     |    —    |    —    |
+| Conceder nível ≥ o próprio       |      ✔       |   —   |    —     |    —    |    —    |
+| **Desmarcar item obrigatório**   |      E       |   E   |    —     |    —    |    —    |
+| Editar checklist                 |      E       |   E   |    E     |    —    |    —    |
+| Apagar mensagem de terceiro      |      E       |   E   |    —     |    —    |    —    |
+| Apagar a própria mensagem        |      ✔       |   ✔   |    ✔     |    ✔    |    —    |
+| Ver relatórios                   |      E       |   E   |    E     |    P    |    E    |
+| Exportar dados                   |      E       |   E   |    —     |    —    |    E    |
+| Ler `auditLogs`                  |      ✔       |   E   |    —     |    —    |    E    |
+| Escrever `auditLogs`             |      —       |   —   |    —     |    —    |    —    |
 
-Duas invariantes que valem para todas as linhas:
+Três invariantes que valem para todas as linhas:
 
-1. **Ninguém concede um papel igual ou superior ao seu.** Sem isso, um gerente se promove a
-   `super_admin` em duas telas.
-2. **Ninguém escreve em `auditLogs`.** Nem o `super_admin`. A escrita é exclusiva do Admin SDK
+1. **Ninguém concede um nível igual ou superior ao seu.** Sem isso, um `admin` se promove a
+   `admin_master` em duas telas.
+2. **Ninguém escreve em `auditLogs`.** Nem o `admin_master`. A escrita é exclusiva do Admin SDK
    dentro das Cloud Functions.
+3. **Exclusão de usuário é lógica.** O documento nunca é apagado — movimentações, mensagens e logs
+   apontam para o `uid`, e removê-lo transformaria a trilha em referência quebrada.
+
+---
+
+### 1.2 Autocadastro e aprovação
+
+Todo autocadastro nasce em `status: 'pendente'` e **não enxerga nada** — nem a frota, nem o fórum,
+nem outros usuários. A conta só passa a existir para efeitos práticos após aprovação por `operador`,
+`admin` ou `admin_master` **da mesma área**.
+
+Como não há integração com SGC, Prontos ou CRM (ver [`REQUISITOS_V2.md`](./REQUISITOS_V2.md) §1.3),
+**a aprovação é a validação**. Quem aprova declara ter conferido RAC02, cadastro no Prontos e ID de
+crachá, e isso fica gravado com autor e data. Se um RAC02 vencido passar, a trilha mostra por quem.
+
+```ts
+export const approveUser = onCall(async (req) => {
+  const caller = requireAuth(req);
+  const { targetUid, level, scopeUnitId, conferido } = req.data;
+
+  const alvo = await db.doc(`users/${targetUid}`).get();
+  if (alvo.get('status') !== 'pendente') {
+    throw new HttpsError('failed-precondition', 'Cadastro não está pendente');
+  }
+
+  // Invariante 1: ninguém concede nível igual ou superior ao seu.
+  if (RANK[level] >= RANK[caller.level] && caller.level !== 'admin_master') {
+    throw new HttpsError('permission-denied', 'Nível acima do seu');
+  }
+  // Invariante de escopo: só se aprova dentro da própria subárvore.
+  assertInScope(caller, alvo.get('declaradoOrgPath'), scopeUnitId);
+
+  // Operador aprova apenas usuário comum - ele proprio nao pode criar par.
+  if (caller.level === 'operador' && level !== 'usuario') {
+    throw new HttpsError('permission-denied', 'Operador aprova apenas usuário comum');
+  }
+
+  await db.doc(`users/${targetUid}`).update({
+    status: 'ativo',
+    level,
+    scopeUnitId,
+    'validacao.rac02': { conferido: conferido.rac02, por: caller.uid, em: NOW },
+    'validacao.prontos': { conferido: conferido.prontos, por: caller.uid, em: NOW },
+    'validacao.cracha': { conferido: conferido.cracha, por: caller.uid, em: NOW },
+    'validacao.aprovadoPor': caller.uid,
+    'validacao.aprovadoEm': NOW,
+  });
+
+  await admin.auth().setCustomUserClaims(targetUid, { level, scope: scopeUnitId });
+  await writeAudit({
+    action: 'user.approve',
+    actor: caller,
+    resource: { type: 'user', id: targetUid },
+  });
+});
+```
+
+Rejeição segue o mesmo caminho, com `motivoRejeicao` obrigatório. Uma fila sem trilha de rejeição
+esconde exatamente os casos que interessam à auditoria.
 
 ---
 
@@ -260,9 +335,77 @@ Regra de segurança sem teste é intenção, não garantia. O CI deve rodar
 
 ---
 
-## 4. Trilha de auditoria
+## 4. Mensagens — grafo de permissão
 
-### 4.1 Como o registro é gravado
+Mensagens circulam **apenas dentro da área** (a unidade organizacional e sua subárvore). Fora disso,
+o grafo de quem fala com quem é assimétrico de propósito:
+
+| De ↓ / Para →      | `usuario` (condutor) | `operador` | `admin` / `admin_master` |
+| ------------------ | :------------------: | :--------: | :----------------------: |
+| `usuario`          |          ✗           |     ✓      |            ✗             |
+| `operador`         |          ✓           |     ✓      |            ✓             |
+| `admin` / `master` |          ✓           |     ✓      |            ✓             |
+
+A intenção é clara: o condutor tem um único canal de escalonamento — o operador — e a administração
+não é inundada por conversa paralela. Condutor não fala com condutor, o que evita o app virar rede
+social de pátio.
+
+**A validação acontece na Function que cria o thread, não apenas na rule.** Uma rule avalia a
+escrita depois que o cliente já montou o documento; se a checagem de nível ficasse só ali, o par de
+participantes já teria sido gravado antes da recusa. A Function decide antes de existir qualquer
+documento:
+
+```ts
+export const openThread = onCall(async (req) => {
+  const caller = requireAuth(req);
+  const { targetUid } = req.data;
+
+  const alvo = await db.doc(`users/${targetUid}`).get();
+  if (!alvo.exists || alvo.get('status') !== 'ativo') {
+    throw new HttpsError('not-found', 'Destinatário indisponível');
+  }
+
+  // Conversa nunca cruza area.
+  if (alvo.get('scopeUnitId') !== caller.scope && caller.level === 'usuario') {
+    throw new HttpsError('permission-denied', 'Fora da sua área');
+  }
+
+  // O unico caso restritivo: condutor so alcanca operador.
+  if (caller.level === 'usuario' && alvo.get('level') !== 'operador') {
+    throw new HttpsError('permission-denied', 'Condutor só pode iniciar conversa com um operador');
+  }
+
+  // Par ordenado: (A,B) e (B,A) resolvem sempre no mesmo thread, o que evita
+  // duas conversas paralelas entre as mesmas duas pessoas.
+  const participantes = [caller.uid, targetUid].sort();
+  const threadId = participantes.join('__');
+  await db
+    .doc(`threads/${threadId}`)
+    .set({ participantes, orgUnitId: caller.scope, createdAt: NOW }, { merge: true });
+  return { threadId };
+});
+```
+
+> **Limitação conhecida, registrada em [`REQUISITOS_V2.md`](./REQUISITOS_V2.md) §2.3.** Se nenhum
+> operador estiver disponível, o condutor fica sem caminho até a administração. Numa operação com
+> risco de segurança envolvido isso é um problema real. A proposta em avaliação é um canal de
+> ocorrência — formulário que chega a todos os administradores da área, sem virar chat — preservando
+> a intenção da regra sem deixar o condutor sem saída.
+
+### 4.1 Autoria e remoção
+
+- **Autor vem do token, nunca de campo digitado.** Hoje o fórum pede o nome do autor num input
+  livre: qualquer pessoa assina como qualquer outra. Insustentável com auditoria.
+- **Edição preserva o rastro.** `editadoEm` preenchido faz a interface mostrar que a mensagem foi
+  alterada. Edição silenciosa em canal corporativo é o mesmo que reescrever o passado.
+- **Remoção é lógica.** `removidoPor` marca quem apagou; o conteúdo sai da tela e permanece para
+  auditoria. Administrador apaga de qualquer um; os demais, apenas as próprias.
+
+---
+
+## 5. Trilha de auditoria
+
+### 5.1 Como o registro é gravado
 
 Escrita de negócio e registro de auditoria acontecem **na mesma transação**. Não há caminho em que a
 mudança persista e o log se perca:
@@ -319,7 +462,7 @@ Note a validação `km < before.km`. É o tipo de regra que **não** pode viver 
 impede registrar uma quilometragem menor que a anterior, o que corrompe silenciosamente todo o
 cálculo de km rodado por condutor.
 
-### 4.2 Eventos obrigatórios
+### 5.2 Eventos obrigatórios
 
 | Categoria    | Ações                                                                                                             |
 | ------------ | ----------------------------------------------------------------------------------------------------------------- |
@@ -331,7 +474,7 @@ cálculo de km rodado por condutor.
 | Dados        | `export.generate`, `report.download`                                                                              |
 | Negativas    | qualquer `permission-denied`, com `result: 'denied'` e `reason`                                                   |
 
-### 4.3 Imutabilidade e retenção
+### 5.3 Imutabilidade e retenção
 
 - Cliente sem `create`, `update` ou `delete` em `auditLogs`.
 - Export contínuo para **BigQuery**; no BigQuery, a tabela recebe _table snapshot_ diário em dataset
@@ -341,7 +484,7 @@ cálculo de km rodado por condutor.
 - Cópia semanal em bucket GCS com _retention policy_ bloqueada (WORM) para os registros que
   precisarem sobreviver ao próprio projeto Firebase.
 
-### 4.4 Auditoria individual por setor
+### 5.4 Auditoria individual por setor
 
 O `orgPath[]` em cada log é o que atende diretamente ao requisito de "auditoria individual de cada
 setor":
@@ -362,21 +505,128 @@ de coleções por nível.
 
 ---
 
-## 5. Sessão e credenciais
+## 6. Sessão, credenciais e políticas de segurança
 
 | Item                | Política                                                                         |
 | ------------------- | -------------------------------------------------------------------------------- |
 | Duração do ID token | 1h (padrão), renovação automática                                                |
 | Sessão inativa      | Logout após 8h sem interação (turno)                                             |
-| MFA                 | Obrigatório: `super_admin`, `gestor_regional`, `auditor`                         |
-| Senha               | Mínimo 12 caracteres, verificação contra listas vazadas (Identity Platform)      |
-| Desligamento        | Function no evento de RH: `disableUser` + `revokeRefreshTokens`                  |
+| Token de segurança  | TOTP obrigatório para **todos os níveis**; ver §6.1                              |
+| Senha               | Mínimo 12 caracteres, verificação contra listas vazadas                          |
+| Expiração de senha  | 45 dias para `usuario` e `operador`; ver §6.2                                    |
+| Desligamento        | `disableUser` + `revokeRefreshTokens`                                            |
+| Force update key    | `config/security.sessionEpoch`; ver §6.3                                         |
 | App Check           | reCAPTCHA Enterprise obrigatório em produção                                     |
 | PIN                 | _Step-up_ para ações destrutivas, validado no servidor. Nunca em `NEXT_PUBLIC_*` |
 
+### 6.1 TOTP — implementação sem custo
+
+O MFA nativo do Firebase (SMS ou TOTP) exige o **Identity Platform pago** — não está no plano
+gratuito. Para atender ao requisito sem custo, o TOTP é implementado em Cloud Function com `otplib`,
+biblioteca madura do algoritmo padronizado em RFC 6238.
+
+**Por que TOTP e não SMS ou e-mail:** funciona **offline**. Em mina, pátio e estrada, SMS e e-mail
+dependem de um sinal que frequentemente não existe — o segundo fator não pode ser justamente o que
+impede o motorista de retirar o veículo. Esse argumento vale independente de custo.
+
+O algoritmo é a parte fácil. O que precisa de cuidado é o entorno:
+
+| Cuidado                     | Por quê                                                                       |
+| --------------------------- | ----------------------------------------------------------------------------- |
+| Segredo cifrado (Cloud KMS) | Segredo TOTP em claro no Firestore equivale a não ter segundo fator           |
+| Limite de tentativas        | Seis dígitos sem _throttling_ são força bruta trivial                         |
+| Proteção contra replay      | Código usado não vale de novo dentro da mesma janela de 30s                   |
+| Códigos de recuperação      | Uso único, guardados como hash — celular perdido não pode virar conta perdida |
+| Verificação no servidor     | Validar TOTP no cliente é o mesmo que não validar                             |
+
+```ts
+export const verifyTotp = onCall(async (req) => {
+  const caller = requireAuth(req);
+  const { code } = req.data;
+
+  const user = await db.doc(`users/${caller.uid}`).get();
+
+  // Throttling antes de qualquer verificacao: sem isto, 10^6 combinacoes caem
+  // em minutos.
+  if (user.get('seguranca.lockedUntil')?.toMillis() > Date.now()) {
+    throw new HttpsError('resource-exhausted', 'Muitas tentativas. Aguarde.');
+  }
+
+  const secret = await kms.decrypt(user.get('seguranca.totpSecretEnc'));
+  const ok = authenticator.verify({ token: code, secret });
+
+  if (!ok) {
+    const n = (user.get('seguranca.failedLoginCount') ?? 0) + 1;
+    await user.ref.update({
+      'seguranca.failedLoginCount': n,
+      // Backoff exponencial, teto de 15 min.
+      'seguranca.lockedUntil': n >= 5 ? plusMinutes(Math.min(2 ** (n - 5), 15)) : null,
+    });
+    await writeAudit({ action: 'auth.totpFailed', actor: caller, result: 'denied' });
+    throw new HttpsError('permission-denied', 'Código inválido');
+  }
+
+  await user.ref.update({ 'seguranca.failedLoginCount': 0, 'seguranca.lockedUntil': null });
+  return { ok: true };
+});
+```
+
+> **Trade-off assumido, registrado.** Implementar MFA por conta própria é assumir a responsabilidade
+> por ela. O Identity Platform transferiria esse risco ao Google por um valor mensal baixo. Para um
+> sistema corporativo com dado pessoal e exigência de auditoria, vale reavaliar quando houver
+> orçamento — a economia é pequena e o risco assumido não é.
+
+### 6.2 Expiração de senha em 45 dias
+
+Function agendada diária marca `mustChangePassword` em quem passou de `passwordMaxAgeDays`. Com a
+marca ligada, qualquer operação é bloqueada até a troca — inclusive por rule, não só pela interface.
+
+> **Contraponto técnico que precisa ser dito.** A recomendação atual do NIST (SP 800-63B) é
+> **contra** expiração periódica arbitrária. O efeito observado é o oposto do pretendido: as pessoas
+> passam a criar senhas previsíveis (`Senha@01`, `Senha@02`) porque precisam decorá-las de novo a
+> cada ciclo. A orientação moderna é forçar troca **diante de indício de comprometimento**, e
+> compensar com segundo fator — que aqui já será obrigatório.
+>
+> Fica implementado porque foi pedido e porque política corporativa costuma exigir. Recomendo levar
+> o ponto à área de segurança: com TOTP obrigatório, o ganho dos 45 dias é discutível e o custo em
+> qualidade de senha é real.
+
+### 6.3 Force update key
+
+Invalidar todas as sessões de uma vez, sem percorrer a base usuário por usuário:
+
+```javascript
+// config/security = { sessionEpoch: <Timestamp> }
+function sessaoValida() {
+  return request.auth.token.auth_time * 1000
+       >= get(/databases/$(database)/documents/config/security).data.sessionEpoch.toMillis();
+}
+```
+
+Uma escrita em `config/security` derruba todo mundo. O custo é uma leitura por avaliação de rule —
+aceitável para um controle de emergência, e mitigável com o cache de `get()` dentro da mesma
+requisição.
+
+Para revogação individual (desligamento, suspeita), `revokeRefreshTokens(uid)` continua sendo o
+caminho, sem custo de leitura.
+
+### 6.4 Atualizações do aplicativo
+
+| Tipo           | Comportamento                              |
+| -------------- | ------------------------------------------ |
+| Funcionalidade | Apresentada no login, com aceitar ou adiar |
+| Segurança      | Aplicada automaticamente, sem pergunta     |
+
+Sendo um PWA, quando a tela aparece o service worker **já baixou** a versão nova — "negar" só pode
+significar "seguir nesta sessão com a versão em cache". Não existe desinstalar atualização.
+
+Por isso `AppRelease.adiamentosPermitidos`: adiar indefinidamente criaria frota de versões
+diferentes conversando com o mesmo banco, origem clássica de bug irreproduzível. Release marcado
+como `obrigatoria` ignora a pergunta.
+
 ---
 
-## 6. LGPD
+## 7. LGPD
 
 O sistema trata dado pessoal: nome de condutor, CNH, **geolocalização** e fotos. Isso traz
 obrigações concretas, não formalidades.

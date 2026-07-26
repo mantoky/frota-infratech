@@ -61,6 +61,16 @@ interface OrgUnit {
     name: string;
     email: string;
   };
+
+  // Os tres vinculos que definem uma "area" para efeito de mensagens. O forum
+  // circula dentro da area e sua subarvore, entao esses campos deixam de ser
+  // informativos e passam a ser parte da regra de visibilidade.
+  lideranca: {
+    gerenciaRegional: { unitId: string; lider: string };
+    coordenacaoLocal: { unitId: string; lider: string };
+    areaFrota: string; // ex.: "Infratech-No"
+  };
+
   costCenter?: string; // integração com ERP/contabilidade
   active: boolean; // desativação lógica: histórico não pode perder o nó
   createdAt: Timestamp;
@@ -178,28 +188,81 @@ interface Movement {
 ```ts
 interface UserProfile {
   uid: string;
-  email: string;
-  displayName: string;
-  role:
-    | 'super_admin'
-    | 'gestor_regional'
-    | 'gerente'
-    | 'coordenador'
-    | 'operador'
-    | 'motorista'
-    | 'auditor';
-  scopeUnitId: string | null; // nó raiz do escopo. null = global (super_admin)
+  email: string; // corporativo; identificador de login
+  displayName: string; // nome completo
+
+  level: 'usuario' | 'operador' | 'admin' | 'admin_master' | 'auditor';
+  scopeUnitId: string | null; // nó raiz do escopo. null = global (admin_master)
   additionalScopes: string[]; // exceção: quem responde por setores não contíguos
-  active: boolean;
+
+  // --- Estado da conta ---
+  // `pendente` é o estado inicial de todo autocadastro: a conta existe, mas
+  // nao enxerga absolutamente nada ate ser aprovada. Ver REQUISITOS_V2 §1.2.
+  status: 'pendente' | 'ativo' | 'bloqueado' | 'inativo';
+
+  // --- Dados declarados no cadastro ---
+  declarado: {
+    gerencia: string;
+    coordenador: string;
+    gestorStaff: string;
+    funcao: string;
+    empresa: string;
+    idCracha: string;
+    rac02: string;
+    rac02ValidadeDeclarada: Timestamp | null;
+    prontosCadastrado: boolean;
+  };
+
+  // --- Validação humana (não há integração com SGC/Prontos) ---
+  // Guardar quem validou e quando e o que torna a ausencia de integracao
+  // auditavel: se um RAC02 vencido passar, a trilha mostra por quem.
+  validacao: {
+    rac02: { conferido: boolean; por: string | null; em: Timestamp | null };
+    prontos: { conferido: boolean; por: string | null; em: Timestamp | null };
+    cracha: { conferido: boolean; por: string | null; em: Timestamp | null };
+    aprovadoPor: string | null;
+    aprovadoEm: Timestamp | null;
+    rejeitadoPor: string | null;
+    rejeitadoEm: Timestamp | null;
+    motivoRejeicao: string | null;
+  };
+
+  // --- Segurança ---
+  seguranca: {
+    // Segredo TOTP cifrado com Cloud KMS. Nunca em claro, nunca legivel pelo
+    // cliente - a verificacao acontece dentro da Function.
+    totpSecretEnc: string | null;
+    totpAtivoEm: Timestamp | null;
+    recoveryCodesHash: string[]; // uso unico, guardados como hash
+    passwordUpdatedAt: Timestamp;
+    mustChangePassword: boolean; // ligado pela rotina de 45 dias
+    failedLoginCount: number;
+    lockedUntil: Timestamp | null;
+  };
+
+  preferencias: {
+    popupNovasMensagens: boolean; // ativado por padrão
+    idioma: 'pt' | 'en' | 'es';
+    tema: 'light' | 'dark';
+  };
+
   cnh?: { numero: string; categoria: string; validade: Timestamp };
   lastLoginAt: Timestamp;
   createdAt: Timestamp;
 }
 ```
 
-`role` e `scopeUnitId` são espelhados em **custom claims** pela Function `setUserScope`. O documento
-é a fonte de verdade administrável; a claim é a cópia rápida usada nas rules. Ver
+`level` e `scopeUnitId` são espelhados em **custom claims** pela Function `setUserScope`. O
+documento é a fonte de verdade administrável; a claim é a cópia rápida usada nas rules. Ver
 [`RBAC_AUDITORIA.md`](./RBAC_AUDITORIA.md) §2.
+
+> **Por que `status: 'pendente'` e não simplesmente `active: false`:** são estados diferentes com
+> consequências diferentes. `pendente` nunca teve acesso e aguarda decisão; `bloqueado` teve acesso
+> e foi suspenso; `inativo` é o desligamento. Colapsar os três num booleano perde a informação de
+> que a auditoria mais precisa — a de por que a conta está sem acesso.
+>
+> **Exclusão é sempre lógica.** Movimentações, mensagens e logs apontam para o `uid`. Apagar o
+> documento transformaria o histórico inteiro em referência quebrada.
 
 ### 2.5 `auditLogs/{logId}`
 
@@ -247,11 +310,121 @@ interface ChecklistTemplate {
 Checklist por setor atende ao requisito de gestão individual: a coordenação de pátio pode exigir
 itens que a de escritório não exige.
 
+> **`required` nasce `true`.** Todo item é obrigatório por padrão e só o administrador pode
+> desmarcar, com registro em `auditLogs`. Desobrigar um item de checklist é decisão sobre segurança
+> operacional, não preferência de tela — e por isso precisa de autor e data.
+
+Além dos campos do checklist configurável, a retirada passa a exigir três confirmações fixas, que
+não podem ser desmarcadas por ninguém:
+
+```ts
+interface RetiradaObrigatorios {
+  prontosExecutado: boolean; // executou o Prontos e está liberado
+  crmRealizado: boolean;
+  // Preenchido apenas quando o condutor NAO esta liberado pelo Prontos. A
+  // justificativa e do gestor, nunca do proprio condutor - se ele pudesse
+  // justificar a si mesmo, o controle nao existiria.
+  aptidaoJustificada?: {
+    justificativa: string;
+    gestorUid: string;
+    gestorNome: string;
+    em: Timestamp;
+  };
+}
+```
+
 ### 2.7 `forumPosts/{postId}` e subcoleção `comments`
 
 Igual ao modelo atual, com dois acréscimos: `orgPath[]` para direcionar avisos a um setor e sua
 subárvore, e comentários em **subcoleção** em vez de array — um post movimentado com 200 comentários
 dentro do documento reencontraria o mesmo teto de 1 MiB.
+
+**A autoria passa a vir do token, nunca de campo digitado.** Hoje `ForumPage` pede o nome do autor
+num input livre, o que permite assinar como qualquer pessoa — insustentável num sistema auditável.
+
+```ts
+interface ForumPost {
+  id: string;
+  titulo: string;
+  conteudo: string;
+  autor: { uid: string; nome: string; level: string }; // do token, sempre
+  categoria: 'Aviso' | 'Alerta' | 'Manutenção' | 'Geral';
+  orgUnitId: string;
+  orgPath: string[]; // circula apenas na área e subárvore
+  editadoEm: Timestamp | null; // transparência: mensagem editada mostra que foi
+  removidoPor: string | null; // remoção lógica preserva a trilha
+  createdAt: Timestamp;
+  likes: number;
+}
+```
+
+### 2.8 `threads/{threadId}` e subcoleção `messages`
+
+Mensagem privada. O par de participantes vive no documento pai para que a regra de permissão seja
+avaliada **uma vez por conversa**, e não a cada mensagem.
+
+```ts
+interface Thread {
+  id: string;
+  // Ordenado, para que a dupla (A,B) e (B,A) resolvam sempre no mesmo thread.
+  participantes: [string, string];
+  participantesInfo: Record<string, { nome: string; level: string }>;
+  orgUnitId: string; // conversa nunca cruza area
+  ultimaMensagem: { texto: string; autorUid: string; em: Timestamp };
+  naoLidas: Record<string, number>; // contador por participante
+  createdAt: Timestamp;
+}
+
+interface Message {
+  id: string;
+  autorUid: string;
+  autorNome: string; // snapshot, para o historico nao mudar se o nome mudar
+  texto: string;
+  editadoEm: Timestamp | null;
+  removidoPor: string | null;
+  lidaPor: string[];
+  createdAt: Timestamp;
+}
+```
+
+O grafo de quem pode falar com quem (condutor → apenas operador) está em
+[`RBAC_AUDITORIA.md`](./RBAC_AUDITORIA.md) §4 e é validado **na Function que cria o thread**, não só
+na rule — validar apenas na rule deixaria o par gravado antes da checagem de nível.
+
+### 2.9 `appReleases/{version}`
+
+Suporta o aceite de atualização no login.
+
+```ts
+interface AppRelease {
+  version: string; // "1.3.0"
+  notas: string;
+  tipo: 'funcionalidade' | 'seguranca';
+  // Atualizacao de seguranca ignora a pergunta e aplica na hora. A de
+  // funcionalidade pode ser adiada por um numero limitado de sessoes - adiar
+  // indefinidamente cria frota de versoes diferentes sobre o mesmo banco.
+  obrigatoria: boolean;
+  adiamentosPermitidos: number;
+  publicadoEm: Timestamp;
+  publicadoPor: string;
+}
+```
+
+### 2.10 `config/security`
+
+Documento único que sustenta o _force update key_.
+
+```ts
+interface SecurityConfig {
+  // Toda sessao emitida antes deste instante e recusada pelas rules. Uma
+  // escrita derruba todos os usuarios de uma vez, sem percorrer a base
+  // usuario por usuario.
+  sessionEpoch: Timestamp;
+  atualizadoPor: string;
+  motivo: string;
+  passwordMaxAgeDays: number; // 45
+}
+```
 
 ---
 
@@ -259,15 +432,20 @@ dentro do documento reencontraria o mesmo teto de 1 MiB.
 
 Registrar em `firestore.indexes.json` (hoje o arquivo está vazio).
 
-| Coleção     | Campos                               | Consulta atendida                       |
-| ----------- | ------------------------------------ | --------------------------------------- |
-| `vehicles`  | `orgPath` (array) + `status` + `tag` | Frota de um setor filtrada por situação |
-| `vehicles`  | `orgPath` (array) + `blocked`        | Painel de bloqueios da regional         |
-| `movements` | `orgPath` (array) + `createdAt` desc | Histórico paginado por setor            |
-| `movements` | `vehicleId` + `createdAt` desc       | Linha do tempo de um veículo            |
-| `movements` | `driver.userId` + `createdAt` desc   | Ranking e histórico por condutor        |
-| `auditLogs` | `orgPath` (array) + `timestamp` desc | Auditoria setorial                      |
-| `auditLogs` | `actor.uid` + `timestamp` desc       | Trilha por usuário                      |
+| Coleção      | Campos                                             | Consulta atendida                           |
+| ------------ | -------------------------------------------------- | ------------------------------------------- |
+| `vehicles`   | `orgPath` (array) + `status` + `tag`               | Frota de um setor filtrada por situação     |
+| `vehicles`   | `orgPath` (array) + `blocked`                      | Painel de bloqueios da regional             |
+| `movements`  | `orgPath` (array) + `createdAt` desc               | Histórico paginado por setor                |
+| `movements`  | `vehicleId` + `createdAt` desc                     | Linha do tempo de um veículo                |
+| `movements`  | `driver.userId` + `createdAt` desc                 | Ranking e histórico por condutor            |
+| `auditLogs`  | `orgPath` (array) + `timestamp` desc               | Auditoria setorial                          |
+| `auditLogs`  | `actor.uid` + `timestamp` desc                     | Trilha por usuário                          |
+| `users`      | `status` + `scopeUnitId` + `createdAt`             | Fila de aprovação de cadastros da área      |
+| `users`      | `scopeUnitId` + `level` + `displayName`            | Gestão de usuários no painel administrativo |
+| `users`      | `seguranca.passwordUpdatedAt`                      | Rotina agendada de expiração de senha       |
+| `forumPosts` | `orgPath` (array) + `createdAt` desc               | Fórum da área, paginado                     |
+| `threads`    | `participantes` (array) + `ultimaMensagem.em` desc | Caixa de conversas do usuário               |
 
 ---
 

@@ -1,8 +1,9 @@
 # Arquitetura Alvo — Plataforma Corporativa de Gestão de Frota
 
 > Documento de arquitetura. Descreve o estado atual sem maquiagem, o alvo, e o porquê de cada
-> decisão. Companheiros deste documento: [`MODELO_DADOS.md`](./MODELO_DADOS.md),
-> [`RBAC_AUDITORIA.md`](./RBAC_AUDITORIA.md), [`ROADMAP.md`](./ROADMAP.md).
+> decisão. Companheiros deste documento: [`REQUISITOS_V2.md`](./REQUISITOS_V2.md),
+> [`MODELO_DADOS.md`](./MODELO_DADOS.md), [`RBAC_AUDITORIA.md`](./RBAC_AUDITORIA.md),
+> [`HOSPEDAGEM.md`](./HOSPEDAGEM.md), [`ROADMAP.md`](./ROADMAP.md).
 
 ---
 
