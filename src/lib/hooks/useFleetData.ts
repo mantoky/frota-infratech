@@ -33,6 +33,24 @@ function writeBackup(vehicles: Vehicle[], history: HistoryItem[], drivers: strin
   return backup
 }
 
+/** Backfill org/timestamp fields for vehicles saved before regionais/métricas. */
+function migrateVehicles(vehicles: Vehicle[]): { vehicles: Vehicle[]; changed: boolean } {
+  const byTag = new Map(initialVehicles.map(v => [v.tag, v]))
+  const byId = new Map(initialVehicles.map(v => [v.id, v]))
+  let changed = false
+  const migrated = vehicles.map(v => {
+    const seed = byTag.get(v.tag) || byId.get(v.id)
+    const next: Vehicle = { ...v }
+    if (!next.regionalId && seed?.regionalId) { next.regionalId = seed.regionalId; changed = true }
+    if (!next.gerenciaId && seed?.gerenciaId) { next.gerenciaId = seed.gerenciaId; changed = true }
+    if (!next.lastStatusChangeAt && seed?.lastStatusChangeAt) { next.lastStatusChangeAt = seed.lastStatusChangeAt; changed = true }
+    if (!next.lastWashedAt && seed?.lastWashedAt) { next.lastWashedAt = seed.lastWashedAt; changed = true }
+    if (!next.regionalId) { next.regionalId = initialVehicles[0]?.regionalId; changed = true }
+    return next
+  })
+  return { vehicles: migrated, changed }
+}
+
 // Camada de dados offline-first: o localStorage e a fonte primaria, sempre
 // disponivel mesmo sem rede nenhuma (ex: rede corporativa que bloqueia o
 // Firestore). O Firestore vira uma sincronizacao best-effort em segundo
@@ -66,10 +84,14 @@ export function useFleetData() {
     /* eslint-disable react-hooks/set-state-in-effect -- le o backup local apos a montagem; o HTML estatico e pre-renderizado sem acesso ao localStorage, entao isso precisa acontecer no cliente, e nao pode ir no useState (quebraria a hidratacao) */
     const backup = readBackup()
     if (backup) {
-      setVehicles(backup.vehicles)
+      const { vehicles: migrated, changed } = migrateVehicles(backup.vehicles || [])
+      setVehicles(migrated)
       setHistory(backup.history)
       setDrivers(backup.drivers || [])
       lastUpdatedRef.current = backup.lastUpdated
+      if (changed) {
+        writeBackup(migrated, backup.history, backup.drivers || [], false, backup.lastUpdated)
+      }
       setLoading(false)
     }
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -139,11 +161,12 @@ export function useFleetData() {
         const isNewer = !lastUpdatedRef.current || (firestoreLastUpdated && firestoreLastUpdated > lastUpdatedRef.current)
 
         if (isNewer && (firestoreVehicles.length > 0 || firestoreHistory.length > 0)) {
-          setVehicles(firestoreVehicles)
+          const { vehicles: migrated } = migrateVehicles(firestoreVehicles)
+          setVehicles(migrated)
           setHistory(firestoreHistory)
           setDrivers(firestoreDrivers)
           lastUpdatedRef.current = firestoreLastUpdated || new Date().toISOString()
-          writeBackup(firestoreVehicles, firestoreHistory, firestoreDrivers, true, lastUpdatedRef.current)
+          writeBackup(migrated, firestoreHistory, firestoreDrivers, true, lastUpdatedRef.current)
         } else if (!localBackup && firestoreVehicles.length === 0) {
           setVehicles(initialVehicles)
           setDoc(doc(db, 'frota', 'data'), {
@@ -165,11 +188,20 @@ export function useFleetData() {
     return () => unsub()
   }, [])
 
-  const addToHistory = useCallback((vehicle: Vehicle, action: string, driver: string, km: number, extra: string, currentVehicles: Vehicle[], extraFields?: Partial<Pick<HistoryItem, 'location' | 'distanceKm' | 'travelTimeMinutes'>>) => {
+  const addToHistory = useCallback((vehicle: Vehicle, action: string, driver: string, km: number, extra: string, currentVehicles: Vehicle[], extraFields?: Partial<Pick<HistoryItem, 'location' | 'distanceKm' | 'travelTimeMinutes' | 'photos' | 'customChecklistData' | 'regionalId' | 'gerenciaId'>>) => {
     const now = new Date()
     const dateStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR')
     const newHistoryItem: HistoryItem = {
-      date: dateStr, vehicle: `${vehicle.tag} (${vehicle.plate})`, driver, action, km, extra, ...extraFields
+      id: `h-${Date.now()}`,
+      date: dateStr,
+      vehicle: `${vehicle.tag} (${vehicle.plate})`,
+      driver,
+      action,
+      km,
+      extra,
+      regionalId: vehicle.regionalId,
+      gerenciaId: vehicle.gerenciaId,
+      ...extraFields
     }
     const newHistory = [...historyRef.current, newHistoryItem]
     setHistory(newHistory)

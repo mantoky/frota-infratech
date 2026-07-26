@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 
-import { Vehicle, PageType, FilterType } from '@/types'
+import { Vehicle, PageType, FilterType, ChecklistPhoto } from '@/types'
 import translations from '@/lib/translations.json'
 import { calculateDriverKm, getDriverStats, generateVehicleId, findLastWithdrawal, haversineKm, parseDateTime, isValidAdminPin } from '@/lib/helpers'
 import { GeoPoint } from '@/lib/geolocation'
 import { useFleetData } from '@/lib/hooks/useFleetData'
+import { useOrgData } from '@/lib/hooks/useOrgData'
 import { generateFleetReport } from '@/lib/pdf'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
@@ -20,6 +21,9 @@ import AddModal from '@/components/modals/AddModal'
 import PinModal from '@/components/modals/PinModal'
 import LoginScreen from '@/components/auth/LoginScreen'
 import AdminPage from '@/components/admin/AdminPage'
+import MetricsPage from '@/components/metrics/MetricsPage'
+import ForumPage from '@/components/forum/ForumPage'
+import RegionaisPage from '@/components/org/RegionaisPage'
 import { useInstallPrompt } from '@/lib/hooks/useInstallPrompt'
 
 const t = (key: string, lang: string): string => {
@@ -29,6 +33,11 @@ const t = (key: string, lang: string): string => {
 
 export default function FrotaInfratech() {
   const { vehicles, setVehicles, history, drivers, saveDrivers, loading, saveData, addToHistory } = useFleetData()
+  const {
+    regionais, gerencias, forumPosts, checklistFields,
+    saveChecklistFields, createRegional, createGerencia,
+    addForumPost, addForumComment, likeForumPost
+  } = useOrgData()
   const { canInstall, promptInstall } = useInstallPrompt()
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all')
   const [isAdmin, setIsAdmin] = useState(false)
@@ -55,18 +64,15 @@ export default function FrotaInfratech() {
   const [pendingVehicleData, setPendingVehicleData] = useState<Partial<Vehicle> | null>(null)
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- restaura preferências do localStorage após a montagem; o HTML estático é pré-renderizado sem acesso ao localStorage, então isso precisa acontecer no cliente, depois do primeiro paint */
     const storedLang = localStorage.getItem('frota_lang')
     const storedTheme = localStorage.getItem('theme')
     const storedAdmin = localStorage.getItem('isAdmin')
     const storedEntered = localStorage.getItem('frota_entered')
-
     if (storedLang) setCurrentLang(storedLang)
     if (storedTheme) setTheme(storedTheme)
     if (storedAdmin === 'true') setIsAdmin(true)
     if (storedEntered === 'true') setAppEntered(true)
     setAuthChecked(true)
-    /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
 
   useEffect(() => {
@@ -77,16 +83,13 @@ export default function FrotaInfratech() {
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
   const changeLanguage = (lang: string) => { setCurrentLang(lang); localStorage.setItem('frota_lang', lang) }
-
   const enterCommon = () => { setAppEntered(true); localStorage.setItem('frota_entered', 'true') }
   const enterAdmin = (pin: string) => {
     if (isValidAdminPin(pin)) {
       setLoginPinError(false)
       setIsAdmin(true); localStorage.setItem('isAdmin', 'true')
       setAppEntered(true); localStorage.setItem('frota_entered', 'true')
-    } else {
-      setLoginPinError(true)
-    }
+    } else setLoginPinError(true)
   }
   const logout = () => {
     setIsAdmin(false); localStorage.removeItem('isAdmin')
@@ -101,9 +104,7 @@ export default function FrotaInfratech() {
       else if (pendingAction === 'add' && pendingVehicleData) addNewVehicle(pendingVehicleData)
       else if (pendingAction === 'unblock' && selectedVehicle) unblockVehicle()
       setPendingAction(null); setPendingVehicleData(null)
-    } else {
-      setPinError(true)
-    }
+    } else setPinError(true)
   }
 
   const deleteVehicle = () => {
@@ -116,7 +117,11 @@ export default function FrotaInfratech() {
     const newVehicle: Vehicle = {
       id: generateVehicleId(), tag: data.tag || '', plate: data.plate || '', model: data.model || '',
       status: data.status || 'disp', km: data.km || 0, fuel: data.fuel || 50, fuelText: data.fuelText || '50%',
-      maintenance: data.maintenance || 10000, driver: '', lastLocation: '', obs: ''
+      maintenance: data.maintenance || 10000, driver: '', lastLocation: '', obs: '',
+      regionalId: data.regionalId || regionais[0]?.id,
+      gerenciaId: data.gerenciaId,
+      lastStatusChangeAt: new Date().toISOString(),
+      lastWashedAt: new Date().toISOString()
     }
     const newVehicles = [...vehicles, newVehicle]
     setVehicles(newVehicles); saveData(newVehicles, history); setAddModal(false)
@@ -127,21 +132,34 @@ export default function FrotaInfratech() {
   const openServiceModal = (type: 'man' | 'lav', vehicle: Vehicle) => { setSelectedVehicle(vehicle); setServiceType(type); setServiceModal(true) }
   const openManageModal = (vehicle: Vehicle) => { setSelectedVehicle(vehicle); setManageModal(true) }
 
-  const handleWithdrawConfirm = (data: { driver: string; km: number; fuel: string; fuelPercent: number; obs: string; location: GeoPoint | null }) => {
+  const handleWithdrawConfirm = (data: {
+    driver: string; km: number; fuel: string; fuelPercent: number; obs: string
+    location: GeoPoint | null; photos: ChecklistPhoto[]; customChecklistData: Record<string, boolean>
+  }) => {
     if (!selectedVehicle) return
-    const updatedVehicle: Vehicle = { ...selectedVehicle, status: 'uso', driver: data.driver, km: data.km, fuel: data.fuelPercent, fuelText: data.fuel, obs: data.obs }
+    const nowIso = new Date().toISOString()
+    const updatedVehicle: Vehicle = {
+      ...selectedVehicle, status: 'uso', driver: data.driver, km: data.km,
+      fuel: data.fuelPercent, fuelText: data.fuel, obs: data.obs, lastStatusChangeAt: nowIso
+    }
     const newVehicles = vehicles.map(v => v.id === selectedVehicle.id ? updatedVehicle : v)
     setVehicles(newVehicles)
-    addToHistory(updatedVehicle, 'Retirada', data.driver, data.km, '', newVehicles, { location: data.location || undefined })
+    addToHistory(updatedVehicle, 'Retirada', data.driver, data.km, data.obs || '', newVehicles, {
+      location: data.location || undefined,
+      photos: data.photos,
+      customChecklistData: data.customChecklistData
+    })
     setWithdrawModal(false); setSelectedVehicle(null)
   }
 
   const handleReturnConfirm = (data: { km: number; fuel: string; fuelPercent: number; location: string; locationSpecify: string; obs: string; coords: GeoPoint | null }) => {
     if (!selectedVehicle) return
     const location = data.location === 'Outros' ? data.locationSpecify : data.location
-    const updatedVehicle: Vehicle = { ...selectedVehicle, status: 'disp', driver: '', km: data.km, fuel: data.fuelPercent, fuelText: data.fuel, lastLocation: location, obs: data.obs }
+    const updatedVehicle: Vehicle = {
+      ...selectedVehicle, status: 'disp', driver: '', km: data.km, fuel: data.fuelPercent,
+      fuelText: data.fuel, lastLocation: location, obs: data.obs, lastStatusChangeAt: new Date().toISOString()
+    }
     const newVehicles = vehicles.map(v => v.id === selectedVehicle.id ? updatedVehicle : v)
-
     const withdrawal = findLastWithdrawal(`${updatedVehicle.tag} (${updatedVehicle.plate})`, history)
     let distanceKm: number | undefined
     let travelTimeMinutes: number | undefined
@@ -149,23 +167,30 @@ export default function FrotaInfratech() {
       distanceKm = haversineKm(withdrawal.location, data.coords)
       travelTimeMinutes = Math.max(0, (Date.now() - parseDateTime(withdrawal.date).getTime()) / 60000)
     }
-
     setVehicles(newVehicles)
-    addToHistory(updatedVehicle, 'Devolucao', '', data.km, location, newVehicles, { location: data.coords || undefined, distanceKm, travelTimeMinutes })
+    addToHistory(updatedVehicle, 'Devolucao', '', data.km, data.obs || location, newVehicles, {
+      location: data.coords || undefined, distanceKm, travelTimeMinutes
+    })
     setReturnModal(false); setSelectedVehicle(null)
   }
 
   const handleServiceConfirm = (data: { driver: string; km: number; obs: string }) => {
     if (!selectedVehicle) return
-    const updatedVehicle: Vehicle = { ...selectedVehicle, status: serviceType, driver: data.driver, km: data.km, obs: data.obs }
+    const nowIso = new Date().toISOString()
+    const updatedVehicle: Vehicle = {
+      ...selectedVehicle, status: serviceType, driver: data.driver, km: data.km, obs: data.obs,
+      lastStatusChangeAt: nowIso,
+      lastWashedAt: serviceType === 'lav' ? nowIso : selectedVehicle.lastWashedAt
+    }
     const newVehicles = vehicles.map(v => v.id === selectedVehicle.id ? updatedVehicle : v)
-    setVehicles(newVehicles); addToHistory(updatedVehicle, serviceType === 'man' ? 'Envio Manutencao' : 'Envio Lavador', data.driver, data.km, data.obs, newVehicles)
+    setVehicles(newVehicles)
+    addToHistory(updatedVehicle, serviceType === 'man' ? 'Envio Manutencao' : 'Envio Lavador', data.driver, data.km, data.obs, newVehicles)
     setServiceModal(false); setSelectedVehicle(null)
   }
 
   const handleManageSave = (data: Partial<Vehicle>) => {
     if (!selectedVehicle) return
-    const updatedVehicle = { ...selectedVehicle, ...data } as Vehicle
+    const updatedVehicle = { ...selectedVehicle, ...data, lastStatusChangeAt: new Date().toISOString() } as Vehicle
     const newVehicles = vehicles.map(v => v.id === selectedVehicle.id ? updatedVehicle : v)
     setVehicles(newVehicles); saveData(newVehicles, history); setManageModal(false); setSelectedVehicle(null)
   }
@@ -197,9 +222,15 @@ export default function FrotaInfratech() {
 
   const downloadPDF = () => generateFleetReport(vehicles, history)
 
-  if (!authChecked) {
-    return <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-main)' }} />
+  const handleCreateRegional = (data: { name: string; code: string; description: string }) => {
+    createRegional(data, (seedVehicle) => {
+      const newVehicles = [...vehicles, seedVehicle]
+      setVehicles(newVehicles)
+      saveData(newVehicles, history)
+    })
   }
+
+  if (!authChecked) return <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-main)' }} />
 
   if (!appEntered) {
     return (
@@ -246,7 +277,6 @@ export default function FrotaInfratech() {
           onAddVehicle={() => setAddModal(true)}
         />
 
-        {/* Dashboard */}
         {currentPage === 'dashboard' && (
           <DashboardPage
             vehicles={vehicles}
@@ -261,19 +291,44 @@ export default function FrotaInfratech() {
           />
         )}
 
-        {/* Admin */}
+        {currentPage === 'metrics' && (
+          <MetricsPage vehicles={vehicles} history={history} currentLang={currentLang} />
+        )}
+
+        {currentPage === 'forum' && (
+          <ForumPage
+            posts={forumPosts}
+            isAdmin={isAdmin}
+            onAddPost={addForumPost}
+            onAddComment={addForumComment}
+            onLikePost={likeForumPost}
+          />
+        )}
+
+        {currentPage === 'regionais' && (
+          <RegionaisPage
+            regionais={regionais}
+            gerencias={gerencias}
+            vehicles={vehicles}
+            isAdmin={isAdmin}
+            onCreateRegional={handleCreateRegional}
+            onCreateGerencia={createGerencia}
+          />
+        )}
+
         {currentPage === 'admin' && isAdmin && (
           <AdminPage
             vehicles={vehicles}
             drivers={drivers}
             currentLang={currentLang}
+            checklistFields={checklistFields}
             onManage={openManageModal}
             onAddVehicle={() => setAddModal(true)}
             onSaveDrivers={saveDrivers}
+            onSaveChecklistFields={saveChecklistFields}
           />
         )}
 
-        {/* Drivers */}
         {currentPage === 'drivers' && (
           <div style={{ padding: '25px', maxWidth: '1400px', margin: '0 auto' }}>
             <h1 className="page-title">{t('driversTitle', currentLang)}</h1>
@@ -293,14 +348,13 @@ export default function FrotaInfratech() {
                   </div>
                 ))
               )}
-              <button onClick={downloadPDF} style={{ backgroundColor: 'var(--brand-primary)', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginTop: '15px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button onClick={downloadPDF} style={{ backgroundColor: 'var(--brand-primary)', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, marginTop: '15px', width: '100%' }}>
                 📄 {t('btnDownloadHistory', currentLang)}
               </button>
             </div>
           </div>
         )}
 
-        {/* Settings */}
         {currentPage === 'settings' && (
           <div style={{ padding: '25px', maxWidth: '1400px', margin: '0 auto' }}>
             <h1 className="page-title">{t('settingsTitle', currentLang)}</h1>
@@ -315,7 +369,6 @@ export default function FrotaInfratech() {
                   <option value="pt">Portugues</option><option value="en">English</option><option value="es">Espanol</option>
                 </select>
               </div>
-
               <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
                 <div>
                   <h3 style={{ marginBottom: '5px' }}>{t('setTheme', currentLang)}</h3>
@@ -325,7 +378,6 @@ export default function FrotaInfratech() {
                   {theme === 'dark' ? `🌙 ${t('setThemeDark', currentLang)}` : `☀️ ${t('setThemeLight', currentLang)}`}
                 </button>
               </div>
-
               {canInstall && (
                 <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)' }}>
                   <div>
@@ -337,7 +389,6 @@ export default function FrotaInfratech() {
                   </button>
                 </div>
               )}
-
               <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
                 <button onClick={logout} style={{ padding: '10px 16px', borderRadius: '5px', border: 'none', background: 'var(--brand-gray)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
                   {t('btnLogout', currentLang)}
@@ -348,13 +399,7 @@ export default function FrotaInfratech() {
         )}
       </main>
 
-      <HistoryPanel
-        isOpen={historyPanelOpen}
-        onClose={() => setHistoryPanelOpen(false)}
-        history={history}
-        currentLang={currentLang}
-        onDownloadPdf={downloadPDF}
-      />
+      <HistoryPanel isOpen={historyPanelOpen} onClose={() => setHistoryPanelOpen(false)} history={history} currentLang={currentLang} onDownloadPdf={downloadPDF} />
 
       <WithdrawModal
         isOpen={withdrawModal}
@@ -362,53 +407,14 @@ export default function FrotaInfratech() {
         vehicle={selectedVehicle}
         currentLang={currentLang}
         drivers={drivers}
+        checklistFields={checklistFields}
         onConfirm={handleWithdrawConfirm}
       />
-
-      <ServiceModal
-        isOpen={serviceModal}
-        onClose={() => setServiceModal(false)}
-        vehicle={selectedVehicle}
-        serviceType={serviceType}
-        currentLang={currentLang}
-        onConfirm={handleServiceConfirm}
-      />
-
-      <ReturnModal
-        isOpen={returnModal}
-        onClose={() => setReturnModal(false)}
-        vehicle={selectedVehicle}
-        currentLang={currentLang}
-        onConfirm={handleReturnConfirm}
-      />
-
-      <ManageModal
-        isOpen={manageModal}
-        onClose={() => setManageModal(false)}
-        vehicle={selectedVehicle}
-        currentLang={currentLang}
-        isAdmin={isAdmin}
-        onSave={handleManageSave}
-        onDelete={deleteVehicle}
-        onRequestPin={requestPin}
-        onBlock={blockVehicle}
-        onUnblock={unblockVehicle}
-      />
-
-      <AddModal
-        isOpen={addModal}
-        onClose={() => setAddModal(false)}
-        currentLang={currentLang}
-        onAdd={handleAddVehicle}
-      />
-
-      <PinModal
-        isOpen={pinModal}
-        onClose={() => { setPinModal(false); setPendingAction(null); setPinError(false) }}
-        currentLang={currentLang}
-        error={pinError}
-        onVerify={verifyPin}
-      />
+      <ServiceModal isOpen={serviceModal} onClose={() => setServiceModal(false)} vehicle={selectedVehicle} serviceType={serviceType} currentLang={currentLang} onConfirm={handleServiceConfirm} />
+      <ReturnModal isOpen={returnModal} onClose={() => setReturnModal(false)} vehicle={selectedVehicle} currentLang={currentLang} onConfirm={handleReturnConfirm} />
+      <ManageModal isOpen={manageModal} onClose={() => setManageModal(false)} vehicle={selectedVehicle} currentLang={currentLang} isAdmin={isAdmin} onSave={handleManageSave} onDelete={deleteVehicle} onRequestPin={requestPin} onBlock={blockVehicle} onUnblock={unblockVehicle} />
+      <AddModal isOpen={addModal} onClose={() => setAddModal(false)} currentLang={currentLang} onAdd={handleAddVehicle} />
+      <PinModal isOpen={pinModal} onClose={() => { setPinModal(false); setPendingAction(null); setPinError(false) }} currentLang={currentLang} error={pinError} onVerify={verifyPin} />
     </div>
   )
 }

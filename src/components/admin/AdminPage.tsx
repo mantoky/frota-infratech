@@ -2,26 +2,31 @@
 
 import { useState, CSSProperties } from 'react'
 import { t } from '@/lib/hooks/useTranslations'
-import { Vehicle } from '@/types'
+import { Vehicle, ChecklistField } from '@/types'
 import { SEMANTIC_COLORS, getVehicleSemanticStatus, getStatusLabelKey } from '@/lib/statusColor'
 import { Search, Pencil, Plus, X, UserPlus } from 'lucide-react'
+import ChecklistBuilder from '@/components/checklist/ChecklistBuilder'
 
 interface AdminPageProps {
   vehicles: Vehicle[]
   drivers: string[]
   currentLang: string
+  checklistFields: ChecklistField[]
   onManage: (vehicle: Vehicle) => void
   onAddVehicle: () => void
   onSaveDrivers: (drivers: string[]) => void
+  onSaveChecklistFields: (fields: ChecklistField[]) => void
 }
 
 export default function AdminPage({
   vehicles,
   drivers,
   currentLang,
+  checklistFields,
   onManage,
   onAddVehicle,
-  onSaveDrivers
+  onSaveDrivers,
+  onSaveChecklistFields
 }: AdminPageProps) {
   const [search, setSearch] = useState('')
   const [newDriver, setNewDriver] = useState('')
@@ -229,6 +234,14 @@ export default function AdminPage({
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div style={{ marginBottom: '25px' }}>
+        <ChecklistBuilder
+          fields={checklistFields}
+          isAdmin
+          onSaveFields={onSaveChecklistFields}
+        />
       </div>
 
       {/* Drivers management */}

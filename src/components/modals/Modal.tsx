@@ -1,6 +1,8 @@
 'use client'
 
-import { CSSProperties, ReactNode } from 'react'
+import React, { ReactNode } from 'react'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
+import { XIcon } from 'lucide-react'
 
 interface ModalProps {
   isOpen: boolean
@@ -11,66 +13,51 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children, maxWidth = '600px' }: ModalProps) {
-  const styles: { [key: string]: CSSProperties } = {
-    modal: {
-      display: 'flex',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      zIndex: 2000,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    modalContent: {
-      backgroundColor: 'var(--bg-card)',
-      borderRadius: '12px',
-      width: '90%',
-      maxWidth: maxWidth,
-      maxHeight: '90vh',
-      overflowY: 'auto',
-    },
-    modalHeader: {
-      padding: '20px',
-      borderBottom: '1px solid var(--border)',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    modalTitle: {
-      fontSize: '1.25rem',
-      fontWeight: 600,
-      color: 'var(--text-primary)',
-    },
-    closeButton: {
-      background: 'none',
-      border: 'none',
-      fontSize: '1.5rem',
-      cursor: 'pointer',
-      color: 'var(--text-secondary)',
-    },
-    modalBody: {
-      padding: '20px',
-    },
-  }
-
-  if (!isOpen) return null
-
   return (
-    <div style={styles.modal} onClick={onClose}>
-      <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
-        <div style={styles.modalHeader}>
-          <h2 style={styles.modalTitle}>{title}</h2>
-          <button onClick={onClose} style={styles.closeButton}>
-            &times;
-          </button>
-        </div>
-        <div style={styles.modalBody}>
-          {children}
-        </div>
-      </div>
-    </div>
+    <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogPrimitive.Portal>
+        {/* Backdrop Overlay with smooth blur and fade */}
+        <DialogPrimitive.Overlay
+          className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm transition-opacity data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        />
+
+        {/* Modal Container:
+            - Mobile (<640px): Bottom Sheet with rounded-t-2xl, max-h-[88vh], drag handle, slide-in-from-bottom
+            - Desktop (>=640px): Centered Dialog with glassmorphism card, rounded-2xl, zoom-in-95, max-h-[90vh]
+        */}
+        <DialogPrimitive.Content
+          style={{ maxWidth: maxWidth }}
+          className="fixed z-[2001] w-full bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border)] shadow-2xl transition-all duration-200 ease-out focus:outline-none flex flex-col overflow-hidden max-h-[88vh] sm:max-h-[90vh]
+            /* Mobile Bottom Sheet */
+            inset-x-0 bottom-0 rounded-t-2xl p-5 sm:p-6
+            data-[state=open]:animate-in data-[state=closed]:animate-out
+            data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom
+            /* Desktop Centered Dialog */
+            sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl
+            sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:fade-out-0 sm:data-[state=open]:fade-in-0"
+        >
+          {/* Mobile Drag Handle Pill */}
+          <div className="sm:hidden w-12 h-1.5 bg-[var(--text-secondary)] rounded-full mx-auto mb-3 shrink-0 opacity-40" aria-hidden="true" />
+
+          {/* Modal Header */}
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-[var(--border)] shrink-0">
+            <DialogPrimitive.Title className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
+              {title}
+            </DialogPrimitive.Title>
+            <DialogPrimitive.Close
+              className="p-1.5 rounded-full hover:bg-[var(--bg-main)] text-[var(--text-secondary)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] cursor-pointer"
+              aria-label="Fechar modal"
+            >
+              <XIcon className="w-5 h-5" />
+            </DialogPrimitive.Close>
+          </div>
+
+          {/* Modal Scrollable Body */}
+          <div className="overflow-y-auto overscroll-contain pr-1 flex-1 text-sm sm:text-base">
+            {children}
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   )
 }

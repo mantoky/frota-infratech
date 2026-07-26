@@ -3,7 +3,10 @@
 import { t } from '@/lib/hooks/useTranslations'
 import { FilterType, PageType } from '@/types'
 import { CSSProperties } from 'react'
-import { Truck, LayoutGrid, Check, Clock, Droplet, Wrench, Users, History, Settings, ShieldCheck } from 'lucide-react'
+import {
+  Truck, LayoutGrid, Check, Clock, Droplet, Wrench, Users, History, Settings, ShieldCheck,
+  BarChart3, MessageSquare, MapPin
+} from 'lucide-react'
 
 const FILTER_ICONS: Record<FilterType, typeof Check> = {
   all: LayoutGrid,
@@ -71,6 +74,20 @@ export default function Sidebar({
 
   const filters: FilterType[] = ['disp', 'uso', 'lav', 'man']
 
+  const navItem = (page: PageType, label: string, Icon: typeof LayoutGrid) => (
+    <div
+      style={{
+        ...styles.menuItem,
+        backgroundColor: currentPage === page ? 'rgba(255,255,255,0.1)' : 'transparent',
+        borderLeft: currentPage === page ? '4px solid var(--brand-secondary)' : 'none'
+      }}
+      onClick={() => { onNavigate(page); onClose() }}
+    >
+      <Icon size={18} style={{ width: '24px' }} />
+      <span>{label}</span>
+    </div>
+  )
+
   return (
     <>
       <aside style={styles.sidebar}>
@@ -83,17 +100,10 @@ export default function Sidebar({
             <div style={{ padding: '10px 20px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '1px' }}>
               {t('menuMain', currentLang)}
             </div>
-            <div
-              style={{ 
-                ...styles.menuItem, 
-                backgroundColor: currentPage === 'dashboard' ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                borderLeft: currentPage === 'dashboard' ? '4px solid var(--brand-secondary)' : 'none' 
-              }}
-              onClick={() => { onNavigate('dashboard'); onClose(); }}
-            >
-              <LayoutGrid size={18} style={{ width: '24px' }} />
-              <span>{t('menuDashboard', currentLang)}</span>
-            </div>
+            {navItem('dashboard', t('menuDashboard', currentLang), LayoutGrid)}
+            {navItem('metrics', 'Métricas & Grafana', BarChart3)}
+            {navItem('forum', 'Fórum Operacional', MessageSquare)}
+            {navItem('regionais', 'Regionais / Gerências', MapPin)}
           </div>
 
           <div style={{ marginBottom: '25px' }}>
@@ -110,7 +120,7 @@ export default function Sidebar({
                     backgroundColor: currentFilter === filter ? 'rgba(255,255,255,0.1)' : 'transparent',
                     borderLeft: currentFilter === filter ? '4px solid var(--brand-secondary)' : 'none'
                   }}
-                  onClick={() => { onFilterChange(filter); onClose(); }}
+                  onClick={() => { onFilterChange(filter); onClose() }}
                 >
                   <FilterIcon size={18} style={{ width: '24px' }} />
                   <span>{t(`stat${filter === 'disp' ? 'Available' : filter === 'uso' ? 'InUse' : filter === 'lav' ? 'Wash' : 'Maintenance'}`, currentLang)}</span>
@@ -123,21 +133,8 @@ export default function Sidebar({
             <div style={{ padding: '10px 20px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '1px' }}>
               {t('menuReports', currentLang)}
             </div>
-            <div
-              style={{ 
-                ...styles.menuItem, 
-                backgroundColor: currentPage === 'drivers' ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                borderLeft: currentPage === 'drivers' ? '4px solid var(--brand-secondary)' : 'none' 
-              }}
-              onClick={() => { onNavigate('drivers'); onClose(); }}
-            >
-              <Users size={18} style={{ width: '24px' }} />
-              <span>{t('menuDrivers', currentLang)}</span>
-            </div>
-            <div
-              style={styles.menuItem}
-              onClick={() => { onHistoryOpen(); onClose(); }}
-            >
+            {navItem('drivers', t('menuDrivers', currentLang), Users)}
+            <div style={styles.menuItem} onClick={() => { onHistoryOpen(); onClose() }}>
               <History size={18} style={{ width: '24px' }} />
               <span>{t('menuHistory', currentLang)}</span>
             </div>
@@ -147,30 +144,8 @@ export default function Sidebar({
             <div style={{ padding: '10px 20px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '1px' }}>
               {t('menuSystem', currentLang)}
             </div>
-            <div
-              style={{ 
-                ...styles.menuItem, 
-                backgroundColor: currentPage === 'settings' ? 'rgba(255,255,255,0.1)' : 'transparent', 
-                borderLeft: currentPage === 'settings' ? '4px solid var(--brand-secondary)' : 'none' 
-              }}
-              onClick={() => { onNavigate('settings'); onClose(); }}
-            >
-              <Settings size={18} style={{ width: '24px' }} />
-              <span>{t('menuSettings', currentLang)}</span>
-            </div>
-            {isAdmin && (
-              <div
-                style={{
-                  ...styles.menuItem,
-                  backgroundColor: currentPage === 'admin' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  borderLeft: currentPage === 'admin' ? '4px solid var(--brand-secondary)' : 'none'
-                }}
-                onClick={() => { onNavigate('admin'); onClose(); }}
-              >
-                <ShieldCheck size={18} style={{ width: '24px' }} />
-                <span>{t('menuAdmin', currentLang)}</span>
-              </div>
-            )}
+            {navItem('settings', t('menuSettings', currentLang), Settings)}
+            {isAdmin && navItem('admin', t('menuAdmin', currentLang), ShieldCheck)}
           </div>
         </nav>
       </aside>

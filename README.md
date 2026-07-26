@@ -101,6 +101,19 @@ As imagens dos veículos foram geradas com IA em estilo artístico (anime/aquare
 
 ## 📝 Changelog
 
+### v1.1.0 — Modal Responsivo Padrão de Mercado & Refatoração de Acessibilidade
+- **Refatoração de Modal com Radix UI Primitives (`@radix-ui/react-dialog`)**:
+  - **Focus Trap Automático**: Previne escape de foco por teclado para fora do modal aberto.
+  - **Scroll Lock Nativo**: Impede rolagem do fundo (`body`) durante a exibição do diálogo.
+  - **Acessibilidade WCAG 2.1 AA**: Atributos `aria-modal="true"`, `DialogTitle` e `DialogDescription`.
+- **Padrão Mobile Bottom Sheet (< 640px)**:
+  - Transição automática no mobile para deslizar do rodapé (*Bottom Sheet*).
+  - Indicador de toque estilo pílula (*Drag Handle Pill*), cantos superiores arredondados e transição fluida.
+- **Visual Glassmorphism em Desktop (≥ 640px)**:
+  - Diálogo centralizado com bordas arredondadas, profundidade com sombra e backdrop desfocado (`backdrop-blur-sm`).
+- **Validação e Servidor Local**:
+  - Servidor em tempo real em `http://localhost:3003`.
+
 ### v1.0.0
 - Lançamento inicial
 - Sistema completo de gestão de frotas
