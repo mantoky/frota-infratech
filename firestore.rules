@@ -89,10 +89,20 @@ service cloud.firestore {
     match /frota/data {
       allow read: if ativo();
 
+      // `hasAll(['vehicles','history'])` estava aqui e teria bloqueado a
+      // correcao da perda de frota: a semeadura deixou de enviar `history` de
+      // proposito - mandar `[]` junto foi o que destruiu o historico real.
+      // Num documento que ainda nao existe, o resultado da mesclagem tambem
+      // nao teria a chave, e a gravacao seria negada.
+      //
+      // O que continua garantido e o que importa: se a chave vier, ela e uma
+      // lista. Nenhuma escrita consegue trocar o tipo do campo.
       allow write: if ativo()
-                   && request.resource.data.keys().hasAll(['vehicles', 'history'])
                    && request.resource.data.vehicles is list
-                   && request.resource.data.history is list;
+                   && (!('history' in request.resource.data)
+                       || request.resource.data.history is list)
+                   && (!('drivers' in request.resource.data)
+                       || request.resource.data.drivers is list);
     }
 
     // ---------- estrutura organizacional ----------
