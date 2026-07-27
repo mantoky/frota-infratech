@@ -489,3 +489,59 @@ exportado para o GCS e removido. A Function de espelho é desativada.
 **Compatibilidade durante a transição:** `migrateVehicles()` em `useFleetData` já é precedente de
 backfill defensivo no cliente. O mesmo padrão vale aqui — campos ausentes recebem default em vez de
 quebrar a tela.
+
+---
+
+## Adendo — hierarquia de cinco níveis e fórum no Firestore
+
+> Escrito depois do incidente de perda de frota de 27/07/2026. Substitui o par
+> `Regional[] + Gerencia[]` da v1.
+
+### A árvore
+
+```
+Regional > Gerência > Coordenação > Gestão > Área
+```
+
+Uma coleção só, `org/data`, com um array de `OrgUnit`. Cada nó guarda apenas o
+pai imediato (`parentId`) e o caminho materializado até a raiz (`path`). É o
+`path` que torna barato perguntar "tudo que está sob esta gerência" — vira um
+filtro linear em vez de travessia recursiva.
+
+Cada nível declara atributos próprios em `ORG_LEVEL_FIELDS` (`src/lib/org.ts`):
+
+| Nível       | Atributos                                    |
+| ----------- | -------------------------------------------- |
+| Regional    | responsável, sede, UF, descrição             |
+| Gerência    | gerente\*, e-mail, centro de custo           |
+| Coordenação | coordenador\*, turno, telefone de plantão    |
+| Gestão      | gestor\*, staff, contrato                    |
+| Área        | registro da frota\*, responsável, empresa    |
+
+`*` obrigatório. O registro da frota da área (ex.: `Infratech-No`) é o que
+delimita quem troca mensagens com quem no fórum.
+
+Documento único, e não uma coleção por unidade, porque a árvore muda raramente
+e é lida em quase toda tela: uma leitura por sessão contra uma por unidade.
+
+### Migração
+
+`migrarDaV1()` promove as regionais e gerências existentes **preservando os
+ids** — os veículos já gravados apontam para eles, e trocá-los desvincularia a
+frota inteira da estrutura. Os três níveis que não existiam são criados como
+"padrão" para que nenhum veículo fique sem área.
+
+### Fórum
+
+Coleção `forumPosts/{postId}`, **não** um array dentro de um documento. A razão
+é a regra de segurança: "o autor edita a sua, o administrador apaga qualquer
+uma" só é expressável quando a posse é por documento. Num array, quem pode
+escrever no documento reescreve a mensagem de qualquer pessoa.
+
+`authorUid` vem do token e é conferido pela regra no `create`. O campo de texto
+livre "Seu nome" foi removido — ele permitia assinar como qualquer um, o que
+anula a trilha de auditoria inteira.
+
+Curtir e comentar são liberados a qualquer usuário ativo, mas apenas sobre as
+chaves `likes` e `comments` (`hasOnly`), para que um "comentário" não venha
+acompanhado de uma troca sorrateira de autor ou conteúdo.

@@ -6,21 +6,10 @@ import { CSSProperties, useMemo, useState } from 'react';
 import VehicleMiniCard from '@/components/vehicles/VehicleMiniCard';
 import VehicleDetailModal from '@/components/vehicles/VehicleDetailModal';
 import PageHeader from '@/components/ui/PageHeader';
-import StatCard from '@/components/ui/StatCard';
-import FilterChips, { FilterChipOption } from '@/components/ui/FilterChips';
+import KpiPolygon, { KpiSegment } from '@/components/ui/KpiPolygon';
 import AlertBanner from '@/components/ui/AlertBanner';
 import EmptyState from '@/components/ui/EmptyState';
-import {
-  AlertTriangle,
-  Ban,
-  Search,
-  Truck,
-  CheckCircle2,
-  Clock,
-  Wrench,
-  X,
-  SearchX,
-} from 'lucide-react';
+import { AlertTriangle, Ban, Search, X, SearchX } from 'lucide-react';
 
 interface DashboardPageProps {
   vehicles: Vehicle[];
@@ -54,11 +43,6 @@ export default function DashboardPage({
   const [detailVehicle, setDetailVehicle] = useState<Vehicle | null>(null);
 
   const styles: { [key: string]: CSSProperties } = {
-    statGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-      gap: 'var(--space-3)',
-    },
     toolbar: {
       display: 'flex',
       alignItems: 'center',
@@ -116,10 +100,14 @@ export default function DashboardPage({
     );
   }, [vehicles, currentFilter, searchQuery]);
 
-  const filterOptions: FilterChipOption<FilterType>[] = [
-    { value: 'all', label: t('statAll', currentLang), count: counts.all },
+  // Cinco indicadores viram um pentagono; se um dia entrar um sexto status, o
+  // componente vira hexagono sozinho. Cada setor filtra - o indicador e o
+  // controle passaram a ser a mesma coisa, em vez de dois lugares mostrando a
+  // mesma contagem.
+  const segments: KpiSegment<FilterType>[] = [
+    { value: 'all', label: t('statAll', currentLang), count: counts.all, tone: 'neutro' },
     { value: 'disp', label: t('statAvailable', currentLang), count: counts.disp, tone: 'ok' },
-    { value: 'uso', label: t('statInUse', currentLang), count: counts.uso, tone: 'ok' },
+    { value: 'uso', label: t('statInUse', currentLang), count: counts.uso, tone: 'neutro' },
     { value: 'lav', label: t('statWash', currentLang), count: counts.lav, tone: 'alerta' },
     { value: 'man', label: t('statMaintenance', currentLang), count: counts.man, tone: 'anormal' },
   ];
@@ -134,42 +122,16 @@ export default function DashboardPage({
         eyebrow="Operação"
         title={t('dashboardTitle', currentLang)}
         description={t('dashboardSubtitle', currentLang)}
-        // Indicadores de leitura, nao controles. Os cards e a barra de filtros
-        // abaixo mostravam a mesma contagem e disparavam o mesmo filtro, um
-        // embaixo do outro - duas formas de fazer a mesma coisa na mesma tela.
-        // Os cards ficaram com o resumo (que os chips nao dao, como a taxa de
-        // disponibilidade e a quebra de indisponiveis) e o filtro ficou num
-        // lugar so.
         meta={
-          <div style={styles.statGrid}>
-            <StatCard
-              label="Frota total"
-              value={counts.all}
-              hint={`${availabilityRate}% disponível agora`}
-              icon={<Truck size={17} />}
-            />
-            <StatCard
-              label={t('statAvailable', currentLang)}
-              value={counts.disp}
-              hint="Prontos para retirada"
-              icon={<CheckCircle2 size={17} />}
-              tone="ok"
-            />
-            <StatCard
-              label={t('statInUse', currentLang)}
-              value={counts.uso}
-              hint="Em rota com condutor"
-              icon={<Clock size={17} />}
-              tone="ok"
-            />
-            <StatCard
-              label="Indisponíveis"
-              value={counts.man + counts.lav + counts.blocked}
-              hint={`${counts.man} manutenção · ${counts.lav} lavagem · ${counts.blocked} bloqueio`}
-              icon={<Wrench size={17} />}
-              tone={counts.man + counts.blocked > 0 ? 'anormal' : 'alerta'}
-            />
-          </div>
+          <KpiPolygon
+            segments={segments}
+            active={currentFilter}
+            onSelect={onFilterChange}
+            centerValue={counts.all}
+            centerLabel={`${availabilityRate}% disponível`}
+            ariaLabel="Filtrar frota por situação"
+            size={248}
+          />
         }
       />
 
@@ -249,13 +211,6 @@ export default function DashboardPage({
             </button>
           )}
         </div>
-
-        <FilterChips
-          options={filterOptions}
-          value={currentFilter}
-          onChange={onFilterChange}
-          ariaLabel="Filtrar frota por situação"
-        />
       </div>
 
       {/* Contagem do resultado: sem ela, um filtro que devolve 2 de 13

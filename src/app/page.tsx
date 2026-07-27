@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 import { Vehicle, PageType, FilterType, ChecklistPhoto } from '@/types';
 import translations from '@/lib/translations.json';
@@ -32,8 +32,10 @@ import CompleteProfile from '@/components/auth/CompleteProfile';
 import AdminPage from '@/components/admin/AdminPage';
 import MetricsPage from '@/components/metrics/MetricsPage';
 import ForumPage from '@/components/forum/ForumPage';
-import RegionaisPage from '@/components/org/RegionaisPage';
+import OrgPage from '@/components/org/OrgPage';
 import { useInstallPrompt } from '@/lib/hooks/useInstallPrompt';
+import { useUnreadForum } from '@/lib/hooks/useUnreadForum';
+import { trilha } from '@/lib/org';
 import { useAuth } from '@/lib/hooks/useAuth';
 import PageHeader from '@/components/ui/PageHeader';
 import Card, { CardHeader } from '@/components/ui/Card';
@@ -88,16 +90,17 @@ export default function FrotaInfratech() {
   const { vehicles, setVehicles, history, drivers, saveDrivers, loading, saveData, addToHistory } =
     useFleetData();
   const {
+    units,
     regionais,
-    gerencias,
     forumPosts,
     checklistFields,
     saveChecklistFields,
-    createRegional,
-    createGerencia,
+    criarUnidade,
+    excluirUnidade,
     addForumPost,
     addForumComment,
     likeForumPost,
+    deleteForumPost,
   } = useOrgData();
   const { canInstall, promptInstall } = useInstallPrompt();
 
@@ -118,6 +121,33 @@ export default function FrotaInfratech() {
     reauthenticate,
     completeProfile,
   } = useAuth();
+
+  // ---------------------------------------------------------------------
+  // Identidade de quem escreve
+  // ---------------------------------------------------------------------
+  // O forum deixa de perguntar quem e voce. Nome, papel e escopo saem do
+  // perfil autenticado; a regra do Firestore ainda confere o uid, entao nem
+  // um cliente adulterado consegue assinar por outra pessoa.
+  const autorSessao = useMemo(
+    () => ({
+      uid: user?.uid || '',
+      nome: profile?.displayName || user?.email || 'Sem nome',
+      role: (profile?.level === 'admin' || profile?.level === 'admin_master'
+        ? 'Administrador'
+        : profile?.level === 'operador'
+          ? 'Operador'
+          : 'Motorista') as 'Motorista' | 'Operador' | 'Administrador',
+      orgUnitId: profile?.orgUnitId,
+    }),
+    [user, profile]
+  );
+
+  const escopoLabel = useMemo(() => {
+    const unidade = units.find((u) => u.id === profile?.orgUnitId);
+    return unidade ? trilha(units, unidade) : '';
+  }, [units, profile?.orgUnitId]);
+
+  const { unread: unreadMessages, marcarComoLido } = useUnreadForum(forumPosts, user?.uid);
 
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
   const [currentLang, setCurrentLang] = useState('pt');
@@ -404,13 +434,16 @@ export default function FrotaInfratech() {
 
   const downloadPDF = () => generateFleetReport(vehicles, history);
 
-  const handleCreateRegional = (data: { name: string; code: string; description: string }) => {
-    createRegional(data, (seedVehicle) => {
-      const newVehicles = [...vehicles, seedVehicle];
-      setVehicles(newVehicles);
-      saveData(newVehicles, history);
-    });
-  };
+  // Entrar no forum zera o contador. Fazer isso na navegacao, e nao ao
+  // renderizar a lista, evita que o badge suma por causa de um re-render
+  // qualquer sem que ninguem tenha realmente olhado as mensagens.
+  const navegar = useCallback(
+    (page: PageType) => {
+      if (page === 'forum') marcarComoLido();
+      setCurrentPage(page);
+    },
+    [marcarComoLido]
+  );
 
   // Enquanto o Firebase nao responde se ha sessao, nada e renderizado. Mostrar
   // a tela de login por um instante e depois trocar pelo app produz um flash
@@ -503,7 +536,7 @@ export default function FrotaInfratech() {
         sidebarOpen={sidebarOpen}
         currentLang={currentLang}
         isAdmin={isAdmin}
-        onNavigate={setCurrentPage}
+        onNavigate={navegar}
         onFilterChange={setCurrentFilter}
         onHistoryOpen={() => setHistoryPanelOpen(true)}
         onClose={() => setSidebarOpen(false)}
@@ -519,8 +552,9 @@ export default function FrotaInfratech() {
           theme={theme}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onToggleTheme={toggleTheme}
-          onNavigate={setCurrentPage}
+          onNavigate={navegar}
           onAddVehicle={() => setAddModal(true)}
+          unreadMessages={unreadMessages}
         />
 
         {currentPage === 'dashboard' && (
@@ -545,21 +579,24 @@ export default function FrotaInfratech() {
           <ForumPage
             posts={forumPosts}
             isAdmin={isAdmin}
-            onAddPost={addForumPost}
-            onAddComment={addForumComment}
+            currentUid={autorSessao.uid}
+            currentName={autorSessao.nome}
+            currentRole={autorSessao.role}
+            scopeLabel={escopoLabel}
+            onAddPost={(post) => addForumPost(post, autorSessao)}
+            onAddComment={(postId, text) => addForumComment(postId, text, autorSessao)}
             onLikePost={likeForumPost}
+            onDeletePost={deleteForumPost}
           />
         )}
 
         {currentPage === 'regionais' && (
-          <RegionaisPage
-            regionais={regionais}
-            gerencias={gerencias}
+          <OrgPage
+            units={units}
             vehicles={vehicles}
             isAdmin={isAdmin}
-            currentLang={currentLang}
-            onCreateRegional={handleCreateRegional}
-            onCreateGerencia={createGerencia}
+            onCreate={criarUnidade}
+            onDelete={excluirUnidade}
           />
         )}
 

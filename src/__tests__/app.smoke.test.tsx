@@ -7,11 +7,26 @@ import type { UserProfile } from '@/types';
 // existe" - o mesmo caminho que faz o app cair no seed de initialVehicles.
 jest.mock('@/lib/firebase', () => ({ db: {}, auth: {} }));
 
+// `metadata.fromCache: false` simula resposta do SERVIDOR. E o que o app usa
+// para decidir se pode semear: um snapshot de cache dizendo "nao existe" ja
+// levou a sobrescrever a frota real por engano.
 jest.mock('firebase/firestore', () => ({
   doc: jest.fn(() => ({})),
+  collection: jest.fn(() => ({})),
+  query: jest.fn(() => ({})),
+  orderBy: jest.fn(() => ({})),
+  limit: jest.fn(() => ({})),
   setDoc: jest.fn(() => Promise.resolve()),
+  addDoc: jest.fn(() => Promise.resolve({ id: 'novo' })),
+  updateDoc: jest.fn(() => Promise.resolve()),
+  deleteDoc: jest.fn(() => Promise.resolve()),
   onSnapshot: jest.fn((_ref: unknown, onNext: (snap: unknown) => void) => {
-    onNext({ exists: () => false, data: () => ({}) });
+    onNext({
+      exists: () => false,
+      data: () => ({}),
+      metadata: { fromCache: false },
+      docs: [],
+    });
     return () => {};
   }),
 }));
@@ -37,7 +52,7 @@ const authMock = {
   logout: jest.fn(),
   resetPassword: jest.fn(() => Promise.resolve()),
   reauthenticate: jest.fn(() => Promise.resolve()),
-  completeProfile: jest.fn(() => Promise.resolve()),
+  completeProfile: jest.fn((_dados: Record<string, unknown>) => Promise.resolve()),
 };
 
 jest.mock('@/lib/hooks/useAuth', () => ({
@@ -268,7 +283,7 @@ describe('Aplicação — usuário comum ativo', () => {
 
     navegarPara(/Regionais/i);
     expect(
-      await screen.findByRole('heading', { name: /Regionais e Gerências/i })
+      await screen.findByRole('heading', { name: /Estrutura organizacional/i })
     ).toBeInTheDocument();
 
     navegarPara(/Motoristas/i);
@@ -298,6 +313,50 @@ describe('Aplicação — usuário comum ativo', () => {
     await entrar();
     navegarPara(/Histórico/i);
     expect(await screen.findByText(/Nenhum registro/i)).toBeInTheDocument();
+  });
+  // -------------------------------------------------------------------------
+  // Regressoes desta rodada
+  // -------------------------------------------------------------------------
+
+  it('o KPI poligonal filtra a frota, e nao apenas informa', async () => {
+    await entrar();
+
+    // Os cinco setores sao controles de verdade, nao desenho.
+    const grupo = await screen.findByRole('radiogroup', { name: /Filtrar frota por situação/i });
+    const setores = within(grupo).getAllByRole('radio');
+    expect(setores.length).toBe(5);
+
+    const todos = within(grupo).getByRole('radio', { name: /Todos/i });
+    expect(todos).toHaveAttribute('aria-checked', 'true');
+
+    const emUso = setores.find((s) => /Em Uso/i.test(s.getAttribute('aria-label') || ''));
+    fireEvent.click(emUso!);
+
+    await waitFor(() => expect(emUso).toHaveAttribute('aria-checked', 'true'));
+    // O rodape de contagem tem de acompanhar o filtro; se nao acompanhar, o
+    // setor virou enfeite de novo.
+    expect(await screen.findByText(/de 13 veículos/i)).toBeInTheDocument();
+  });
+
+  it('a barra superior tem o ícone de mensagens e leva ao fórum', async () => {
+    await entrar();
+    // Sem mensagens novas o rotulo e neutro; com elas, anuncia a contagem.
+    const botao = screen.getByRole('button', { name: /Fórum de mensagens/i });
+    fireEvent.click(botao);
+    expect(await screen.findByRole('heading', { name: /Fórum Operacional/i })).toBeInTheDocument();
+  });
+
+  it('o fórum não pede o nome do autor — ele vem da sessão', async () => {
+    await entrar();
+    navegarPara(/Fórum/i);
+    await screen.findByRole('heading', { name: /Fórum Operacional/i });
+
+    fireEvent.click(screen.getByRole('button', { name: /Nova mensagem/i }));
+
+    // Regressao: havia um campo de texto livre "Seu nome". Qualquer pessoa
+    // assinava como qualquer outra, o que anula a trilha de auditoria.
+    expect(screen.queryByPlaceholderText(/Seu nome/i)).not.toBeInTheDocument();
+    expect(await screen.findByText(/Publicando como/i)).toBeInTheDocument();
   });
 });
 

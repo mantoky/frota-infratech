@@ -17,6 +17,9 @@ export interface Vehicle {
   blockedAt?: string;
   regionalId?: string;
   gerenciaId?: string;
+  coordenacaoId?: string;
+  gestaoId?: string;
+  areaId?: string;
   lastStatusChangeAt?: string;
   lastWashedAt?: string;
 }
@@ -37,6 +40,9 @@ export interface UserProfile {
   displayName: string;
   level: UserLevel;
   status: UserStatus;
+  /** Unidade organizacional a que a pessoa pertence — normalmente uma `area`.
+   *  E o que define com quem ela troca mensagens no forum e o que enxerga. */
+  orgUnitId?: string;
   declarado?: {
     gerencia?: string;
     coordenador?: string;
@@ -79,6 +85,55 @@ export interface HistoryItem {
   customChecklistData?: Record<string, boolean | string>;
 }
 
+// ---------------------------------------------------------------------------
+// Arvore organizacional
+// ---------------------------------------------------------------------------
+// A hierarquia tem cinco niveis e cada um carrega atributos proprios:
+//
+//   Regional > Gerencia > Coordenacao > Gestao > Area
+//
+// Cada no aponta apenas para o pai imediato (`parentId`). O caminho completo
+// ate a raiz fica materializado em `path`, do ancestral mais distante ao pai -
+// e isso que permite perguntar "tudo que esta sob esta gerencia" numa consulta
+// so, sem varrer a arvore em profundidade a cada filtro ou auditoria.
+
+export const ORG_LEVELS = ['regional', 'gerencia', 'coordenacao', 'gestao', 'area'] as const;
+export type OrgLevel = (typeof ORG_LEVELS)[number];
+
+/** Rotulo de cada nivel, no singular e no plural, para a interface. */
+export const ORG_LEVEL_LABEL: Record<OrgLevel, { singular: string; plural: string }> = {
+  regional: { singular: 'Regional', plural: 'Regionais' },
+  gerencia: { singular: 'Gerência', plural: 'Gerências' },
+  coordenacao: { singular: 'Coordenação', plural: 'Coordenações' },
+  gestao: { singular: 'Gestão', plural: 'Gestões' },
+  area: { singular: 'Área', plural: 'Áreas' },
+};
+
+/** O nivel imediatamente acima. `null` na raiz. */
+export const ORG_PARENT_LEVEL: Record<OrgLevel, OrgLevel | null> = {
+  regional: null,
+  gerencia: 'regional',
+  coordenacao: 'gerencia',
+  gestao: 'coordenacao',
+  area: 'gestao',
+};
+
+export interface OrgUnit {
+  id: string;
+  level: OrgLevel;
+  name: string;
+  code: string;
+  /** Pai imediato. `null` apenas para `regional`. */
+  parentId: string | null;
+  /** Ancestrais do mais distante ao pai imediato. Vazio na raiz. */
+  path: string[];
+  createdAt: string;
+  /** Atributos proprios do nivel. Ver ORG_LEVEL_FIELDS em lib/org.ts. */
+  attrs: Record<string, string>;
+  active?: boolean;
+}
+
+/** @deprecated Mantidos para leitura de backups antigos. Use OrgUnit. */
 export interface Regional {
   id: string;
   name: string;
@@ -87,6 +142,7 @@ export interface Regional {
   description?: string;
 }
 
+/** @deprecated Mantidos para leitura de backups antigos. Use OrgUnit. */
 export interface Gerencia {
   id: string;
   regionalId: string;
@@ -98,6 +154,8 @@ export interface Gerencia {
 
 export interface ForumComment {
   id: string;
+  /** Sempre derivado da sessao autenticada, nunca digitado. */
+  authorUid: string;
   author: string;
   role: string;
   content: string;
@@ -108,11 +166,19 @@ export interface ForumPost {
   id: string;
   title: string;
   content: string;
+  /** Sempre derivado da sessao autenticada, nunca digitado. */
+  authorUid: string;
   author: string;
   role: 'Motorista' | 'Operador' | 'Administrador';
   category: 'Aviso' | 'Alerta' | 'Manutenção' | 'Geral';
+  /** Escopo de circulacao: a unidade organizacional do autor. */
+  orgUnitId?: string;
+  /** Caminho do escopo, para filtrar por qualquer ancestral. */
+  orgPath?: string[];
   regionalId?: string;
+  /** ISO 8601. Ordenavel; o rotulo legivel e formatado na interface. */
   createdAt: string;
+  editedAt?: string;
   likes: number;
   comments: ForumComment[];
 }

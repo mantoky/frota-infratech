@@ -100,6 +100,22 @@ export function useFleetData() {
   const historyRef = useRef(history);
   const driversRef = useRef(drivers);
   const lastUpdatedRef = useRef('');
+
+  // ---------------------------------------------------------------------
+  // Trava de hidratacao — a correcao da perda de frota
+  // ---------------------------------------------------------------------
+  // Enquanto isto for `false`, NADA e escrito no Firestore. O motivo e um
+  // caso real de perda de dados: ao abrir o app num dominio novo, o
+  // localStorage esta vazio e o SDK do Firestore entrega primeiro um snapshot
+  // vindo do cache local - tambem vazio - dizendo que o documento nao existe.
+  // A versao anterior tratava isso como "primeira instalacao" e gravava a
+  // frota de exemplo por cima do documento real, zerando junto `history` e
+  // `drivers`. O estado do banco depois do incidente era exatamente esse:
+  // historico e condutores vazios.
+  //
+  // Um snapshot de cache nao e resposta do servidor, e ausencia de resposta.
+  // So depois que o servidor confirma e que sabemos se ha o que semear.
+  const hidratadoRef = useRef(false);
   useEffect(() => {
     historyRef.current = history;
   }, [history]);
@@ -116,6 +132,10 @@ export function useFleetData() {
       setHistory(backup.history);
       setDrivers(backup.drivers || []);
       lastUpdatedRef.current = backup.lastUpdated;
+      // Backup local tambem e fonte autoritativa: sabemos o que o usuario
+      // tinha, entao gravar deixa de ser arriscado mesmo antes do servidor
+      // responder - e exatamente esse o ponto do offline-first.
+      hidratadoRef.current = true;
       if (changed) {
         writeBackup(migrated, backup.history, backup.drivers || [], false, backup.lastUpdated);
       }
@@ -131,6 +151,12 @@ export function useFleetData() {
       newDrivers: string[],
       lastUpdated: string
     ) => {
+      if (!hidratadoRef.current) {
+        console.warn(
+          'Escrita ignorada: os dados ainda nao foram carregados. Gravar agora sobrescreveria a frota real com um estado vazio.'
+        );
+        return;
+      }
       try {
         // Firestore rejeita campos com valor undefined (ex: HistoryItem.location
         // quando a captura de GPS falha) - o round-trip por JSON remove essas
@@ -197,11 +223,15 @@ export function useFleetData() {
   }, [pushToFirestore]);
 
   useEffect(() => {
-    const localBackup = readBackup();
-
     const unsub = onSnapshot(
       doc(db, 'frota', 'data'),
       (docSnap) => {
+        // Um snapshot de cache nao e resposta do servidor - e a ausencia
+        // dela. Tratar "nao existe no cache" como "nao existe" foi o que
+        // apagou a frota. Enquanto for cache, so aproveitamos o que ja veio
+        // preenchido; nunca decidimos semear nem gravar nada.
+        const doCache = docSnap.metadata.fromCache;
+
         if (docSnap.exists()) {
           const data = docSnap.data();
           const firestoreVehicles: Vehicle[] = data.vehicles || [];
@@ -223,38 +253,41 @@ export function useFleetData() {
             setDrivers(firestoreDrivers);
             lastUpdatedRef.current = firestoreLastUpdated || new Date().toISOString();
             writeBackup(migrated, firestoreHistory, firestoreDrivers, true, lastUpdatedRef.current);
-          } else if (!localBackup && firestoreVehicles.length === 0) {
+          }
+        }
+
+        if (!doCache) {
+          const semeavel = !docSnap.exists() || (docSnap.data()?.vehicles || []).length === 0;
+          // Semear so quando o SERVIDOR confirma que nao ha frota, e apenas
+          // uma vez. `history` e `drivers` ficam de fora do payload: se um
+          // dia existirem e a frota nao, escrever [] em cima os destruiria.
+          if (semeavel && !hidratadoRef.current) {
+            const agora = new Date().toISOString();
             setVehicles(initialVehicles);
+            lastUpdatedRef.current = agora;
+            hidratadoRef.current = true;
+            writeBackup(initialVehicles, historyRef.current, driversRef.current, true, agora);
             setDoc(
               doc(db, 'frota', 'data'),
               {
                 vehicles: initialVehicles,
-                history: [],
-                drivers: [],
-                createdAt: new Date().toISOString(),
+                createdAt: agora,
+                lastUpdated: agora,
                 version: '2.0',
               },
               { merge: true }
-            );
+            ).catch((e) => console.error('Falha ao semear a frota inicial', e));
           }
-        } else if (!localBackup) {
-          setVehicles(initialVehicles);
-          setDoc(
-            doc(db, 'frota', 'data'),
-            {
-              vehicles: initialVehicles,
-              history: [],
-              drivers: [],
-              createdAt: new Date().toISOString(),
-              version: '2.0',
-            },
-            { merge: true }
-          );
+          hidratadoRef.current = true;
         }
+
         setLoading(false);
       },
       (error) => {
         console.error('Error fetching Firestore data:', error);
+        // Sem resposta do servidor, o app segue no modo local. Liberamos a
+        // gravacao apenas se ja havia backup - caso contrario continuamos
+        // travados, que e o comportamento seguro.
         setLoading(false);
       }
     );

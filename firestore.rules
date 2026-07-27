@@ -95,6 +95,55 @@ service cloud.firestore {
                    && request.resource.data.history is list;
     }
 
+    // ---------- estrutura organizacional ----------
+
+    // Regional > Gerencia > Coordenacao > Gestao > Area, num documento unico.
+    // Todo mundo ativo le - a arvore aparece em quase toda tela e e o que
+    // amarra veiculo, checklist e escopo de mensagem. Escrever e outra coisa:
+    // mexer na hierarquia muda quem enxerga o que, entao fica com operador
+    // ou acima.
+    match /org/data {
+      allow read: if ativo();
+      allow write: if ehOperadorOuAcima()
+                   && request.resource.data.units is list;
+    }
+
+    // ---------- forum ----------
+
+    // Colecao, e nao array dentro de um documento, justamente por causa
+    // destas regras: num array, quem pode escrever no documento reescreve a
+    // mensagem de qualquer um. Aqui a posse e por documento.
+    match /forumPosts/{postId} {
+      allow read: if ativo();
+
+      // A autoria e conferida contra o token, nao aceita do cliente. Era um
+      // campo de texto livre antes - qualquer pessoa assinava como qualquer
+      // outra, o que anula qualquer trilha de auditoria.
+      allow create: if ativo()
+                    && request.resource.data.authorUid == request.auth.uid
+                    && request.resource.data.likes == 0
+                    && request.resource.data.title is string
+                    && request.resource.data.content is string;
+
+      // Tres caminhos distintos, de proposito:
+      //   1. o autor edita a propria mensagem;
+      //   2. o administrador modera qualquer uma;
+      //   3. qualquer pessoa ativa pode curtir ou comentar - e SO isso, com
+      //      `hasOnly` impedindo que um "comentario" venha acompanhado de uma
+      //      troca sorrateira de autor ou de conteudo.
+      allow update: if ativo() && (
+                      resource.data.authorUid == request.auth.uid
+                      || ehAdmin()
+                      || request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['likes', 'comments'])
+                    );
+
+      // Apagar: o dono ou o administrador. Ninguem mais.
+      allow delete: if ativo() && (
+                      resource.data.authorUid == request.auth.uid || ehAdmin()
+                    );
+    }
+
     // ---------- padrao ----------
 
     // Nega qualquer outro documento ou colecao. As colecoes da Fase 1

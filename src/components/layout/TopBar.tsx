@@ -1,7 +1,7 @@
 'use client';
 
 import { CSSProperties } from 'react';
-import { Menu, Settings, Plus, Moon, Sun, ShieldCheck, User } from 'lucide-react';
+import { Menu, Settings, Plus, Moon, Sun, ShieldCheck, User, MessageSquare } from 'lucide-react';
 import { PageType } from '@/types';
 import { t } from '@/lib/hooks/useTranslations';
 
@@ -14,6 +14,8 @@ interface TopBarProps {
   onToggleTheme: () => void;
   onNavigate: (page: PageType) => void;
   onAddVehicle: () => void;
+  /** Mensagens do forum ainda nao vistas por este usuario. */
+  unreadMessages: number;
 }
 
 export default function TopBar({
@@ -25,6 +27,7 @@ export default function TopBar({
   onToggleTheme,
   onNavigate,
   onAddVehicle,
+  unreadMessages,
 }: TopBarProps) {
   const styles: { [key: string]: CSSProperties } = {
     topBar: {
@@ -125,6 +128,46 @@ export default function TopBar({
           {isAdmin ? <ShieldCheck size={13} /> : <User size={13} />}
           <span className="topbar__role-label">{isAdmin ? 'Admin' : 'Operador'}</span>
         </span>
+
+        {/* Mensagens. O contador so aparece quando ha algo a ver - um badge
+            permanente com "0" treina o olho a ignorar o icone, e ai o aviso
+            que importa passa despercebido. */}
+        <button
+          type="button"
+          onClick={() => onNavigate('forum')}
+          aria-label={
+            unreadMessages > 0
+              ? `Fórum: ${unreadMessages} ${unreadMessages === 1 ? 'mensagem nova' : 'mensagens novas'}`
+              : 'Fórum de mensagens'
+          }
+          style={{ ...styles.iconButton, position: 'relative' }}
+        >
+          <MessageSquare size={18} />
+          {unreadMessages > 0 && (
+            <span
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                top: -5,
+                right: -5,
+                minWidth: 18,
+                height: 18,
+                padding: '0 5px',
+                borderRadius: 9,
+                backgroundColor: 'var(--state-danger-solid)',
+                color: '#fff',
+                fontSize: '0.66rem',
+                fontWeight: 800,
+                lineHeight: '18px',
+                textAlign: 'center',
+                border: '2px solid var(--bg-card)',
+                boxSizing: 'content-box',
+              }}
+            >
+              {unreadMessages > 99 ? '99+' : unreadMessages}
+            </span>
+          )}
+        </button>
 
         <button
           type="button"

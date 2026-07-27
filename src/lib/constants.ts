@@ -1,4 +1,4 @@
-import { Vehicle, Regional, Gerencia, ChecklistField, ForumPost } from '@/types';
+import { Vehicle, Regional, Gerencia, ChecklistField, ForumPost, OrgUnit } from '@/types';
 
 export const initialVehicles: Vehicle[] = [
   {
@@ -286,6 +286,181 @@ export const initialGerencias: Gerencia[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Arvore organizacional inicial — Regional > Gerencia > Coordenacao > Gestao > Area
+// ---------------------------------------------------------------------------
+// Os ids das duas primeiras camadas sao os mesmos da v1 (`reg-carajas`,
+// `ger-log`...) de proposito: os veiculos ja gravados apontam para eles, e
+// trocar os ids agora desvincularia a frota inteira da estrutura.
+
+const nova = (
+  id: string,
+  level: OrgUnit['level'],
+  name: string,
+  code: string,
+  parentId: string | null,
+  path: string[],
+  attrs: Record<string, string>,
+  createdAt = '2026-01-10'
+): OrgUnit => ({ id, level, name, code, parentId, path, createdAt, attrs, active: true });
+
+export const initialOrgUnits: OrgUnit[] = [
+  // --- Regionais -----------------------------------------------------------
+  nova('reg-carajas', 'regional', 'Regional Carajás (Norte)', 'REG-CRJ', null, [], {
+    responsavel: 'Diretoria Norte',
+    sede: 'Parauapebas',
+    uf: 'PA',
+    descricao: 'Atendimento à operação de mineração e logística do Corredor Norte',
+  }),
+  nova(
+    'reg-vitoria',
+    'regional',
+    'Regional Vitória (Sudeste)',
+    'REG-VIT',
+    null,
+    [],
+    {
+      responsavel: 'Diretoria Sudeste',
+      sede: 'Vitória',
+      uf: 'ES',
+      descricao: 'Atendimento aos portos, terminais e pátios da região Sudeste',
+    },
+    '2026-02-15'
+  ),
+
+  // --- Gerências -----------------------------------------------------------
+  nova(
+    'ger-log',
+    'gerencia',
+    'Gerência de Logística e Transporte',
+    'GER-LOG',
+    'reg-carajas',
+    ['reg-carajas'],
+    { gerente: 'Carlos Eduardo Silva', centroCusto: 'CC-1041' },
+    '2026-01-15'
+  ),
+  nova(
+    'ger-man',
+    'gerencia',
+    'Gerência de Manutenção de Ativos Móveis',
+    'GER-MAN',
+    'reg-carajas',
+    ['reg-carajas'],
+    { gerente: 'Ana Paula Santos', centroCusto: 'CC-1077' },
+    '2026-01-20'
+  ),
+  nova(
+    'ger-op',
+    'gerencia',
+    'Gerência de Operações de Mina e Pátio',
+    'GER-OP',
+    'reg-vitoria',
+    ['reg-vitoria'],
+    { gerente: 'Marcelo Oliveira', centroCusto: 'CC-2033' },
+    '2026-02-18'
+  ),
+
+  // --- Coordenações --------------------------------------------------------
+  nova(
+    'coord-log-n',
+    'coordenacao',
+    'Coordenação Local Norte',
+    'CRD-LOGN',
+    'ger-log',
+    ['reg-carajas', 'ger-log'],
+    { coordenador: 'Rafael Lima', turno: 'Administrativo' },
+    '2026-01-16'
+  ),
+  nova(
+    'coord-man-n',
+    'coordenacao',
+    'Coordenação de Manutenção Norte',
+    'CRD-MANN',
+    'ger-man',
+    ['reg-carajas', 'ger-man'],
+    { coordenador: 'Juliana Costa', turno: '1º turno' },
+    '2026-01-22'
+  ),
+  nova(
+    'coord-op-se',
+    'coordenacao',
+    'Coordenação de Pátio Sudeste',
+    'CRD-OPSE',
+    'ger-op',
+    ['reg-vitoria', 'ger-op'],
+    { coordenador: 'Bruno Almeida', turno: '2º turno' },
+    '2026-02-20'
+  ),
+
+  // --- Gestões -------------------------------------------------------------
+  nova(
+    'gest-log-frota',
+    'gestao',
+    'Gestão de Frota Leve',
+    'GST-LOGF',
+    'coord-log-n',
+    ['reg-carajas', 'ger-log', 'coord-log-n'],
+    { gestor: 'Robson Luís', staff: 'Equipe Infratech' },
+    '2026-01-18'
+  ),
+  nova(
+    'gest-man-prev',
+    'gestao',
+    'Gestão de Manutenção Preventiva',
+    'GST-MANP',
+    'coord-man-n',
+    ['reg-carajas', 'ger-man', 'coord-man-n'],
+    { gestor: 'Patrícia Nunes', staff: 'Oficina Central' },
+    '2026-01-25'
+  ),
+  nova(
+    'gest-op-patio',
+    'gestao',
+    'Gestão de Pátio e Movimentação',
+    'GST-OPPT',
+    'coord-op-se',
+    ['reg-vitoria', 'ger-op', 'coord-op-se'],
+    { gestor: 'Diego Ramos', staff: 'Equipe Portuária' },
+    '2026-02-22'
+  ),
+
+  // --- Áreas ---------------------------------------------------------------
+  nova(
+    'area-infratech-no',
+    'area',
+    'Infratech-No',
+    'ARE-INFNO',
+    'gest-log-frota',
+    ['reg-carajas', 'ger-log', 'coord-log-n', 'gest-log-frota'],
+    {
+      registroFrota: 'Infratech-No',
+      responsavel: 'Robson Luís',
+      empresa: 'Infratech',
+    },
+    '2026-01-19'
+  ),
+  nova(
+    'area-oficina-no',
+    'area',
+    'Oficina Norte',
+    'ARE-OFNO',
+    'gest-man-prev',
+    ['reg-carajas', 'ger-man', 'coord-man-n', 'gest-man-prev'],
+    { registroFrota: 'Oficina-No', responsavel: 'Patrícia Nunes', empresa: 'Infratech' },
+    '2026-01-26'
+  ),
+  nova(
+    'area-patio-se',
+    'area',
+    'Pátio Sudeste',
+    'ARE-PTSE',
+    'gest-op-patio',
+    ['reg-vitoria', 'ger-op', 'coord-op-se', 'gest-op-patio'],
+    { registroFrota: 'Patio-Se', responsavel: 'Diego Ramos', empresa: 'Infratech' },
+    '2026-02-23'
+  ),
+];
+
 export const initialChecklistFields: ChecklistField[] = [
   {
     id: 'chk-1',
@@ -351,19 +526,23 @@ export const initialForumPosts: ForumPost[] = [
     title: '📢 Atenção na Rota N4E - Trecho de Acesso à Mina em Manutenção',
     content:
       'Informamos a todos os motoristas que o trecho N4E está com obras de nivelamento de pista. Favor redobrar atenção e reduzir velocidade máxima para 30km/h no setor.',
+    authorUid: 'seed',
     author: 'Gestão de Segurança (SMS)',
     role: 'Administrador',
     category: 'Alerta',
     regionalId: 'reg-carajas',
-    createdAt: '26/07/2026 08:30',
+    orgUnitId: 'area-infratech-no',
+    orgPath: ['reg-carajas', 'ger-log', 'coord-log-n', 'gest-log-frota', 'area-infratech-no'],
+    createdAt: '2026-07-26T08:30:00.000Z',
     likes: 12,
     comments: [
       {
         id: 'c-1',
+        authorUid: 'seed',
         author: 'João Pereira',
         role: 'Motorista',
         content: 'Ciente! Passei lá cedo e o trânsito está no sistema siga e pare.',
-        createdAt: '26/07/2026 09:15',
+        createdAt: '2026-07-26T09:15:00.000Z',
       },
     ],
   },
@@ -372,11 +551,14 @@ export const initialForumPosts: ForumPost[] = [
     title: '🚿 Lavador do Pátio Centralizado Liberado',
     content:
       'O lavador automático do pátio centralizado voltou a operar normalmente em capacidade total de higienização de cabines e chassi.',
+    authorUid: 'seed',
     author: 'Coordenação de Higienização',
     role: 'Operador',
     category: 'Aviso',
     regionalId: 'reg-carajas',
-    createdAt: '25/07/2026 14:20',
+    orgUnitId: 'area-infratech-no',
+    orgPath: ['reg-carajas', 'ger-log', 'coord-log-n', 'gest-log-frota', 'area-infratech-no'],
+    createdAt: '2026-07-25T14:20:00.000Z',
     likes: 8,
     comments: [],
   },
@@ -385,11 +567,14 @@ export const initialForumPosts: ForumPost[] = [
     title: '🔧 Cronograma de Calibração Preditiva de Pneus',
     content:
       'Iniciamos a rodada mensal de aferição de desgaste e calibração de frota leve. Favor apresentar os veículos com final de tag ímpar no pátio até sexta-feira.',
+    authorUid: 'seed',
     author: 'Equipe de Manutenção',
     role: 'Administrador',
     category: 'Manutenção',
     regionalId: 'reg-vitoria',
-    createdAt: '24/07/2026 11:00',
+    orgUnitId: 'area-patio-se',
+    orgPath: ['reg-vitoria', 'ger-op', 'coord-op-se', 'gest-op-patio', 'area-patio-se'],
+    createdAt: '2026-07-24T11:00:00.000Z',
     likes: 15,
     comments: [],
   },
