@@ -1,10 +1,17 @@
-# Deploy na VPS — techartsolucoes.com.br
+# Deploy na VPS — gestao-frota.techartsolucoes.com.br
 
 > Migração da hospedagem estática do Netlify para VPS própria com domínio. O Netlify continua no ar
 > como ambiente de desenvolvimento.
 >
-> Servidor: `srv1790854.hstgr.cloud` · `187.127.28.74` · Ubuntu LTS Produção:
-> <https://techartsolucoes.com.br> Desenvolvimento: <https://frota-infratech-dev.netlify.app>
+> Servidor: `srv1790854.hstgr.cloud` · `187.127.28.74` · Ubuntu LTS
+>
+> | Ambiente        | Endereço                                      |
+> | --------------- | --------------------------------------------- |
+> | Produção        | <https://gestao-frota.techartsolucoes.com.br> |
+> | Desenvolvimento | <https://frota-infratech-dev.netlify.app>     |
+>
+> **O app vive num subdomínio.** `techartsolucoes.com.br` é o portal de links de outros aplicativos
+> e continua intocado — a VPS é compartilhada, não dedicada a este projeto.
 
 ---
 
@@ -37,10 +44,11 @@ Netlify CDN ──┐                  Nginx (VPS) ──┐
 
 Antes de qualquer coisa no servidor, aponte o domínio:
 
-| Tipo | Nome  | Valor           |
-| ---- | ----- | --------------- |
-| A    | `@`   | `187.127.28.74` |
-| A    | `www` | `187.127.28.74` |
+| Tipo | Nome           | Valor           |
+| ---- | -------------- | --------------- |
+| A    | `gestao-frota` | `187.127.28.74` |
+
+Apenas o subdomínio. Não mexa nos registros de `@` e `www` — eles atendem o portal existente.
 
 O provisionamento confere isso antes de pedir o certificado. Cada tentativa falha do Let's Encrypt
 conta para o limite de emissão, então conferir antes não é zelo excessivo — é evitar ficar bloqueado
@@ -80,16 +88,16 @@ configura o firewall; emite o certificado TLS.
 
 É idempotente — rodar de novo não quebra nada.
 
-> **Se o script parar dizendo que já existe site respondendo pelo domínio**, é porque a VPS não
-> estava limpa. O Nginx **ignora silenciosamente** o segundo bloco com o mesmo `server_name`, e
-> `nginx -t` continua dizendo "successful" — o domínio ficaria servindo o site antigo, e o certbot
-> instalaria o certificado no arquivo errado.
+> **Por que subdomínio e não o domínio raiz.** A primeira tentativa apontou para
+> `techartsolucoes.com.br`, que já tinha site. O Nginx **ignora silenciosamente** o segundo bloco
+> com o mesmo `server_name` — `nginx -t` continua dizendo "successful" — e o certbot instalou o
+> certificado no arquivo do outro site. O script agora detecta a colisão e para.
 >
 > O script mostra qual arquivo colide. Confira o que é antes de remover:
 >
 > ```bash
 > head -30 /etc/nginx/sites-enabled/<arquivo>
-> curl -sI https://techartsolucoes.com.br | head -5
+> curl -sI https://gestao-frota.techartsolucoes.com.br | head -5
 > ```
 
 ### Passo 4 — Variáveis do Firebase
@@ -106,7 +114,7 @@ publicação recusa rodar se o arquivo ainda tiver os valores de exemplo.
 ### Passo 5 — Autorizar o domínio no Firebase
 
 **Firebase Console → Authentication → Settings → Authorized domains → Add domain →
-`techartsolucoes.com.br`**
+`gestao-frota.techartsolucoes.com.br`**
 
 > **Este é o passo que mais provavelmente vai ser esquecido, e ele quebra o login por completo.** O
 > Firebase Auth só aceita requisição vinda de domínios autorizados; de qualquer outro, o login falha
@@ -124,7 +132,8 @@ versão, basta repetir este comando.
 
 ### Passo 7 — Conferir
 
-- <https://techartsolucoes.com.br> abre com cadeado válido
+- <https://gestao-frota.techartsolucoes.com.br> abre com cadeado válido
+- <https://techartsolucoes.com.br> continua mostrando o portal de links, intacto
 - Login funciona (se não, quase certamente é o passo 5)
 - Aba anônima sem login não mostra nenhum dado de frota
 - No DevTools → Application → Service Workers, o `sw.js` registra sem erro
@@ -166,6 +175,16 @@ O `Permissions-Policy` do Nginx traz `geolocation=(self)`. Um cabeçalho de nega
 é o que muitos guias recomendam — quebraria a captura de GPS na retirada e devolução
 **silenciosamente**: o fluxo continuaria funcionando, só que sem coordenada nenhuma, e ninguém
 perceberia até auditar.
+
+### O servidor é compartilhado
+
+Duas consequências que valem registro, porque tornam este deploy diferente de uma VPS dedicada:
+
+- O site `default` do Nginx **não** é removido. Numa VPS dedicada seria inofensivo; aqui ele pode
+  atender requisições que não casam com nenhum `server_name`, e removê-lo mudaria o comportamento de
+  coisas que não são nossas.
+- O `server_name` é específico do subdomínio. Nada do que este deploy instala interfere no portal ou
+  nos outros aplicativos hospedados.
 
 ### Nada roda como root
 

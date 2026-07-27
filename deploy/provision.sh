@@ -21,8 +21,12 @@
 
 set -euo pipefail
 
-DOMAIN="techartsolucoes.com.br"
-DOMAIN_WWW="www.${DOMAIN}"
+# O app vive num subdominio proprio: techartsolucoes.com.br e o portal de
+# links de outros aplicativos e nao pode ser tocado. Configuravel por variavel
+# de ambiente para nao exigir edicao do script.
+DOMAIN="${DOMAIN:-gestao-frota.techartsolucoes.com.br}"
+# Nomes adicionais (ex.: www num dominio raiz). Vazio para subdominio.
+DOMAIN_ALIASES="${DOMAIN_ALIASES:-}"
 REPO="https://github.com/mantoky/frota-infratech.git"
 BRANCH="master"
 
@@ -144,9 +148,17 @@ if [[ -n "$CONFLITO" ]]; then
   die "Interrompido para nao publicar uma configuracao que seria ignorada."
 fi
 
-install -m 644 "${APP_DIR}/deploy/nginx/frota.conf" /etc/nginx/sites-available/frota.conf
+SERVER_NAMES="$(echo "${DOMAIN} ${DOMAIN_ALIASES}" | xargs)"
+sed "s/__DOMAIN__/${SERVER_NAMES}/" "${APP_DIR}/deploy/nginx/frota.conf" \
+  > /etc/nginx/sites-available/frota.conf
+chmod 644 /etc/nginx/sites-available/frota.conf
 ln -sfn /etc/nginx/sites-available/frota.conf /etc/nginx/sites-enabled/frota.conf
-rm -f /etc/nginx/sites-enabled/default
+
+# O site `default` NAO e removido. A versao anterior removia, e isso e seguro
+# so numa VPS dedicada. Aqui o servidor hospeda outros sites, e o `default`
+# pode ser o que atende requisicoes que nao casam com nenhum server_name -
+# apaga-lo mudaria o comportamento de coisas que nao sao nossas. Nosso bloco
+# tem server_name especifico, entao conviver com ele nao custa nada.
 
 # `nginx -t` retorna sucesso mesmo com aviso de colisao. Capturar a saida e
 # olhar o texto e a unica forma de transformar isso em falha.
@@ -186,15 +198,16 @@ log "DNS de ${DOMAIN}: ${DOMAIN_IP:-nao resolve}"
 
 if [[ -z "$DOMAIN_IP" ]]; then
   warn "O dominio nao resolve. Aponte um registro A de ${DOMAIN} para ${SERVER_IP} e rode:"
-  warn "    certbot --nginx -d ${DOMAIN} -d ${DOMAIN_WWW}"
+  warn "    certbot --nginx -d ${DOMAIN}"
 elif [[ -n "$SERVER_IP" && "$DOMAIN_IP" != "$SERVER_IP" ]]; then
   warn "O dominio resolve para ${DOMAIN_IP}, que nao e este servidor (${SERVER_IP})."
   warn "Corrija o DNS e depois rode:"
-  warn "    certbot --nginx -d ${DOMAIN} -d ${DOMAIN_WWW}"
+  warn "    certbot --nginx -d ${DOMAIN}"
 else
   log "DNS confere. Emitindo certificado"
-  certbot --nginx \
-    -d "$DOMAIN" -d "$DOMAIN_WWW" \
+  CERT_ARGS=(-d "$DOMAIN")
+  for alias in $DOMAIN_ALIASES; do CERT_ARGS+=(-d "$alias"); done
+  certbot --nginx "${CERT_ARGS[@]}" \
     --non-interactive --agree-tos --redirect \
     -m "admin@${DOMAIN}" || warn "Certbot falhou. Rode manualmente para ver o motivo."
   systemctl enable certbot.timer >/dev/null 2>&1 || true

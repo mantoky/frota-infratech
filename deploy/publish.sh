@@ -15,6 +15,7 @@
 set -euo pipefail
 
 BRANCH="${BRANCH:-master}"
+DOMAIN="${DOMAIN:-gestao-frota.techartsolucoes.com.br}"
 BASE_DIR="/srv/frota"
 APP_DIR="${BASE_DIR}/app"
 RELEASES_DIR="${BASE_DIR}/releases"
@@ -100,8 +101,8 @@ ls -1dt "${RELEASES_DIR}"/*/ 2>/dev/null \
 # ---------------------------------------------------------------------------
 log "Verificando"
 # ---------------------------------------------------------------------------
-if curl -fsS --max-time 10 -o /dev/null -w '%{http_code}' https://techartsolucoes.com.br/ 2>/dev/null | grep -q 200; then
-  log "https://techartsolucoes.com.br respondeu 200"
+if curl -fsS --max-time 10 -o /dev/null -w '%{http_code}' "https://${DOMAIN}/" 2>/dev/null | grep -q 200; then
+  log "https://${DOMAIN} respondeu 200"
 else
   printf '\033[1;33m !  Nao consegui confirmar por HTTPS. Se o certificado ainda nao foi emitido, isso e esperado.\033[0m\n'
 fi

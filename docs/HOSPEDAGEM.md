@@ -7,18 +7,18 @@
 > **Situação atual — a migração foi decidida antes de qualquer gatilho técnico.**
 >
 > A análise abaixo continua válida e concluía que nada obrigava a sair do Netlify agora. A decisão
-> de subir para VPS própria em `techartsolucoes.com.br` foi tomada por domínio próprio e controle, e
-> é legítima — o §4 lista necessidades, não proibições.
+> de subir para VPS própria em `gestao-frota.techartsolucoes.com.br` foi tomada por domínio próprio
+> e controle, e é legítima — o §4 lista necessidades, não proibições.
 >
 > O que ela custa está no §5.4 e vale repetir: a conta de infraestrutura é a parte barata. Patch de
 > sistema, renovação de certificado, backup e resposta a incidente passam a ser trabalho da equipe.
 >
 > **Execução em [`VPS_DEPLOY.md`](./VPS_DEPLOY.md).** Os dois ambientes convivem:
 >
-> | Ambiente        | Endereço                                  | Hospedagem   |
-> | --------------- | ----------------------------------------- | ------------ |
-> | Produção        | <https://techartsolucoes.com.br>          | Nginx na VPS |
-> | Desenvolvimento | <https://frota-infratech-dev.netlify.app> | Netlify      |
+> | Ambiente        | Endereço                                      | Hospedagem   |
+> | --------------- | --------------------------------------------- | ------------ |
+> | Produção        | <https://gestao-frota.techartsolucoes.com.br> | Nginx na VPS |
+> | Desenvolvimento | <https://frota-infratech-dev.netlify.app>     | Netlify      |
 
 ---
 
