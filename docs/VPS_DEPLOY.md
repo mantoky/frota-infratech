@@ -46,11 +46,31 @@ O provisionamento confere isso antes de pedir o certificado. Cada tentativa falh
 conta para o limite de emissão, então conferir antes não é zelo excessivo — é evitar ficar bloqueado
 por uma hora.
 
-### Passo 2 — Provisionar
+### Passo 2 — Entrar no servidor
+
+> **Não cole `ssh` junto com os comandos seguintes.** O `ssh` abre uma sessão interativa; o que vem
+> depois só deve ser digitado **dentro** dela. Se o login falhar, as linhas seguintes executam na
+> sua própria máquina — e no PowerShell isso produz um erro confuso, porque `curl` lá é apelido de
+> `Invoke-WebRequest` e não aceita `-fsSL`. Foi exatamente o que aconteceu na primeira tentativa.
 
 ```bash
 ssh root@187.127.28.74
+```
 
+Se der `Connection closed` logo após a senha, a autenticação foi recusada. Alternativas, em ordem de
+praticidade:
+
+| Caminho                                                                                  | Onde                                    |
+| ---------------------------------------------------------------------------------------- | --------------------------------------- |
+| **Terminal do navegador** — não passa por SSH, funciona mesmo com a chave/senha quebrada | hPanel → VPS → Browser terminal         |
+| Instalar a chave pública                                                                 | hPanel → VPS → SSH Keys                 |
+| Redefinir a senha de root                                                                | hPanel → VPS → Settings → Root password |
+
+### Passo 3 — Provisionar
+
+Com o prompt `root@srv1790854:~#` à vista — e só então:
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/mantoky/frota-infratech/master/deploy/provision.sh -o provision.sh
 bash provision.sh
 ```
@@ -60,7 +80,7 @@ configura o firewall; emite o certificado TLS.
 
 É idempotente — rodar de novo não quebra nada.
 
-### Passo 3 — Variáveis do Firebase
+### Passo 4 — Variáveis do Firebase
 
 ```bash
 nano /srv/frota/app/.env.local
@@ -71,7 +91,7 @@ Os mesmos sete valores que estão no Netlify, em **Site configuration → Enviro
 São embutidas no bundle em tempo de build, então precisam existir **antes** de publicar. A
 publicação recusa rodar se o arquivo ainda tiver os valores de exemplo.
 
-### Passo 4 — Autorizar o domínio no Firebase
+### Passo 5 — Autorizar o domínio no Firebase
 
 **Firebase Console → Authentication → Settings → Authorized domains → Add domain →
 `techartsolucoes.com.br`**
@@ -81,7 +101,7 @@ publicação recusa rodar se o arquivo ainda tiver os valores de exemplo.
 > com `auth/unauthorized-domain`. O app carrega normalmente, a tela aparece, e a autenticação
 > simplesmente não funciona — o que leva a procurar o problema no lugar errado.
 
-### Passo 5 — Publicar
+### Passo 6 — Publicar
 
 ```bash
 sudo -u frota bash /srv/frota/app/deploy/publish.sh
@@ -90,10 +110,10 @@ sudo -u frota bash /srv/frota/app/deploy/publish.sh
 Traz o código, instala, constrói, publica numa release nova e troca o link ativo. A cada nova
 versão, basta repetir este comando.
 
-### Passo 6 — Conferir
+### Passo 7 — Conferir
 
 - <https://techartsolucoes.com.br> abre com cadeado válido
-- Login funciona (se não, quase certamente é o passo 4)
+- Login funciona (se não, quase certamente é o passo 5)
 - Aba anônima sem login não mostra nenhum dado de frota
 - No DevTools → Application → Service Workers, o `sw.js` registra sem erro
 
@@ -158,12 +178,12 @@ Efeito imediato, sem rebuild. As cinco últimas releases ficam guardadas.
 
 | Sintoma                                        | Causa provável                                         | Verificação                                                                         |
 | ---------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `auth/unauthorized-domain` no login            | Domínio não autorizado no Firebase                     | Passo 4                                                                             |
+| `auth/unauthorized-domain` no login            | Domínio não autorizado no Firebase                     | Passo 5                                                                             |
 | Site abre, mas sem dados e com erro no console | `.env.local` vazio ou build feito antes de preenchê-lo | `grep FIREBASE /srv/frota/app/.env.local` e republicar                              |
 | Certificado inválido                           | Certbot não rodou ou DNS não apontava                  | `certbot certificates`                                                              |
 | Versão antiga persiste no celular              | Service worker preso                                   | DevTools → Application → Service Workers → Unregister; conferir o header de `sw.js` |
 | 404 em rota que não seja a raiz                | `try_files` fora do ar                                 | `nginx -t` e conferir o bloco `location /`                                          |
-| Publicação recusa rodar                        | `.env.local` com valores de exemplo                    | Passo 3                                                                             |
+| Publicação recusa rodar                        | `.env.local` com valores de exemplo                    | Passo 4                                                                             |
 
 Logs:
 
