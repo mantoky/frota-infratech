@@ -80,6 +80,18 @@ configura o firewall; emite o certificado TLS.
 
 É idempotente — rodar de novo não quebra nada.
 
+> **Se o script parar dizendo que já existe site respondendo pelo domínio**, é porque a VPS não
+> estava limpa. O Nginx **ignora silenciosamente** o segundo bloco com o mesmo `server_name`, e
+> `nginx -t` continua dizendo "successful" — o domínio ficaria servindo o site antigo, e o certbot
+> instalaria o certificado no arquivo errado.
+>
+> O script mostra qual arquivo colide. Confira o que é antes de remover:
+>
+> ```bash
+> head -30 /etc/nginx/sites-enabled/<arquivo>
+> curl -sI https://techartsolucoes.com.br | head -5
+> ```
+
 ### Passo 4 — Variáveis do Firebase
 
 ```bash

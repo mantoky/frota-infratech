@@ -116,10 +116,46 @@ chmod 755 "$BASE_DIR" "$RELEASES_DIR"
 # ---------------------------------------------------------------------------
 log "Nginx"
 # ---------------------------------------------------------------------------
+# Um site pre-existente com o mesmo server_name faz o Nginx IGNORAR o nosso —
+# e apenas como aviso, nao erro. `nginx -t` continua dizendo "successful", o
+# script seguiria feliz, e o dominio ficaria servindo o site antigo. Foi
+# exatamente o que aconteceu na primeira execucao numa VPS que nao estava
+# limpa. Detectar antes de instalar evita o diagnostico confuso depois.
+CONFLITO="$(grep -rl --include='*' -E "server_name[^;]*\b${DOMAIN//./\\.}\b" \
+  /etc/nginx/sites-enabled/ 2>/dev/null | grep -v 'frota.conf' || true)"
+
+if [[ -n "$CONFLITO" ]]; then
+  warn "Ja existe site Nginx respondendo por ${DOMAIN}:"
+  printf '      %s\n' $CONFLITO
+  warn ""
+  warn "O Nginx ignora o segundo bloco com o mesmo server_name, entao instalar"
+  warn "a nossa configuracao agora nao teria efeito nenhum — e o certbot"
+  warn "instalaria o certificado no arquivo errado."
+  warn ""
+  warn "Confira o que e esse site antes de decidir:"
+  warn "    head -30 ${CONFLITO%% *}"
+  warn "    curl -sI https://${DOMAIN} | head -5"
+  warn ""
+  warn "Se puder ser desativado:"
+  for c in $CONFLITO; do
+    warn "    rm $c"
+  done
+  warn "    bash $0        # rode este script de novo"
+  die "Interrompido para nao publicar uma configuracao que seria ignorada."
+fi
+
 install -m 644 "${APP_DIR}/deploy/nginx/frota.conf" /etc/nginx/sites-available/frota.conf
 ln -sfn /etc/nginx/sites-available/frota.conf /etc/nginx/sites-enabled/frota.conf
 rm -f /etc/nginx/sites-enabled/default
-nginx -t
+
+# `nginx -t` retorna sucesso mesmo com aviso de colisao. Capturar a saida e
+# olhar o texto e a unica forma de transformar isso em falha.
+NGINX_TEST="$(nginx -t 2>&1)"
+printf '%s\n' "$NGINX_TEST"
+if grep -q 'conflicting server name' <<<"$NGINX_TEST"; then
+  die "Colisao de server_name persiste. A configuracao instalada esta sendo ignorada."
+fi
+
 systemctl reload nginx
 systemctl enable nginx >/dev/null
 
