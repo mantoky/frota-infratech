@@ -18,11 +18,28 @@ function codigosEquivalentes(consulta: string, campo: string): boolean {
   return q[1] === f[1] && Number(q[2]) === Number(f[2]);
 }
 
+/** 04 e 4 são o mesmo número. 00 continua sendo zero. */
+function significativo(digitos: string): string {
+  return digitos.replace(/^0+/, '') || '0';
+}
+
+/**
+ * Um número curto só conta no começo do bloco.
+ * 4 acha 4, 04, 44, 41 e 49. Não acha 84, 64 nem 34.
+ */
+function numeroNoComeco(consulta: string, bloco: string): boolean {
+  return significativo(bloco).startsWith(significativo(consulta));
+}
+
 export function textoCombina(consulta: string, texto: string): boolean {
   const q = compactar(consulta.trim());
   const f = compactar(texto);
   if (!q) return true;
   if (CODIGO.test(q) && CODIGO.test(f)) return codigosEquivalentes(q, f);
+  if (/^\d+$/.test(q)) {
+    const blocos = f.match(/\d+/g) ?? [];
+    return blocos.some((bloco) => numeroNoComeco(q, bloco));
+  }
   return f.includes(q);
 }
 

@@ -1,3 +1,4 @@
+import { initialVehicles } from '@/lib/constants';
 import { textoCombina, vehicleMatchesSearch } from '@/lib/search';
 
 const tn01 = {
@@ -38,5 +39,38 @@ describe('busca da tag TN01', () => {
     expect(textoCombina('hilux', 'Toyota Hilux')).toBe(true);
     expect(textoCombina('8b72', 'FQQ-8B72')).toBe(true);
     expect(textoCombina('01', 'TN01')).toBe(true);
+  });
+});
+
+describe('número curto', () => {
+  it.each(['4', '04', '44', '41', '49', '40'])('4 encontra %s', (numero) => {
+    expect(textoCombina('4', numero)).toBe(true);
+  });
+
+  it.each(['84', '64', '34', '14', '74'])('4 não encontra o dígito no fim de %s', (numero) => {
+    expect(textoCombina('4', numero)).toBe(false);
+  });
+
+  function tags(termo: string): string[] {
+    return initialVehicles
+      .filter((v) => vehicleMatchesSearch(v, termo))
+      .map((v) => v.tag)
+      .sort();
+  }
+
+  it('4 não traz placa que só termina em 4', () => {
+    expect(tags('4')).toEqual(['TN04', 'TN73', 'TN78']);
+  });
+
+  it('8 não traz o 8 do final de 18, 28, 68 ou 78', () => {
+    expect(tags('8')).toEqual(['TN01', 'TN02', 'TN29', 'TN88']);
+  });
+
+  it('5 não traz o 5 do final de 75', () => {
+    expect(tags('5')).toEqual([]);
+  });
+
+  it('3 traz quem começa com 3 e deixa de fora o 23', () => {
+    expect(tags('3')).toEqual(['TN03', 'TN04', 'TN31', 'TN73', 'TN74']);
   });
 });
