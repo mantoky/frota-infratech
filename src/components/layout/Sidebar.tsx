@@ -1,5 +1,6 @@
 'use client';
 
+import { version } from '../../../package.json';
 import { t } from '@/lib/hooks/useTranslations';
 import { FilterType, PageType } from '@/types';
 import { CSSProperties, useEffect } from 'react';
@@ -322,7 +323,7 @@ export default function Sidebar({
             flexShrink: 0,
           }}
         >
-          Frota Infratech · v1.2
+          Frota Infratech · v{version}
         </div>
       </aside>
 

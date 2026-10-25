@@ -118,8 +118,6 @@ export default function DashboardPage({
     <div className="page-shell">
       <PageHeader
         eyebrow="Operação"
-        title={t('dashboardTitle', currentLang)}
-        description={t('dashboardSubtitle', currentLang)}
         meta={
           <FilterBars
             counts={counts}

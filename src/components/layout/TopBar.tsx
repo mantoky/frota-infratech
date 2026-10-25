@@ -1,7 +1,7 @@
 'use client';
 
 import { CSSProperties } from 'react';
-import { Menu, Settings, Plus, Moon, Sun, ShieldCheck, User, MessageSquare } from 'lucide-react';
+import { Menu, Settings, Plus, Moon, Sun, ShieldCheck, User, MessageSquare, House } from 'lucide-react';
 import { PageType } from '@/types';
 import { t } from '@/lib/hooks/useTranslations';
 
@@ -11,12 +11,14 @@ interface TopBarProps {
   isAdmin: boolean;
   theme: string;
   onToggleSidebar: () => void;
+  onHome: () => void;
   onToggleTheme: () => void;
   onNavigate: (page: PageType) => void;
   onAddVehicle: () => void;
   onRequestAdmin: () => void;
   /** Mensagens do forum ainda nao vistas por este usuario. */
   unreadMessages: number;
+  currentPage: PageType;
 }
 
 export default function TopBar({
@@ -25,11 +27,13 @@ export default function TopBar({
   isAdmin,
   theme,
   onToggleSidebar,
+  onHome,
   onToggleTheme,
   onNavigate,
   onAddVehicle,
   onRequestAdmin,
   unreadMessages,
+  currentPage,
 }: TopBarProps) {
   const styles: { [key: string]: CSSProperties } = {
     topBar: {
@@ -42,7 +46,7 @@ export default function TopBar({
       alignItems: 'center',
       position: 'sticky',
       top: 0,
-      zIndex: 100,
+      zIndex: 2100,
       gap: 'var(--space-3)',
     },
     iconButton: {
@@ -53,8 +57,10 @@ export default function TopBar({
       height: 42,
       minHeight: 42,
       borderRadius: 'var(--radius-s)',
-      border: '1px solid var(--border)',
-      background: 'var(--bg-card)',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderColor: 'var(--border)',
+      backgroundColor: 'var(--bg-card)',
       color: 'var(--text-secondary)',
       cursor: 'pointer',
       transition: 'all var(--duration-fast) var(--ease-out)',
@@ -74,6 +80,32 @@ export default function TopBar({
           style={{ ...styles.iconButton, color: 'var(--text-primary)' }}
         >
           <Menu size={19} />
+        </button>
+
+        <button
+          type="button"
+          onClick={onHome}
+          aria-label="Início"
+          aria-current={currentPage === 'dashboard' ? 'page' : undefined}
+          title="Voltar ao painel"
+          style={{
+            ...styles.iconButton,
+            color: 'var(--text-primary)',
+            width: 'auto',
+            padding: '0 12px',
+            gap: 6,
+            fontSize: '0.8rem',
+            fontWeight: 650,
+            ...(currentPage === 'dashboard'
+              ? {
+                  backgroundColor: 'color-mix(in srgb, var(--brand-primary) 12%, var(--bg-card))',
+                  borderColor: 'var(--brand-primary)',
+                }
+              : {}),
+          }}
+        >
+          <House size={18} />
+          <span className="topbar__home-label">Início</span>
         </button>
 
         {/* Identidade da unidade operacional. Num sistema que vai atender

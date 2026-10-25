@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 interface PageHeaderProps {
   /** Rotulo curto de contexto acima do titulo (ex: "Operacao", "Governanca"). */
   eyebrow?: string;
-  title: string;
+  title?: string;
   description?: string;
   /** Botoes de acao primaria da pagina. Ficam a direita no desktop e
    *  descem pra baixo do texto no mobile. */
@@ -43,7 +43,7 @@ export default function PageHeader({
               {eyebrow}
             </p>
           )}
-          <h1 className="page-title">{title}</h1>
+          {title && <h1 className="page-title">{title}</h1>}
           {description && <p className="page-subtitle">{description}</p>}
         </div>
         {actions && (

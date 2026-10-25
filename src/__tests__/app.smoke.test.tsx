@@ -153,6 +153,17 @@ describe('Aplicação — operação', () => {
     expect(within(dialog).getByRole('button', { name: /Retirar/i })).toBeInTheDocument();
   });
 
+  it('o início volta ao painel de qualquer tela', async () => {
+    await entrar();
+    navegarPara(/Métricas/i);
+    expect(await screen.findByRole('heading', { name: /Métricas de Uso/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^Início$/i }));
+
+    expect(await screen.findByRole('radio', { name: /Todos/i })).toBeChecked();
+    expect(screen.queryByRole('heading', { name: /Métricas de Uso/i })).not.toBeInTheDocument();
+  });
+
   it('navega por todas as páginas sem quebrar', async () => {
     await entrar();
 

@@ -440,7 +440,8 @@ textarea {
 @media (max-width: 560px) {
   .topbar__subtitle,
   .topbar__role-label,
-  .topbar__add-label {
+  .topbar__add-label,
+  .topbar__home-label {
     display: none;
   }
 }
@@ -676,37 +677,43 @@ textarea.field {
 
 .filter-bars {
   display: grid;
-  gap: 14px;
+  gap: 8px;
   width: 100%;
 }
 
 .filter-bars__rail {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 0;
   width: 100%;
-  padding-bottom: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
 }
 
 .filter-bars__btn {
   position: relative;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 8px;
   min-width: 0;
-  min-height: 74px;
+  min-height: 40px;
   margin: 0;
-  padding: 10px 8px 12px;
+  padding: 6px 10px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 0;
   cursor: pointer;
   text-align: center;
-  color: var(--text-on-brand);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 7px 0 var(--lip, var(--brand-primary-dark));
+  background: transparent;
+  color: var(--text-secondary);
+  box-shadow: none;
+}
+
+.filter-bars__btn:not(:first-child) {
+  box-shadow: inset 1px 0 0 var(--border);
 }
 
 .filter-bars__btn input {
@@ -717,77 +724,69 @@ textarea.field {
 }
 
 .filter-bars__btn:has(input:focus-visible) {
-  outline: 2px solid var(--brand-accent);
-  outline-offset: 3px;
+  outline: 2px solid var(--brand-primary);
+  outline-offset: -2px;
 }
 
 .filter-bars__btn:has(input:checked) {
-  transform: translateY(5px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    0 2px 0 var(--lip, var(--brand-primary-dark));
+  background: color-mix(in srgb, currentColor 10%, var(--bg-card));
+  box-shadow: inset 0 -2px 0 currentColor;
+}
+
+.filter-bars__btn:not(:first-child):has(input:checked) {
+  box-shadow: inset 1px 0 0 var(--border), inset 0 -2px 0 currentColor;
 }
 
 .filter-bars__btn--all {
-  background: var(--brand-primary);
-  --lip: var(--brand-primary-dark);
+  color: var(--brand-primary);
 }
 
 .filter-bars__btn--disp {
-  background: var(--state-ok-solid);
-  --lip: #0d4a24;
+  color: var(--state-ok);
 }
 
 .filter-bars__btn--uso {
-  background: #3e5164;
-  --lip: #243140;
+  color: var(--text-primary);
 }
 
 .filter-bars__btn--lav {
-  background: var(--state-alert-solid);
-  --lip: #6d4304;
+  color: var(--state-alert);
 }
 
 .filter-bars__btn--man {
-  background: var(--state-danger-solid);
-  --lip: #7f1515;
+  color: var(--state-danger);
 }
 
 .filter-bars__btn--atencao {
-  background: var(--brand-accent);
-  --lip: #8a6400;
-  color: #1a1300;
+  color: #7a5a00;
+}
+
+.dark .filter-bars__btn--atencao {
+  color: #e0b44a;
 }
 
 .filter-bars__name {
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 500;
   line-height: 1.2;
 }
 
 .filter-bars__count {
-  font-size: 1.35rem;
-  font-weight: 750;
+  font-size: 0.8rem;
+  font-weight: 500;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 640px) {
   .filter-bars__btn {
-    min-height: 64px;
-    padding: 8px 4px 10px;
+    min-height: 36px;
+    gap: 6px;
+    padding: 6px 4px;
   }
 
-  .filter-bars__name {
-    font-size: 0.72rem;
-  }
-
+  .filter-bars__name,
   .filter-bars__count {
-    font-size: 1.15rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .filter-bars__btn:has(input:checked) {
-    transform: none;
+    font-size: 0.72rem;
   }
 }

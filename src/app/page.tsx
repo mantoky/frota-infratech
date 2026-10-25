@@ -413,6 +413,25 @@ export default function FrotaInfratech() {
     [marcarComoLido]
   );
 
+  // O app e uma pagina so. O voltar do celular sai do aplicativo, entao o
+  // Inicio precisa desfazer sozinho a tela, o menu, o historico e qualquer
+  // janela aberta e deixar o painel de veiculos visivel.
+  const [painelKey, setPainelKey] = useState(0);
+  const irParaInicio = useCallback(() => {
+    setCurrentPage('dashboard');
+    setCurrentFilter('all');
+    setSidebarOpen(false);
+    setHistoryPanelOpen(false);
+    setWithdrawModal(false);
+    setReturnModal(false);
+    setServiceModal(false);
+    setManageModal(false);
+    setAddModal(false);
+    setConfirmModal(false);
+    setSelectedVehicle(null);
+    setPainelKey((n) => n + 1);
+  }, []);
+
   if (loading) {
     // Skeleton no formato da grade real em vez de um spinner: em rede fraca o
     // usuario ja enxerga onde o conteudo vai cair, e a troca pro conteudo
@@ -482,8 +501,10 @@ export default function FrotaInfratech() {
           isAdmin={isAdmin}
           theme={theme}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onHome={irParaInicio}
           onToggleTheme={toggleTheme}
           onNavigate={navegar}
+          currentPage={currentPage}
           onAddVehicle={() => setAddModal(true)}
           onRequestAdmin={pedirAdmin}
           unreadMessages={unreadMessages}
@@ -491,6 +512,7 @@ export default function FrotaInfratech() {
 
         {currentPage === 'dashboard' && (
           <DashboardPage
+            key={painelKey}
             vehicles={vehicles}
             currentFilter={currentFilter}
             currentLang={currentLang}

@@ -35,10 +35,10 @@ export default function HistoryPanel({
   const styles: { [key: string]: CSSProperties } = {
     overlay: {
       position: 'fixed',
-      top: 0,
+      top: 'var(--topbar-height)',
       right: 0,
       width: '100%',
-      height: '100%',
+      height: 'calc(100% - var(--topbar-height))',
       backgroundColor: 'rgba(0,0,0,0.5)',
       zIndex: 1500,
       display: isOpen ? 'flex' : 'none',
