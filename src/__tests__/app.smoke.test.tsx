@@ -1,6 +1,5 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import FrotaInfratech from '@/app/page';
-import type { UserProfile } from '@/types';
 
 // O app fala com o Firestore na montagem. Aqui o interesse e a camada de UI,
 // entao o SDK e trocado por um duble que simula "documento remoto ainda nao
@@ -35,65 +34,7 @@ jest.mock('firebase/firestore', () => ({
 // o PDF em si, so o caminho ate o botao, o modulo inteiro vira stub.
 jest.mock('@/lib/pdf', () => ({ generateFleetReport: jest.fn() }));
 
-// --- Duble controlavel do useAuth -------------------------------------------
-// Mockar o hook, e nao o SDK do Firebase, mantem os testes sobre o que importa:
-// como a interface reage a cada estado de sessao. O comportamento do Firebase
-// Auth em si e responsabilidade dele, nao desta suite.
-const authMock = {
-  profile: null as UserProfile | null,
-  loading: false,
-  isActive: false,
-  isAdmin: false,
-  isOperator: false,
-  status: null as string | null,
-  user: null as { email: string } | null,
-  signIn: jest.fn(() => Promise.resolve()),
-  signUp: jest.fn(() => Promise.resolve()),
-  logout: jest.fn(),
-  resetPassword: jest.fn(() => Promise.resolve()),
-  reauthenticate: jest.fn(() => Promise.resolve()),
-  completeProfile: jest.fn((_dados: Record<string, unknown>) => Promise.resolve()),
-};
-
-jest.mock('@/lib/hooks/useAuth', () => ({
-  useAuth: () => authMock,
-  authErrorMessage: (c: string) => c,
-}));
-
-function comoDeslogado() {
-  Object.assign(authMock, {
-    profile: null,
-    user: null,
-    isActive: false,
-    isAdmin: false,
-    status: null,
-  });
-}
-
-/** Autenticado no Auth, mas sem documento em `users/{uid}`. */
-function comoSemPerfil() {
-  Object.assign(authMock, {
-    profile: null,
-    user: { email: 'c0699118@vale.com' },
-    isActive: false,
-    isAdmin: false,
-    status: 'sem-perfil',
-  });
-}
-
-function comoUsuario(
-  level: UserProfile['level'] = 'usuario',
-  status: UserProfile['status'] = 'ativo'
-) {
-  Object.assign(authMock, {
-    user: { email: 'a@b.com' },
-    profile: { uid: 'u1', email: 'a@b.com', displayName: 'Teste', level, status } as UserProfile,
-    isActive: status === 'ativo',
-    isAdmin: status === 'ativo' && ['admin', 'admin_master'].includes(level),
-    isOperator: status === 'ativo' && ['operador', 'admin', 'admin_master'].includes(level),
-    status,
-  });
-}
+const SENHA_ADMIN = 'senha-admin-teste';
 
 /** Navega pela sidebar, que e o unico caminho real entre paginas. */
 function navegarPara(rotulo: string | RegExp) {
@@ -105,8 +46,9 @@ let consoleError: jest.SpyInstance;
 
 beforeEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
+  process.env.NEXT_PUBLIC_ADMIN_PASSWORD = SENHA_ADMIN;
   jest.clearAllMocks();
-  authMock.loading = false;
   // Um erro de console durante a navegacao quase sempre significa render
   // quebrado ou prop faltando. O teste falha nele de proposito.
   consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -117,108 +59,42 @@ afterEach(() => {
   consoleError.mockRestore();
 });
 
-describe('Portão de acesso', () => {
-  it('sem sessão, mostra o login e nenhum dado da frota', () => {
-    comoDeslogado();
+describe('Acesso', () => {
+  it('abre a frota sem pedir e-mail', async () => {
     render(<FrotaInfratech />);
-    expect(screen.getByRole('heading', { name: /Gestão de Frota/i })).toBeInTheDocument();
-    expect(screen.queryByText('TN-01')).not.toBeInTheDocument();
+    expect(await screen.findByText('TN-01')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/E-mail/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Entrar como administrador/i })).toBeInTheDocument();
   });
 
-  it('autentica com e-mail e senha', async () => {
-    comoDeslogado();
+  it('senha errada não libera o administrador', async () => {
     render(<FrotaInfratech />);
-
-    fireEvent.change(screen.getByLabelText(/E-mail corporativo/i), {
-      target: { value: 'joao@infratech.com' },
+    fireEvent.click(await screen.findByRole('button', { name: /Entrar como administrador/i }));
+    fireEvent.change(screen.getByLabelText(/Senha do administrador/i), {
+      target: { value: 'errada' },
     });
-    fireEvent.change(screen.getByLabelText(/^Senha$/i), { target: { value: 'senhaSuperLonga1' } });
-    fireEvent.click(screen.getByRole('button', { name: /Entrar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Confirmar$/i }));
 
-    await waitFor(() =>
-      expect(authMock.signIn).toHaveBeenCalledWith('joao@infratech.com', 'senhaSuperLonga1')
-    );
+    expect(await screen.findByText(/Senha incorreta/i)).toBeInTheDocument();
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument();
   });
 
-  it('o autocadastro pede os dados declarados e avisa que passa por aprovação', async () => {
-    comoDeslogado();
+  it('a senha correta libera a área administrativa', async () => {
     render(<FrotaInfratech />);
-    fireEvent.click(screen.getByRole('button', { name: /Primeiro acesso/i }));
-
-    expect(screen.getByLabelText(/Nome completo/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/RAC02/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/ID crachá/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Gerência/i)).toBeInTheDocument();
-    expect(screen.getByText(/conferidos por um administrador ou operador/i)).toBeInTheDocument();
-  });
-
-  it('recusa senha curta no cadastro sem chamar o servidor', async () => {
-    comoDeslogado();
-    render(<FrotaInfratech />);
-    fireEvent.click(screen.getByRole('button', { name: /Primeiro acesso/i }));
-
-    const senha = screen.getByLabelText(/Senha \(mínimo/i);
-    expect(senha).toHaveAttribute('minLength', '12');
-
-    fireEvent.change(senha, { target: { value: 'curta' } });
-    fireEvent.click(screen.getByRole('button', { name: /Enviar cadastro/i }));
-
-    // Duas barreiras: a validação nativa impede o submit, e o handler recusa
-    // de novo caso o submit chegue por outro caminho. O que importa aqui é que
-    // nada sai para o servidor.
-    await waitFor(() => expect(authMock.signUp).not.toHaveBeenCalled());
-  });
-
-  it('conta pendente não vê a frota e recebe explicação própria', () => {
-    comoUsuario('usuario', 'pendente');
-    render(<FrotaInfratech />);
-
-    expect(screen.getByRole('heading', { name: /Cadastro em análise/i })).toBeInTheDocument();
-    expect(screen.queryByText('TN-01')).not.toBeInTheDocument();
-    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
-  });
-
-  it('conta sem perfil oferece concluir o cadastro, e não um beco sem saída', async () => {
-    comoSemPerfil();
-    render(<FrotaInfratech />);
-
-    // Regressao: esta tela so tinha "Sair", e sair levava de volta a ela. Quem
-    // perdesse a gravacao do perfil entre Auth e Firestore ficava preso ate um
-    // administrador apagar a conta no console - mesmo com as rules permitindo
-    // que a propria pessoa criasse o documento.
-    expect(screen.getByRole('heading', { name: /Concluir cadastro/i })).toBeInTheDocument();
-    expect(screen.getByText('c0699118@vale.com')).toBeInTheDocument();
-    expect(screen.getByLabelText(/RAC02/i)).toBeInTheDocument();
-
-    fireEvent.change(screen.getByLabelText(/Nome completo/i), { target: { value: 'Robson' } });
-    fireEvent.change(screen.getByLabelText(/Empresa/i), { target: { value: 'Infratech' } });
-    fireEvent.change(screen.getByLabelText(/Função/i), { target: { value: 'Analista' } });
-    fireEvent.change(screen.getByLabelText(/Gerência/i), { target: { value: 'GER' } });
-    fireEvent.change(screen.getByLabelText(/Coordenador/i), { target: { value: 'Coord' } });
-    fireEvent.change(screen.getByLabelText(/Gestor/i), { target: { value: 'Gestor' } });
-    fireEvent.change(screen.getByLabelText(/ID crachá/i), { target: { value: '123' } });
-    fireEvent.change(screen.getByLabelText(/RAC02/i), { target: { value: 'R1' } });
-    fireEvent.click(screen.getByRole('button', { name: /Concluir cadastro/i }));
-
-    await waitFor(() => expect(authMock.completeProfile).toHaveBeenCalled());
-    expect(authMock.completeProfile.mock.calls[0][0]).toMatchObject({
-      nomeCompleto: 'Robson',
-      rac02: 'R1',
+    fireEvent.click(await screen.findByRole('button', { name: /Entrar como administrador/i }));
+    fireEvent.change(screen.getByLabelText(/Senha do administrador/i), {
+      target: { value: SENHA_ADMIN },
     });
-  });
+    fireEvent.click(screen.getByRole('button', { name: /^Confirmar$/i }));
 
-  it('conta bloqueada recebe mensagem diferente de conta pendente', () => {
-    comoUsuario('usuario', 'bloqueado');
-    render(<FrotaInfratech />);
-
-    expect(screen.getByRole('heading', { name: /Acesso bloqueado/i })).toBeInTheDocument();
-    expect(screen.queryByText(/Cadastro em análise/i)).not.toBeInTheDocument();
+    expect(await screen.findByText('Admin')).toBeInTheDocument();
+    const sidebar = screen.getByRole('complementary');
+    expect(within(sidebar).getByRole('button', { name: /Administra/i })).toBeInTheDocument();
   });
 });
 
-describe('Aplicação — usuário comum ativo', () => {
+describe('Aplicação — operação', () => {
   const entrar = async () => {
-    comoUsuario('usuario', 'ativo');
     render(<FrotaInfratech />);
     await waitFor(() => expect(screen.getByRole('complementary')).toBeInTheDocument());
   };
@@ -302,11 +178,16 @@ describe('Aplicação — usuário comum ativo', () => {
     await waitFor(() => expect(document.documentElement).not.toHaveClass('dark'));
   });
 
-  it('encerra a sessão pelo Firebase, não pelo localStorage', async () => {
-    await entrar();
+  it('sai do modo administrador pelas configurações', async () => {
+    sessionStorage.setItem('frota-admin', '1');
+    render(<FrotaInfratech />);
+    await waitFor(() => expect(screen.getByText('Admin')).toBeInTheDocument());
     navegarPara(/Configurações/i);
-    fireEvent.click(await screen.findByRole('button', { name: /Sair/i }));
-    expect(authMock.logout).toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('button', { name: /Sair do admin/i }));
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument();
+    expect(
+      screen.getAllByRole('button', { name: /Entrar como administrador/i }).length
+    ).toBeGreaterThan(0);
   });
 
   it('abre o painel de histórico pela sidebar', async () => {
@@ -362,9 +243,9 @@ describe('Aplicação — usuário comum ativo', () => {
 
 describe('Aplicação — administrador', () => {
   const entrarComoAdmin = async () => {
-    comoUsuario('admin', 'ativo');
+    sessionStorage.setItem('frota-admin', '1');
     render(<FrotaInfratech />);
-    await waitFor(() => expect(screen.getByRole('complementary')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Admin')).toBeInTheDocument());
   };
 
   it('expõe a área administrativa', async () => {
@@ -395,7 +276,7 @@ describe('Aplicação — administrador', () => {
     fireEvent.click(within(gestao).getByRole('button', { name: /Excluir/i }));
 
     const confirmacao = await screen.findByRole('dialog');
-    expect(within(confirmacao).getByLabelText(/Sua senha/i)).toBeInTheDocument();
+    expect(within(confirmacao).getByLabelText(/Senha do administrador/i)).toBeInTheDocument();
     // Regressao: o fluxo antigo pedia um PIN comparado com uma constante
     // embutida no bundle, legivel por qualquer pessoa.
     expect(screen.queryByLabelText(/PIN/i)).not.toBeInTheDocument();
@@ -412,12 +293,18 @@ describe('Aplicação — administrador', () => {
     fireEvent.change(within(retirada).getByLabelText(/Motorista/i), {
       target: { value: 'Robson Teste' },
     });
+    // O campo nasce com a leitura atual. Esvaziar é o que o teste cobre:
+    // vazio não pode virar NaN gravado na frota.
+    fireEvent.change(within(retirada).getByLabelText(/Quilometragem|KM/i), {
+      target: { value: '' },
+    });
     within(retirada)
       .getAllByRole('checkbox')
       .forEach((c) => fireEvent.click(c));
     fireEvent.click(within(retirada).getByRole('button', { name: /Confirmar/i }));
 
-    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(await screen.findByText(/KM não pode ser menor/i)).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.queryByText('Robson Teste')).not.toBeInTheDocument();
   });
 

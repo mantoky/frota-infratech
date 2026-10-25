@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, CSSProperties } from 'react';
+import { useEffect, useRef, useState, FormEvent, CSSProperties } from 'react';
 import { t } from '@/lib/hooks/useTranslations';
 import { Vehicle, ChecklistField, ChecklistPhoto } from '@/types';
 import Modal from './Modal';
@@ -45,6 +45,38 @@ export default function WithdrawModal({
   const [kmError, setKmError] = useState(false);
   const [photos, setPhotos] = useState<ChecklistPhoto[]>([]);
   const [checks, setChecks] = useState<Record<string, boolean>>({});
+  const [enviando, setEnviando] = useState(false);
+  const [loadedKey, setLoadedKey] = useState<number | null>(null);
+  const [ciclo, setCiclo] = useState(0);
+  const submittingRef = useRef(false);
+  const cicloRef = useRef(0);
+
+  // O handler assíncrono precisa da geração mais nova depois do await.
+  // O espelho fica no efeito: escrever ref durante o render quebra o lint.
+  useEffect(() => {
+    cicloRef.current = ciclo;
+    submittingRef.current = false;
+  }, [ciclo]);
+
+  // Cada abertura nasce deste veículo. Sem isso o modal, que fica montado,
+  // reaproveita condutor, checklist e fotos da retirada anterior.
+  const openKey = isOpen && vehicle ? vehicle.id : null;
+  if (openKey !== null && openKey !== loadedKey) {
+    setLoadedKey(openKey);
+    setCiclo((atual) => atual + 1);
+    setEnviando(false);
+    setDriver('');
+    setKm(vehicle!.km.toString());
+    setFuel('Reserva');
+    setObs('');
+    setKmError(false);
+    setPhotos([]);
+    setChecks({});
+  } else if (openKey === null && loadedKey !== null) {
+    setLoadedKey(null);
+    setCiclo((atual) => atual + 1);
+    setEnviando(false);
+  }
 
   const activeFields = checklistFields.filter((f) => f.active);
   const allChecked = activeFields.length === 0 || activeFields.every((f) => checks[f.id]);
@@ -118,7 +150,7 @@ export default function WithdrawModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!vehicle) return;
+    if (!vehicle || submittingRef.current) return;
     const kmValue = parseIntSafe(km, -1);
     // -1 como fallback faz um campo vazio/invalido cair na mesma guarda de
     // quilometragem menor que a atual, em vez de passar como NaN.
@@ -126,25 +158,32 @@ export default function WithdrawModal({
       setKmError(true);
       return;
     }
-    const location = await captureLocation();
-    onConfirm({
-      driver,
-      km: kmValue,
-      fuel,
-      fuelPercent: getFuelPercent(fuel),
-      obs,
-      checkProntos: allChecked,
-      location,
-      photos,
-      customChecklistData: checks,
-    });
-    setDriver('');
-    setKm('');
-    setFuel('Reserva');
-    setObs('');
-    setKmError(false);
-    setPhotos([]);
-    setChecks({});
+    const cicloNoEnvio = ciclo;
+    submittingRef.current = true;
+    setEnviando(true);
+    try {
+      const location = await captureLocation();
+      // Fechar ou abrir outro veículo durante a espera invalida este envio.
+      if (cicloNoEnvio !== cicloRef.current) return;
+      onConfirm({
+        driver,
+        km: kmValue,
+        fuel,
+        fuelPercent: getFuelPercent(fuel),
+        obs,
+        checkProntos: allChecked,
+        location,
+        photos,
+        customChecklistData: checks,
+      });
+      // A trava fica até o modal fechar. Soltar aqui deixaria um segundo toque,
+      // ainda na fila, gravar outro movimento antes do React desmontar o form.
+    } catch {
+      if (cicloNoEnvio === cicloRef.current) {
+        submittingRef.current = false;
+        setEnviando(false);
+      }
+    }
   };
 
   if (!vehicle) return null;
@@ -188,6 +227,10 @@ export default function WithdrawModal({
             onChange={(e) => {
               setKm(e.target.value);
               setKmError(false);
+            }}
+            onInvalid={(e) => {
+              e.preventDefault();
+              setKmError(true);
             }}
             style={styles.input}
             min={vehicle.km}
@@ -259,15 +302,21 @@ export default function WithdrawModal({
               usuario tinha que adivinhar. */}
           <button
             type="submit"
-            disabled={!allChecked}
-            title={!allChecked ? 'Conclua o checklist de saída para liberar a retirada' : undefined}
+            disabled={!allChecked || enviando}
+            title={
+              !allChecked
+                ? 'Conclua o checklist de saída para liberar a retirada'
+                : enviando
+                  ? t('btnConfirming', currentLang)
+                  : undefined
+            }
             style={{
               ...styles.button,
               ...styles.confirmButton,
-              ...(!allChecked ? { opacity: 0.45, cursor: 'not-allowed' } : {}),
+              ...(!allChecked || enviando ? { opacity: 0.45, cursor: 'not-allowed' } : {}),
             }}
           >
-            {t('btnConfirm', currentLang)}
+            {enviando ? t('btnConfirming', currentLang) : t('btnConfirm', currentLang)}
           </button>
         </div>
       </form>

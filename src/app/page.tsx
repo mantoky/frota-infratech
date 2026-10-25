@@ -26,21 +26,17 @@ import ServiceModal from '@/components/modals/ServiceModal';
 import ManageModal from '@/components/modals/ManageModal';
 import AddModal from '@/components/modals/AddModal';
 import ConfirmPasswordModal from '@/components/modals/ConfirmPasswordModal';
-import LoginScreen from '@/components/auth/LoginScreen';
-import AccessPending from '@/components/auth/AccessPending';
-import CompleteProfile from '@/components/auth/CompleteProfile';
 import AdminPage from '@/components/admin/AdminPage';
 import MetricsPage from '@/components/metrics/MetricsPage';
 import ForumPage from '@/components/forum/ForumPage';
 import OrgPage from '@/components/org/OrgPage';
 import { useInstallPrompt } from '@/lib/hooks/useInstallPrompt';
 import { useUnreadForum } from '@/lib/hooks/useUnreadForum';
-import { trilha } from '@/lib/org';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAdminSession } from '@/lib/hooks/useAdminSession';
 import PageHeader from '@/components/ui/PageHeader';
 import Card, { CardHeader } from '@/components/ui/Card';
 import EmptyState from '@/components/ui/EmptyState';
-import { FileDown, Trophy, Users, Sun, Moon, Download, LogOut } from 'lucide-react';
+import { FileDown, Trophy, Users, Sun, Moon, Download, LogOut, ShieldCheck } from 'lucide-react';
 
 const t = (key: string, lang: string): string => {
   const translationsData = translations as Record<string, Record<string, string>>;
@@ -104,50 +100,20 @@ export default function FrotaInfratech() {
   } = useOrgData();
   const { canInstall, promptInstall } = useInstallPrompt();
 
-  // A sessao passa a mandar em quem e admin. Antes isso vinha de
-  // localStorage.isAdmin, que o proprio usuario podia editar no console do
-  // navegador - e do PIN, que estava em texto claro no bundle.
-  const {
-    user,
-    profile,
-    loading: authLoading,
-    isActive,
-    isAdmin,
-    status: authStatus,
-    signIn,
-    signUp,
-    logout: signOutUser,
-    resetPassword,
-    reauthenticate,
-    completeProfile,
-  } = useAuth();
+  // Sem conta por e-mail. A operação é aberta; a senha só libera o admin.
+  const { isAdmin, entrar, sair } = useAdminSession();
 
-  // ---------------------------------------------------------------------
-  // Identidade de quem escreve
-  // ---------------------------------------------------------------------
-  // O forum deixa de perguntar quem e voce. Nome, papel e escopo saem do
-  // perfil autenticado; a regra do Firestore ainda confere o uid, entao nem
-  // um cliente adulterado consegue assinar por outra pessoa.
   const autorSessao = useMemo(
     () => ({
-      uid: user?.uid || '',
-      nome: profile?.displayName || user?.email || 'Sem nome',
-      role: (profile?.level === 'admin' || profile?.level === 'admin_master'
-        ? 'Administrador'
-        : profile?.level === 'operador'
-          ? 'Operador'
-          : 'Motorista') as 'Motorista' | 'Operador' | 'Administrador',
-      orgUnitId: profile?.orgUnitId,
+      uid: isAdmin ? 'admin' : 'operacao',
+      nome: isAdmin ? 'Administrador' : 'Operação',
+      role: (isAdmin ? 'Administrador' : 'Operador') as 'Operador' | 'Administrador',
+      orgUnitId: undefined as string | undefined,
     }),
-    [user, profile]
+    [isAdmin]
   );
 
-  const escopoLabel = useMemo(() => {
-    const unidade = units.find((u) => u.id === profile?.orgUnitId);
-    return unidade ? trilha(units, unidade) : '';
-  }, [units, profile?.orgUnitId]);
-
-  const { unread: unreadMessages, marcarComoLido } = useUnreadForum(forumPosts, user?.uid);
+  const { unread: unreadMessages, marcarComoLido } = useUnreadForum(forumPosts, autorSessao.uid);
 
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
   const [currentLang, setCurrentLang] = useState('pt');
@@ -193,20 +159,20 @@ export default function FrotaInfratech() {
     setCurrentLang(lang);
     localStorage.setItem('frota_lang', lang);
   };
-  const logout = () => {
-    signOutUser();
+  const sairDoAdmin = () => {
+    sair();
     setCurrentPage('dashboard');
   };
 
-  // Step-up de verdade no lugar do PIN: antes de uma acao destrutiva, o
-  // Firebase reconfirma a senha contra o servidor de autenticacao. O PIN
-  // anterior era uma constante embutida no bundle - qualquer pessoa que
-  // abrisse o JavaScript o encontrava.
-  const confirmSensitiveAction = async (senha: string) => {
+  const pedirAdmin = () => {
+    setPendingAction('admin');
     setConfirmError('');
-    try {
-      await reauthenticate(senha);
-    } catch {
+    setConfirmModal(true);
+  };
+
+  const confirmSensitiveAction = (senha: string) => {
+    setConfirmError('');
+    if (!entrar(senha)) {
       setConfirmError('Senha incorreta.');
       return;
     }
@@ -445,43 +411,6 @@ export default function FrotaInfratech() {
     [marcarComoLido]
   );
 
-  // Enquanto o Firebase nao responde se ha sessao, nada e renderizado. Mostrar
-  // a tela de login por um instante e depois trocar pelo app produz um flash
-  // que ja foi bug reportado neste projeto.
-  if (authLoading)
-    return <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg-main)' }} />;
-
-  if (!profile && authStatus === null) {
-    return (
-      <LoginScreen
-        currentLang={currentLang}
-        canInstall={canInstall}
-        onInstall={promptInstall}
-        onSignIn={signIn}
-        onSignUp={signUp}
-        onResetPassword={resetPassword}
-      />
-    );
-  }
-
-  // Autenticado, sem perfil. Nao e caso de aviso: as rules sempre permitiram
-  // que a propria pessoa crie o seu documento, entao o certo e oferecer o
-  // caminho, e nao um beco sem saida cujo unico botao e "Sair".
-  if (authStatus === 'sem-perfil') {
-    return (
-      <CompleteProfile email={user?.email || ''} onSubmit={completeProfile} onLogout={logout} />
-    );
-  }
-
-  // Autenticado mas nao liberado. Estados distintos merecem mensagens
-  // distintas: quem aguarda aprovacao precisa saber que basta esperar; quem
-  // foi bloqueado precisa saber que deve procurar o administrador.
-  if (!isActive) {
-    return (
-      <AccessPending status={authStatus} nome={profile?.displayName || ''} onLogout={logout} />
-    );
-  }
-
   if (loading) {
     // Skeleton no formato da grade real em vez de um spinner: em rede fraca o
     // usuario ja enxerga onde o conteudo vai cair, e a troca pro conteudo
@@ -554,6 +483,7 @@ export default function FrotaInfratech() {
           onToggleTheme={toggleTheme}
           onNavigate={navegar}
           onAddVehicle={() => setAddModal(true)}
+          onRequestAdmin={pedirAdmin}
           unreadMessages={unreadMessages}
         />
 
@@ -582,7 +512,7 @@ export default function FrotaInfratech() {
             currentUid={autorSessao.uid}
             currentName={autorSessao.nome}
             currentRole={autorSessao.role}
-            scopeLabel={escopoLabel}
+            scopeLabel=""
             onAddPost={(post) => addForumPost(post, autorSessao)}
             onAddComment={(postId, text) => addForumComment(postId, text, autorSessao)}
             onLikePost={likeForumPost}
@@ -769,14 +699,25 @@ export default function FrotaInfratech() {
                 </SettingRow>
               )}
 
-              <SettingRow
-                title="Encerrar sessão"
-                description="Sai do aplicativo e exige nova autenticação no próximo acesso."
-              >
-                <button type="button" className="btn btn-outline btn-sm" onClick={logout}>
-                  <LogOut size={15} /> {t('btnLogout', currentLang)}
-                </button>
-              </SettingRow>
+              {isAdmin ? (
+                <SettingRow
+                  title="Sair do modo administrador"
+                  description="Volta à operação. A senha será pedida de novo para liberar o admin."
+                >
+                  <button type="button" className="btn btn-outline btn-sm" onClick={sairDoAdmin}>
+                    <LogOut size={15} /> Sair do admin
+                  </button>
+                </SettingRow>
+              ) : (
+                <SettingRow
+                  title="Modo administrador"
+                  description="A operação não pede login. A senha só libera cadastro, exclusão e a área admin."
+                >
+                  <button type="button" className="btn btn-outline btn-sm" onClick={pedirAdmin}>
+                    <ShieldCheck size={15} /> Entrar como administrador
+                  </button>
+                </SettingRow>
+              )}
             </Card>
           </div>
         )}

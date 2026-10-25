@@ -14,6 +14,7 @@ interface TopBarProps {
   onToggleTheme: () => void;
   onNavigate: (page: PageType) => void;
   onAddVehicle: () => void;
+  onRequestAdmin: () => void;
   /** Mensagens do forum ainda nao vistas por este usuario. */
   unreadMessages: number;
 }
@@ -27,6 +28,7 @@ export default function TopBar({
   onToggleTheme,
   onNavigate,
   onAddVehicle,
+  onRequestAdmin,
   unreadMessages,
 }: TopBarProps) {
   const styles: { [key: string]: CSSProperties } = {
@@ -107,27 +109,56 @@ export default function TopBar({
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-        <span
-          title={isAdmin ? 'Sessão com privilégios administrativos' : 'Sessão operacional'}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            height: 32,
-            padding: '0 10px',
-            borderRadius: 'var(--radius-pill)',
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            letterSpacing: '0.04em',
-            textTransform: 'uppercase',
-            backgroundColor: isAdmin ? 'var(--brand-accent-soft)' : 'var(--bg-inset)',
-            color: isAdmin ? 'var(--alert-text)' : 'var(--text-secondary)',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {isAdmin ? <ShieldCheck size={13} /> : <User size={13} />}
-          <span className="topbar__role-label">{isAdmin ? 'Admin' : 'Operador'}</span>
-        </span>
+        {isAdmin ? (
+          <span
+            title="Modo administrador"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              height: 32,
+              padding: '0 10px',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              backgroundColor: 'var(--brand-accent-soft)',
+              color: 'var(--alert-text)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <ShieldCheck size={13} />
+            <span className="topbar__role-label">Admin</span>
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={onRequestAdmin}
+            aria-label="Entrar como administrador"
+            title="Informar a senha de administrador"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              height: 32,
+              padding: '0 10px',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--border)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              backgroundColor: 'var(--bg-inset)',
+              color: 'var(--text-secondary)',
+              whiteSpace: 'nowrap',
+              cursor: 'pointer',
+            }}
+          >
+            <User size={13} />
+            <span className="topbar__role-label">Operador</span>
+          </button>
+        )}
 
         {/* Mensagens. O contador so aparece quando ha algo a ver - um badge
             permanente com "0" treina o olho a ignorar o icone, e ai o aviso

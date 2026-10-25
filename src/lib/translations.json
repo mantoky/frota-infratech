@@ -264,6 +264,11 @@
     "en": "Confirm Withdrawal",
     "es": "Confirmar Retirada"
   },
+  "btnConfirming": {
+    "pt": "Confirmando…",
+    "en": "Confirming…",
+    "es": "Confirmando…"
+  },
   "btnCancel": {
     "pt": "Cancelar",
     "en": "Cancel",

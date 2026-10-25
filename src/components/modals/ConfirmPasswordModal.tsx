@@ -14,19 +14,15 @@ interface ConfirmPasswordModalProps {
 }
 
 const DESCRICAO: Record<string, string> = {
+  admin: 'A senha libera o modo administrador neste navegador, até a aba ser fechada.',
   delete: 'Excluir este veículo remove o cadastro da frota. O histórico permanece registrado.',
   unblock: 'Desbloquear libera o veículo para retirada imediatamente.',
   add: 'Cadastrar um novo veículo na frota.',
 };
 
 /**
- * Step-up de autenticacao antes de acao destrutiva.
- *
- * Substitui o antigo PinModal. A diferenca nao e cosmetica: o PIN era comparado
- * com uma constante embutida no bundle (`NEXT_PUBLIC_ADMIN_PIN_*`), legivel por
- * qualquer pessoa que abrisse o JavaScript. Aqui a senha e verificada pelo
- * servidor de autenticacao do Firebase, e uma senha errada nao passa nem que o
- * cliente seja adulterado.
+ * Pede a senha única do administrador.
+ * Não há conta por e-mail: a mesma senha abre o modo admin e confirma exclusão.
  */
 export default function ConfirmPasswordModal({
   isOpen,
@@ -56,8 +52,8 @@ export default function ConfirmPasswordModal({
     <Modal
       isOpen={isOpen}
       onClose={fechar}
-      title="Confirmar identidade"
-      description="Esta ação exige que você digite sua senha novamente."
+      title="Confirmar senha"
+      description="Digite a senha de administrador para continuar."
       maxWidth="440px"
     >
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--space-4)' }}>
@@ -80,7 +76,7 @@ export default function ConfirmPasswordModal({
 
         <div>
           <label htmlFor="confirm-senha" className="field-label">
-            Sua senha
+            Senha do administrador
           </label>
           <input
             id="confirm-senha"

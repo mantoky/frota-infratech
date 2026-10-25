@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useRef, useState, FormEvent, CSSProperties } from 'react';
 import { t } from '@/lib/hooks/useTranslations';
 import { Vehicle } from '@/types';
 import Modal from './Modal';
 import { parseIntSafe } from '@/lib/helpers';
-import { CSSProperties } from 'react';
+import { SEMANTIC_TEXT } from '@/lib/statusColor';
 
 interface ServiceModalProps {
   isOpen: boolean;
@@ -27,14 +27,31 @@ export default function ServiceModal({
   const [driver, setDriver] = useState('');
   const [km, setKm] = useState('');
   const [obs, setObs] = useState('');
+  const [kmError, setKmError] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const [loadedKey, setLoadedKey] = useState<number | null>(null);
+  const [ciclo, setCiclo] = useState(0);
+  const submittingRef = useRef(false);
+  const cicloRef = useRef(0);
+
+  useEffect(() => {
+    cicloRef.current = ciclo;
+    submittingRef.current = false;
+  }, [ciclo]);
 
   const openKey = isOpen && vehicle ? vehicle.id : null;
   if (openKey !== null && openKey !== loadedKey) {
     setLoadedKey(openKey);
+    setCiclo((atual) => atual + 1);
+    setEnviando(false);
+    setDriver('');
     setKm(vehicle!.km.toString());
+    setObs('');
+    setKmError(false);
   } else if (openKey === null && loadedKey !== null) {
     setLoadedKey(null);
+    setCiclo((atual) => atual + 1);
+    setEnviando(false);
   }
 
   const styles: { [key: string]: CSSProperties } = {
@@ -89,22 +106,35 @@ export default function ServiceModal({
       backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
+    error: { color: SEMANTIC_TEXT.anormal, fontSize: '0.875rem', marginTop: '5px' },
   };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!vehicle) return;
+    if (!vehicle || submittingRef.current) return;
 
-    onConfirm({
-      driver,
-      km: parseIntSafe(km, vehicle.km),
-      obs,
-    });
+    const kmValue = parseIntSafe(km, -1);
+    if (kmValue < vehicle.km) {
+      setKmError(true);
+      return;
+    }
 
-    // Reset form
-    setDriver('');
-    setKm('');
-    setObs('');
+    const cicloNoEnvio = ciclo;
+    submittingRef.current = true;
+    setEnviando(true);
+    try {
+      if (cicloNoEnvio !== cicloRef.current) return;
+      onConfirm({
+        driver,
+        km: kmValue,
+        obs,
+      });
+    } catch {
+      if (cicloNoEnvio === cicloRef.current) {
+        submittingRef.current = false;
+        setEnviando(false);
+      }
+    }
   };
 
   if (!vehicle) return null;
@@ -145,11 +175,19 @@ export default function ServiceModal({
             id="sv-f2"
             type="number"
             value={km}
-            onChange={(e) => setKm(e.target.value)}
+            onChange={(e) => {
+              setKm(e.target.value);
+              setKmError(false);
+            }}
+            onInvalid={(e) => {
+              e.preventDefault();
+              setKmError(true);
+            }}
             style={styles.input}
             min={vehicle.km}
             required
           />
+          {kmError && <p style={styles.error}>{t('errorKm', currentLang)}</p>}
         </div>
 
         <div style={styles.formGroup}>
@@ -172,8 +210,16 @@ export default function ServiceModal({
           >
             {t('btnCancel', currentLang)}
           </button>
-          <button type="submit" style={{ ...styles.button, ...styles.confirmButton }}>
-            {t('btnConfirmService', currentLang)}
+          <button
+            type="submit"
+            disabled={enviando}
+            style={{
+              ...styles.button,
+              ...styles.confirmButton,
+              ...(enviando ? { opacity: 0.45, cursor: 'not-allowed' } : {}),
+            }}
+          >
+            {enviando ? t('btnConfirming', currentLang) : t('btnConfirmService', currentLang)}
           </button>
         </div>
       </form>

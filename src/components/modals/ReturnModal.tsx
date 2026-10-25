@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useRef, useState, FormEvent, CSSProperties } from 'react';
 import { t } from '@/lib/hooks/useTranslations';
 import { Vehicle } from '@/types';
 import Modal from './Modal';
 import { parseIntSafe } from '@/lib/helpers';
-import { CSSProperties } from 'react';
 import { captureLocation, GeoPoint } from '@/lib/geolocation';
+import { SEMANTIC_TEXT } from '@/lib/statusColor';
 
 interface ReturnModalProps {
   isOpen: boolean;
@@ -36,6 +36,34 @@ export default function ReturnModal({
   const [location, setLocation] = useState('');
   const [locationSpecify, setLocationSpecify] = useState('');
   const [obs, setObs] = useState('');
+  const [kmError, setKmError] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [loadedKey, setLoadedKey] = useState<number | null>(null);
+  const [ciclo, setCiclo] = useState(0);
+  const submittingRef = useRef(false);
+  const cicloRef = useRef(0);
+
+  useEffect(() => {
+    cicloRef.current = ciclo;
+    submittingRef.current = false;
+  }, [ciclo]);
+
+  const openKey = isOpen && vehicle ? vehicle.id : null;
+  if (openKey !== null && openKey !== loadedKey) {
+    setLoadedKey(openKey);
+    setCiclo((atual) => atual + 1);
+    setEnviando(false);
+    setKm(vehicle!.km.toString());
+    setFuel('Reserva');
+    setLocation('');
+    setLocationSpecify('');
+    setObs('');
+    setKmError(false);
+  } else if (openKey === null && loadedKey !== null) {
+    setLoadedKey(null);
+    setCiclo((atual) => atual + 1);
+    setEnviando(false);
+  }
 
   const styles: { [key: string]: CSSProperties } = {
     formGroup: {
@@ -98,6 +126,7 @@ export default function ReturnModal({
       backgroundColor: 'var(--brand-gray)',
       color: 'white',
     },
+    error: { color: SEMANTIC_TEXT.anormal, fontSize: '0.875rem', marginTop: '5px' },
   };
 
   const getFuelPercent = (text: string): number => {
@@ -113,26 +142,35 @@ export default function ReturnModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!vehicle) return;
+    if (!vehicle || submittingRef.current) return;
 
     const kmValue = parseIntSafe(km, -1);
-    const coords = await captureLocation();
-    onConfirm({
-      km: kmValue,
-      fuel,
-      fuelPercent: getFuelPercent(fuel),
-      location,
-      locationSpecify,
-      obs,
-      coords,
-    });
+    if (kmValue < vehicle.km) {
+      setKmError(true);
+      return;
+    }
 
-    // Reset form
-    setKm('');
-    setFuel('Reserva');
-    setLocation('');
-    setLocationSpecify('');
-    setObs('');
+    const cicloNoEnvio = ciclo;
+    submittingRef.current = true;
+    setEnviando(true);
+    try {
+      const coords = await captureLocation();
+      if (cicloNoEnvio !== cicloRef.current) return;
+      onConfirm({
+        km: kmValue,
+        fuel,
+        fuelPercent: getFuelPercent(fuel),
+        location,
+        locationSpecify,
+        obs,
+        coords,
+      });
+    } catch {
+      if (cicloNoEnvio === cicloRef.current) {
+        submittingRef.current = false;
+        setEnviando(false);
+      }
+    }
   };
 
   if (!vehicle) return null;
@@ -155,11 +193,19 @@ export default function ReturnModal({
             id="rt-f1"
             type="number"
             value={km}
-            onChange={(e) => setKm(e.target.value)}
+            onChange={(e) => {
+              setKm(e.target.value);
+              setKmError(false);
+            }}
+            onInvalid={(e) => {
+              e.preventDefault();
+              setKmError(true);
+            }}
             style={styles.input}
             min={vehicle.km}
             required
           />
+          {kmError && <p style={styles.error}>{t('errorKm', currentLang)}</p>}
         </div>
 
         <div style={styles.formGroup}>
@@ -243,8 +289,16 @@ export default function ReturnModal({
           >
             {t('btnCancel', currentLang)}
           </button>
-          <button type="submit" style={{ ...styles.button, ...styles.confirmButton }}>
-            {t('btnConfirmReturn', currentLang)}
+          <button
+            type="submit"
+            disabled={enviando}
+            style={{
+              ...styles.button,
+              ...styles.confirmButton,
+              ...(enviando ? { opacity: 0.45, cursor: 'not-allowed' } : {}),
+            }}
+          >
+            {enviando ? t('btnConfirming', currentLang) : t('btnConfirmReturn', currentLang)}
           </button>
         </div>
       </form>
