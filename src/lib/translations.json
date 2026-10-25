@@ -555,9 +555,9 @@
     "es": "Oscuro"
   },
   "searchPlaceholder": {
-    "pt": "Buscar por tag, placa, modelo ou motorista...",
-    "en": "Search by tag, plate, model or driver...",
-    "es": "Buscar por tag, placa, modelo o conductor..."
+    "pt": "Buscar pela tag...",
+    "en": "Search by tag...",
+    "es": "Buscar por tag..."
   },
   "menuAdmin": {
     "pt": "Administração",

@@ -228,7 +228,7 @@ export default function DashboardPage({
             title="Nenhum veículo encontrado"
             description={
               searchQuery
-                ? 'Tente outra tag, placa, modelo ou nome de condutor.'
+                ? 'Tente outra tag.'
                 : 'Nenhum veículo nesta situação no momento.'
             }
             action={

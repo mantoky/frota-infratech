@@ -128,12 +128,17 @@ describe('Aplicação — operação', () => {
     expect(screen.getByRole('radiogroup', { name: /Filtrar frota/i })).toBeInTheDocument();
   });
 
-  it('busca por placa e oferece limpar quando não há resultado', async () => {
+  it('busca só pela tag e oferece limpar quando não há resultado', async () => {
     await entrar();
     const busca = screen.getByRole('searchbox');
 
     fireEvent.change(busca, { target: { value: 'FQQ8B72' } });
+    await waitFor(() => expect(screen.getByText(/Nenhum veículo encontrado/i)).toBeInTheDocument());
+
+    fireEvent.change(busca, { target: { value: '4' } });
     await waitFor(() => expect(screen.getByText(/^1 de 13/)).toBeInTheDocument());
+    expect(screen.getByText('TN04')).toBeInTheDocument();
+    expect(screen.queryByText('TN74')).not.toBeInTheDocument();
 
     fireEvent.change(busca, { target: { value: 'tn1' } });
     await waitFor(() => expect(screen.getByText(/^1 de 13/)).toBeInTheDocument());
