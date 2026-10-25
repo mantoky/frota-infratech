@@ -1,4 +1,4 @@
-const CACHE_NAME = 'frota-infratech-v5';
+const CACHE_NAME = 'frota-infratech-v6';
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',

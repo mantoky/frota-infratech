@@ -2,12 +2,13 @@
 
 import { t } from '@/lib/hooks/useTranslations';
 import { vehicleMatchesSearch } from '@/lib/search';
+import { veiculoEmAtencao } from '@/lib/statusColor';
 import { FilterType, Vehicle } from '@/types';
 import { CSSProperties, useMemo, useState } from 'react';
 import VehicleMiniCard from '@/components/vehicles/VehicleMiniCard';
 import VehicleDetailModal from '@/components/vehicles/VehicleDetailModal';
 import PageHeader from '@/components/ui/PageHeader';
-import KpiPolygon, { KpiSegment } from '@/components/ui/KpiPolygon';
+import FilterBars from '@/components/dashboard/FilterBars';
 import AlertBanner from '@/components/ui/AlertBanner';
 import EmptyState from '@/components/ui/EmptyState';
 import { AlertTriangle, Ban, Search, X, SearchX } from 'lucide-react';
@@ -28,6 +29,24 @@ const getTagNumber = (tag: string) => {
   const match = tag.match(/(\d+)/);
   return match ? parseInt(match[1], 10) : 0;
 };
+
+function passaFiltro(vehicle: Vehicle, filter: FilterType): boolean {
+  switch (filter) {
+    case 'all':
+      return true;
+    case 'disp':
+    case 'uso':
+    case 'lav':
+    case 'man':
+      return vehicle.status === filter;
+    case 'atencao':
+      return veiculoEmAtencao(vehicle);
+    default: {
+      const restante: never = filter;
+      return restante;
+    }
+  }
+}
 
 export default function DashboardPage({
   vehicles,
@@ -72,6 +91,7 @@ export default function DashboardPage({
       man: vehicles.filter((v) => v.status === 'man').length,
       mobilizacao: vehicles.filter((v) => v.status === 'mobilizacao').length,
       blocked: vehicles.filter((v) => v.blocked).length,
+      atencao: vehicles.filter((v) => veiculoEmAtencao(v)).length,
     }),
     [vehicles]
   );
@@ -89,27 +109,10 @@ export default function DashboardPage({
 
   const visibleVehicles = useMemo(() => {
     const sorted = [...vehicles].sort((a, b) => getTagNumber(a.tag) - getTagNumber(b.tag));
-    const byStatus =
-      currentFilter === 'all' ? sorted : sorted.filter((v) => v.status === currentFilter);
+    const byStatus = sorted.filter((v) => passaFiltro(v, currentFilter));
     if (!searchQuery) return byStatus;
     return byStatus.filter((v) => vehicleMatchesSearch(v, searchQuery));
   }, [vehicles, currentFilter, searchQuery]);
-
-  // Cinco indicadores viram um pentagono; se um dia entrar um sexto status, o
-  // componente vira hexagono sozinho. Cada setor filtra - o indicador e o
-  // controle passaram a ser a mesma coisa, em vez de dois lugares mostrando a
-  // mesma contagem.
-  const segments: KpiSegment<FilterType>[] = [
-    { value: 'all', label: t('statAll', currentLang), count: counts.all, tone: 'neutro' },
-    { value: 'disp', label: t('statAvailable', currentLang), count: counts.disp, tone: 'ok' },
-    { value: 'uso', label: t('statInUse', currentLang), count: counts.uso, tone: 'neutro' },
-    { value: 'lav', label: t('statWash', currentLang), count: counts.lav, tone: 'alerta' },
-    { value: 'man', label: t('statMaintenance', currentLang), count: counts.man, tone: 'anormal' },
-  ];
-
-  // Percentual de frota efetivamente utilizavel agora: o gestor pergunta
-  // "quantos carros eu tenho pra dar?", nao "quantos carros existem".
-  const availabilityRate = counts.all > 0 ? Math.round((counts.disp / counts.all) * 100) : 0;
 
   return (
     <div className="page-shell">
@@ -118,14 +121,12 @@ export default function DashboardPage({
         title={t('dashboardTitle', currentLang)}
         description={t('dashboardSubtitle', currentLang)}
         meta={
-          <KpiPolygon
-            segments={segments}
+          <FilterBars
+            counts={counts}
             active={currentFilter}
+            currentLang={currentLang}
+            label={t}
             onSelect={onFilterChange}
-            centerValue={counts.all}
-            centerLabel={`${availabilityRate}% disponível`}
-            ariaLabel="Filtrar frota por situação"
-            size={248}
           />
         }
       />

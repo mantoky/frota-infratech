@@ -14,6 +14,7 @@ import {
   History,
   Settings,
   ShieldCheck,
+  AlertTriangle,
   BarChart3,
   MessageSquare,
   MapPin,
@@ -26,6 +27,7 @@ const FILTER_ICONS: Record<FilterType, typeof Check> = {
   uso: Clock,
   lav: Droplet,
   man: Wrench,
+  atencao: AlertTriangle,
 };
 
 const FILTER_LABEL_KEY: Record<Exclude<FilterType, 'all'>, string> = {
@@ -33,6 +35,7 @@ const FILTER_LABEL_KEY: Record<Exclude<FilterType, 'all'>, string> = {
   uso: 'statInUse',
   lav: 'statWash',
   man: 'statMaintenance',
+  atencao: 'statAttention',
 };
 
 interface SidebarProps {
@@ -185,7 +188,7 @@ export default function Sidebar({
     </button>
   );
 
-  const filters: Exclude<FilterType, 'all'>[] = ['disp', 'uso', 'lav', 'man'];
+  const filters: Exclude<FilterType, 'all'>[] = ['disp', 'uso', 'lav', 'man', 'atencao'];
 
   return (
     <>

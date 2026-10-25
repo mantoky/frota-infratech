@@ -198,7 +198,7 @@ export interface Translations {
 }
 
 export type ModalType = 'withdraw' | 'return' | 'service' | 'manage' | 'add' | 'pin';
-export type FilterType = 'all' | 'disp' | 'uso' | 'lav' | 'man';
+export type FilterType = 'all' | 'disp' | 'uso' | 'lav' | 'man' | 'atencao';
 export type PageType =
   | 'dashboard'
   | 'metrics'

@@ -673,3 +673,121 @@ textarea.field {
   white-space: nowrap;
   border: 0;
 }
+
+.filter-bars {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+}
+
+.filter-bars__rail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  padding-bottom: 8px;
+}
+
+.filter-bars__btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 74px;
+  margin: 0;
+  padding: 10px 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  color: var(--text-on-brand);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 7px 0 var(--lip, var(--brand-primary-dark));
+}
+
+.filter-bars__btn input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.filter-bars__btn:has(input:focus-visible) {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 3px;
+}
+
+.filter-bars__btn:has(input:checked) {
+  transform: translateY(5px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 2px 0 var(--lip, var(--brand-primary-dark));
+}
+
+.filter-bars__btn--all {
+  background: var(--brand-primary);
+  --lip: var(--brand-primary-dark);
+}
+
+.filter-bars__btn--disp {
+  background: var(--state-ok-solid);
+  --lip: #0d4a24;
+}
+
+.filter-bars__btn--uso {
+  background: #3e5164;
+  --lip: #243140;
+}
+
+.filter-bars__btn--lav {
+  background: var(--state-alert-solid);
+  --lip: #6d4304;
+}
+
+.filter-bars__btn--man {
+  background: var(--state-danger-solid);
+  --lip: #7f1515;
+}
+
+.filter-bars__btn--atencao {
+  background: var(--brand-accent);
+  --lip: #8a6400;
+  color: #1a1300;
+}
+
+.filter-bars__name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.filter-bars__count {
+  font-size: 1.35rem;
+  font-weight: 750;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .filter-bars__btn {
+    min-height: 64px;
+    padding: 8px 4px 10px;
+  }
+
+  .filter-bars__name {
+    font-size: 0.72rem;
+  }
+
+  .filter-bars__count {
+    font-size: 1.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-bars__btn:has(input:checked) {
+    transform: none;
+  }
+}

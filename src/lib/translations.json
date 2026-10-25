@@ -109,6 +109,11 @@
     "en": "Maintenance",
     "es": "Mantenimiento"
   },
+  "statAttention": {
+    "pt": "Atenção",
+    "en": "Attention",
+    "es": "Atención"
+  },
   "driversTitle": {
     "pt": "Motoristas",
     "en": "Drivers",

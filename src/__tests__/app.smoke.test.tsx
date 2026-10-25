@@ -204,24 +204,24 @@ describe('Aplicação — operação', () => {
   // Regressoes desta rodada
   // -------------------------------------------------------------------------
 
-  it('o KPI poligonal filtra a frota, e nao apenas informa', async () => {
+  it('as duas barras filtram a frota', async () => {
     await entrar();
 
-    // Os cinco setores sao controles de verdade, nao desenho.
     const grupo = await screen.findByRole('radiogroup', { name: /Filtrar frota por situação/i });
-    const setores = within(grupo).getAllByRole('radio');
-    expect(setores.length).toBe(5);
+    expect(within(grupo).getAllByRole('radio')).toHaveLength(6);
+    expect(within(grupo).getByRole('radio', { name: /Todos/i })).toBeChecked();
 
-    const todos = within(grupo).getByRole('radio', { name: /Todos/i });
-    expect(todos).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(within(grupo).getByRole('radio', { name: /Em Uso/i }));
+    await waitFor(() => {
+      expect(screen.getByText(/de 13 veículos/i).textContent).toMatch(/^1 de 13/);
+    });
 
-    const emUso = setores.find((s) => /Em Uso/i.test(s.getAttribute('aria-label') || ''));
-    fireEvent.click(emUso!);
-
-    await waitFor(() => expect(emUso).toHaveAttribute('aria-checked', 'true'));
-    // O rodape de contagem tem de acompanhar o filtro; se nao acompanhar, o
-    // setor virou enfeite de novo.
-    expect(await screen.findByText(/de 13 veículos/i)).toBeInTheDocument();
+    fireEvent.click(within(grupo).getByRole('radio', { name: /Atenção/i }));
+    await waitFor(() => {
+      expect(screen.getByText(/de 13 veículos/i).textContent).toMatch(/^1 de 13/);
+    });
+    expect(screen.getByRole('button', { name: /TN88/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /TN01/i })).not.toBeInTheDocument();
   });
 
   it('a barra superior tem o ícone de mensagens e leva ao fórum', async () => {

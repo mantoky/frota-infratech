@@ -63,3 +63,22 @@ export const getStatusLabelKey = (vehicle: Vehicle): string => {
 // VehicleMiniCard - centralizado aqui pra os dois nao divergirem.
 export const getFuelSemanticStatus = (fuel: number): SemanticStatus =>
   fuel >= 75 ? 'ok' : fuel >= 30 ? 'alerta' : 'anormal';
+
+const JANELA_MANUTENCAO_KM = 1000;
+
+/** Ponto já registrado no veículo: bloqueio ou revisão a até 1.000 km. */
+export function pontosDeAtencao(vehicle: Vehicle): string[] {
+  const pontos: string[] = [];
+  if (vehicle.blocked) {
+    pontos.push(vehicle.blockedReason?.trim() || 'Veículo bloqueado');
+  }
+  const restante = vehicle.maintenance - vehicle.km;
+  if (Number.isFinite(restante) && restante >= 0 && restante <= JANELA_MANUTENCAO_KM) {
+    pontos.push('Manutenção próxima');
+  }
+  return pontos;
+}
+
+export function veiculoEmAtencao(vehicle: Vehicle): boolean {
+  return pontosDeAtencao(vehicle).length > 0;
+}
