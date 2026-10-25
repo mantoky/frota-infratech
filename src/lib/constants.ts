@@ -3,7 +3,7 @@ import { Vehicle, Regional, Gerencia, ChecklistField, ForumPost, OrgUnit } from 
 export const initialVehicles: Vehicle[] = [
   {
     id: 1,
-    tag: 'TN-01',
+    tag: 'TN01',
     plate: 'FQQ8B72',
     model: 'VW Nivus',
     status: 'disp',
@@ -21,7 +21,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 2,
-    tag: 'TN-03',
+    tag: 'TN03',
     plate: 'TCD7H75',
     model: 'Toyota Hilux',
     status: 'disp',
@@ -39,7 +39,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 3,
-    tag: 'TN-04',
+    tag: 'TN04',
     plate: 'TDM2E37',
     model: 'Toyota Hilux',
     status: 'uso',
@@ -57,7 +57,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 4,
-    tag: 'TN-29',
+    tag: 'TN29',
     plate: 'SHX8B70',
     model: 'Chevrolet S10',
     status: 'disp',
@@ -75,7 +75,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 5,
-    tag: 'TN-31',
+    tag: 'TN31',
     plate: 'TCD7I68',
     model: 'Toyota Hilux',
     status: 'disp',
@@ -93,7 +93,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 6,
-    tag: 'TN-72',
+    tag: 'TN72',
     plate: 'FXD9A18',
     model: 'Toyota Hilux',
     status: 'man',
@@ -111,7 +111,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 7,
-    tag: 'TN-73',
+    tag: 'TN73',
     plate: 'TXX4C32',
     model: 'Toyota Hilux',
     status: 'disp',
@@ -129,7 +129,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 8,
-    tag: 'TN-74',
+    tag: 'TN74',
     plate: 'RDM2E33',
     model: 'Chevrolet S10',
     status: 'lav',
@@ -147,7 +147,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 9,
-    tag: 'TN-76',
+    tag: 'TN76',
     plate: 'TCD7H72',
     model: 'Toyota Hilux',
     status: 'disp',
@@ -165,7 +165,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 10,
-    tag: 'TN-78',
+    tag: 'TN78',
     plate: 'FZY4F28',
     model: 'Ford Ranger',
     status: 'disp',
@@ -183,7 +183,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 11,
-    tag: 'TN-02',
+    tag: 'TN02',
     plate: 'SZQ2H84',
     model: 'Toyota Hilux (ALCON+KOFRE)',
     status: 'disp',
@@ -201,7 +201,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 12,
-    tag: 'TN-99',
+    tag: 'TN99',
     plate: 'ABC1D23',
     model: 'Toyota Hilux',
     status: 'mobilizacao',
@@ -220,7 +220,7 @@ export const initialVehicles: Vehicle[] = [
   },
   {
     id: 13,
-    tag: 'TN-88',
+    tag: 'TN88',
     plate: 'XYZ9W87',
     model: 'Ford Ranger',
     status: 'disp',

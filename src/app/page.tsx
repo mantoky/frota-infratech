@@ -13,6 +13,7 @@ import {
   parseDateTime,
 } from '@/lib/helpers';
 import { GeoPoint } from '@/lib/geolocation';
+import { tagCanonica } from '@/lib/tag';
 import { useFleetData } from '@/lib/hooks/useFleetData';
 import { useOrgData } from '@/lib/hooks/useOrgData';
 import { generateFleetReport } from '@/lib/pdf';
@@ -196,7 +197,7 @@ export default function FrotaInfratech() {
   const addNewVehicle = (data: Partial<Vehicle>) => {
     const newVehicle: Vehicle = {
       id: generateVehicleId(),
-      tag: data.tag || '',
+      tag: tagCanonica(data.tag || ''),
       plate: data.plate || '',
       model: data.model || '',
       status: data.status || 'disp',
@@ -346,6 +347,7 @@ export default function FrotaInfratech() {
     const updatedVehicle = {
       ...selectedVehicle,
       ...data,
+      tag: tagCanonica(data.tag ?? selectedVehicle.tag),
       lastStatusChangeAt: new Date().toISOString(),
     } as Vehicle;
     const newVehicles = vehicles.map((v) => (v.id === selectedVehicle.id ? updatedVehicle : v));

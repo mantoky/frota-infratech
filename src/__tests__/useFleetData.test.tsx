@@ -128,8 +128,14 @@ describe('useFleetData — proteção contra sobrescrever a frota real', () => {
     });
 
     await waitFor(() => expect(result.current.vehicles).toHaveLength(1));
-    expect(result.current.vehicles[0].tag).toBe('TN-99');
+    expect(result.current.vehicles[0].tag).toBe('TN99');
     expect(result.current.drivers).toEqual(['Alguém']);
-    expect(setDoc).not.toHaveBeenCalled();
+
+    await waitFor(() => expect(setDoc).toHaveBeenCalled());
+    const payload = setDoc.mock.calls[0][1] as { vehicles: { tag: string }[]; drivers: string[] };
+    expect(payload.vehicles).toHaveLength(1);
+    expect(payload.vehicles[0].tag).toBe('TN99');
+    expect(payload.drivers).toEqual(['Alguém']);
+    expect(payload).toHaveProperty('history');
   });
 });

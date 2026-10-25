@@ -62,7 +62,7 @@ afterEach(() => {
 describe('Acesso', () => {
   it('abre a frota sem pedir e-mail', async () => {
     render(<FrotaInfratech />);
-    expect(await screen.findByText('TN-01')).toBeInTheDocument();
+    expect(await screen.findByText('TN01')).toBeInTheDocument();
     expect(screen.queryByLabelText(/E-mail/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Entrar como administrador/i })).toBeInTheDocument();
   });
@@ -101,7 +101,7 @@ describe('Aplicação — operação', () => {
 
   it('lista a frota', async () => {
     await entrar();
-    expect(screen.getByText('TN-01')).toBeInTheDocument();
+    expect(screen.getByText('TN01')).toBeInTheDocument();
     expect(screen.getByText(/de 13 veículos/i)).toBeInTheDocument();
   });
 
@@ -135,6 +135,11 @@ describe('Aplicação — operação', () => {
     fireEvent.change(busca, { target: { value: 'FQQ8B72' } });
     await waitFor(() => expect(screen.getByText(/^1 de 13/)).toBeInTheDocument());
 
+    fireEvent.change(busca, { target: { value: 'tn1' } });
+    await waitFor(() => expect(screen.getByText(/^1 de 13/)).toBeInTheDocument());
+    expect(screen.getByText('TN01')).toBeInTheDocument();
+    expect(screen.queryByText('TN31')).not.toBeInTheDocument();
+
     fireEvent.change(busca, { target: { value: 'zzzzz' } });
     await waitFor(() => expect(screen.getByText(/Nenhum veículo encontrado/i)).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /Limpar filtros/i })).toBeInTheDocument();
@@ -142,7 +147,7 @@ describe('Aplicação — operação', () => {
 
   it('abre o detalhe do veículo com as ações de operação', async () => {
     await entrar();
-    fireEvent.click(screen.getByRole('button', { name: /TN-01.*Abrir detalhes/i }));
+    fireEvent.click(screen.getByRole('button', { name: /TN01.*Abrir detalhes/i }));
 
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByRole('button', { name: /Retirar/i })).toBeInTheDocument();
@@ -262,13 +267,13 @@ describe('Aplicação — administrador', () => {
     fireEvent.click(within(sidebar).getByRole('button', { name: /Administra/i }));
 
     expect(await screen.findByRole('heading', { name: /Administra/i })).toBeInTheDocument();
-    expect(screen.getAllByText('TN-01').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('TN01').length).toBeGreaterThan(0);
   });
 
   it('exige a senha antes de excluir veículo, e não um PIN do bundle', async () => {
     await entrarComoAdmin();
 
-    fireEvent.click(screen.getByRole('button', { name: /TN-01.*Abrir detalhes/i }));
+    fireEvent.click(screen.getByRole('button', { name: /TN01.*Abrir detalhes/i }));
     const detalhe = await screen.findByRole('dialog');
     fireEvent.click(within(detalhe).getByRole('button', { name: /Editar/i }));
 
@@ -285,7 +290,7 @@ describe('Aplicação — administrador', () => {
   it('recusa retirada com quilometragem vazia em vez de gravar NaN', async () => {
     await entrarComoAdmin();
 
-    fireEvent.click(screen.getByRole('button', { name: /TN-01.*Abrir detalhes/i }));
+    fireEvent.click(screen.getByRole('button', { name: /TN01.*Abrir detalhes/i }));
     const detalhe = await screen.findByRole('dialog');
     fireEvent.click(within(detalhe).getByRole('button', { name: /Retirar/i }));
 
@@ -311,7 +316,7 @@ describe('Aplicação — administrador', () => {
   it('completa a retirada com motorista, KM e checklist preenchidos', async () => {
     await entrarComoAdmin();
 
-    fireEvent.click(screen.getByRole('button', { name: /TN-01.*Abrir detalhes/i }));
+    fireEvent.click(screen.getByRole('button', { name: /TN01.*Abrir detalhes/i }));
     const detalhe = await screen.findByRole('dialog');
     fireEvent.click(within(detalhe).getByRole('button', { name: /Retirar/i }));
 

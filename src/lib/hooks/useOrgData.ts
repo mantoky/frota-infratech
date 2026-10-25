@@ -300,7 +300,7 @@ export function useOrgData() {
       });
       const seedVehicle: Vehicle = {
         id: Date.now(),
-        tag: `TN-${String(Math.floor(Math.random() * 90) + 10)}`,
+        tag: `TN${String(Math.floor(Math.random() * 90) + 10).padStart(2, '0')}`,
         plate: `STD${Math.floor(Math.random() * 9000) + 1000}`,
         model: 'Toyota Hilux',
         status: 'disp',

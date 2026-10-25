@@ -5,6 +5,7 @@ import { db } from '@/lib/firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { Vehicle, HistoryItem } from '@/types';
 import { initialVehicles } from '@/lib/constants';
+import { tagCanonica, veiculoDoHistorico } from '@/lib/tag';
 
 const BACKUP_KEY = 'frota_backup';
 
@@ -45,14 +46,17 @@ function writeBackup(
   return backup;
 }
 
-/** Backfill org/timestamp fields for vehicles saved before regionais/métricas. */
+/** Backfill org/timestamp fields for vehicles saved before regionais/métricas.
+ *  A tag perde só o hífen: TN-01 vira TN01, TN-31 vira TN31. */
 function migrateVehicles(vehicles: Vehicle[]): { vehicles: Vehicle[]; changed: boolean } {
   const byTag = new Map(initialVehicles.map((v) => [v.tag, v]));
   const byId = new Map(initialVehicles.map((v) => [v.id, v]));
   let changed = false;
   const migrated = vehicles.map((v) => {
-    const seed = byTag.get(v.tag) || byId.get(v.id);
-    const next: Vehicle = { ...v };
+    const tag = tagCanonica(v.tag);
+    const seed = byTag.get(tag) || byId.get(v.id);
+    const next: Vehicle = { ...v, tag };
+    if (tag !== v.tag) changed = true;
     if (!next.regionalId && seed?.regionalId) {
       next.regionalId = seed.regionalId;
       changed = true;
@@ -76,6 +80,17 @@ function migrateVehicles(vehicles: Vehicle[]): { vehicles: Vehicle[]; changed: b
     return next;
   });
   return { vehicles: migrated, changed };
+}
+
+function migrateHistory(history: HistoryItem[]): { history: HistoryItem[]; changed: boolean } {
+  let changed = false;
+  const migrated = history.map((item) => {
+    const vehicle = veiculoDoHistorico(item.vehicle);
+    if (vehicle === item.vehicle) return item;
+    changed = true;
+    return { ...item, vehicle };
+  });
+  return { history: migrated, changed };
 }
 
 // Camada de dados offline-first: o localStorage e a fonte primaria, sempre
@@ -127,17 +142,26 @@ export function useFleetData() {
     /* eslint-disable react-hooks/set-state-in-effect -- le o backup local apos a montagem; o HTML estatico e pre-renderizado sem acesso ao localStorage, entao isso precisa acontecer no cliente, e nao pode ir no useState (quebraria a hidratacao) */
     const backup = readBackup();
     if (backup) {
-      const { vehicles: migrated, changed } = migrateVehicles(backup.vehicles || []);
+      const { vehicles: migrated, changed: vehiclesChanged } = migrateVehicles(backup.vehicles || []);
+      const { history: migratedHistory, changed: historyChanged } = migrateHistory(
+        backup.history || []
+      );
       setVehicles(migrated);
-      setHistory(backup.history);
+      setHistory(migratedHistory);
       setDrivers(backup.drivers || []);
       lastUpdatedRef.current = backup.lastUpdated;
       // Backup local tambem e fonte autoritativa: sabemos o que o usuario
       // tinha, entao gravar deixa de ser arriscado mesmo antes do servidor
       // responder - e exatamente esse o ponto do offline-first.
       hidratadoRef.current = true;
-      if (changed) {
-        writeBackup(migrated, backup.history, backup.drivers || [], false, backup.lastUpdated);
+      if (vehiclesChanged || historyChanged) {
+        writeBackup(
+          migrated,
+          migratedHistory,
+          backup.drivers || [],
+          false,
+          backup.lastUpdated
+        );
       }
       setLoading(false);
     }
@@ -238,6 +262,9 @@ export function useFleetData() {
           const firestoreHistory: HistoryItem[] = data.history || [];
           const firestoreDrivers: string[] = data.drivers || [];
           const firestoreLastUpdated: string = data.lastUpdated || '';
+          const { vehicles: migrated, changed: tagsChanged } = migrateVehicles(firestoreVehicles);
+          const { history: migratedHistory, changed: historyChanged } =
+            migrateHistory(firestoreHistory);
 
           // So aceita o dado remoto se for mais novo que o que ja temos local
           // - evita que um eco atrasado do Firestore sobrescreva uma edicao
@@ -245,14 +272,37 @@ export function useFleetData() {
           const isNewer =
             !lastUpdatedRef.current ||
             (firestoreLastUpdated && firestoreLastUpdated > lastUpdatedRef.current);
+          const localMaisNovo =
+            !!lastUpdatedRef.current &&
+            !!firestoreLastUpdated &&
+            firestoreLastUpdated < lastUpdatedRef.current;
 
           if (isNewer && (firestoreVehicles.length > 0 || firestoreHistory.length > 0)) {
-            const { vehicles: migrated } = migrateVehicles(firestoreVehicles);
             setVehicles(migrated);
-            setHistory(firestoreHistory);
+            setHistory(migratedHistory);
             setDrivers(firestoreDrivers);
             lastUpdatedRef.current = firestoreLastUpdated || new Date().toISOString();
-            writeBackup(migrated, firestoreHistory, firestoreDrivers, true, lastUpdatedRef.current);
+            writeBackup(
+              migrated,
+              migratedHistory,
+              firestoreDrivers,
+              true,
+              lastUpdatedRef.current
+            );
+          }
+
+          // O hífen não volta para o banco. A gravação leva a mesma frota,
+          // só com a tag canônica, e nunca parte de um snapshot de cache.
+          if (
+            !doCache &&
+            (tagsChanged || historyChanged) &&
+            firestoreVehicles.length > 0 &&
+            !localMaisNovo
+          ) {
+            hidratadoRef.current = true;
+            const agora = new Date().toISOString();
+            lastUpdatedRef.current = agora;
+            void pushToFirestore(migrated, migratedHistory, firestoreDrivers, agora);
           }
         }
 

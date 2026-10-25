@@ -5,6 +5,7 @@ import { t } from '@/lib/hooks/useTranslations';
 import { Vehicle } from '@/types';
 import Modal from './Modal';
 import { parseIntSafe } from '@/lib/helpers';
+import { tagCanonica } from '@/lib/tag';
 import { CSSProperties } from 'react';
 
 interface AddModalProps {
@@ -96,7 +97,7 @@ export default function AddModal({ isOpen, onClose, currentLang, onAdd }: AddMod
 
     onAdd({
       id: Date.now(),
-      tag,
+      tag: tagCanonica(tag),
       plate,
       model,
       status,
@@ -133,7 +134,7 @@ export default function AddModal({ isOpen, onClose, currentLang, onAdd }: AddMod
               value={tag}
               onChange={(e) => setTag(e.target.value)}
               style={styles.input}
-              placeholder="TN-01"
+              placeholder="TN01"
               required
             />
           </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { t } from '@/lib/hooks/useTranslations';
+import { vehicleMatchesSearch } from '@/lib/search';
 import { FilterType, Vehicle } from '@/types';
 import { CSSProperties, useMemo, useState } from 'react';
 import VehicleMiniCard from '@/components/vehicles/VehicleMiniCard';
@@ -91,13 +92,7 @@ export default function DashboardPage({
     const byStatus =
       currentFilter === 'all' ? sorted : sorted.filter((v) => v.status === currentFilter);
     if (!searchQuery) return byStatus;
-    return byStatus.filter(
-      (v) =>
-        v.tag.toLowerCase().includes(searchQuery) ||
-        v.plate.toLowerCase().includes(searchQuery) ||
-        v.model.toLowerCase().includes(searchQuery) ||
-        (v.driver || '').toLowerCase().includes(searchQuery)
-    );
+    return byStatus.filter((v) => vehicleMatchesSearch(v, searchQuery));
   }, [vehicles, currentFilter, searchQuery]);
 
   // Cinco indicadores viram um pentagono; se um dia entrar um sexto status, o

@@ -29,7 +29,7 @@ jest.mock('@/lib/hooks/useTranslations', () => ({
 describe('VehicleCard Component', () => {
   const mockVehicle: Vehicle = {
     id: 1,
-    tag: 'TN-01',
+    tag: 'TN01',
     plate: 'FQQ8B72',
     model: 'VW Nivus',
     status: 'disp',
@@ -58,7 +58,7 @@ describe('VehicleCard Component', () => {
       <VehicleCard vehicle={mockVehicle} currentLang="pt" isAdmin={false} {...mockHandlers} />
     );
 
-    expect(screen.getByText('TN-01')).toBeInTheDocument();
+    expect(screen.getByText('TN01')).toBeInTheDocument();
     expect(screen.getByText('VW Nivus')).toBeInTheDocument();
     expect(screen.getByText('FQQ8B72')).toBeInTheDocument();
   });

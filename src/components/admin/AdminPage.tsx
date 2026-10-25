@@ -2,6 +2,7 @@
 
 import { useState, CSSProperties } from 'react';
 import { t } from '@/lib/hooks/useTranslations';
+import { vehicleMatchesSearch } from '@/lib/search';
 import { Vehicle, ChecklistField } from '@/types';
 import { SEMANTIC_COLORS, getVehicleSemanticStatus, getStatusLabelKey } from '@/lib/statusColor';
 import { Search, Pencil, Plus, X, UserPlus } from 'lucide-react';
@@ -150,12 +151,7 @@ export default function AdminPage({
     .sort((a, b) => getTagNumber(a.tag) - getTagNumber(b.tag))
     .filter((v) => {
       if (!query) return true;
-      return (
-        v.tag.toLowerCase().includes(query) ||
-        v.plate.toLowerCase().includes(query) ||
-        v.model.toLowerCase().includes(query) ||
-        (v.driver || '').toLowerCase().includes(query)
-      );
+      return vehicleMatchesSearch(v, query);
     });
 
   const handleAddDriver = () => {

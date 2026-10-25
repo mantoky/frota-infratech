@@ -24,7 +24,7 @@ const checklist: ChecklistField[] = [
 function veiculo(parcial: Partial<Vehicle> = {}): Vehicle {
   return {
     id: 1,
-    tag: 'TN-01',
+    tag: 'TN01',
     plate: 'ABC1D23',
     model: 'Hilux',
     status: 'disp',
@@ -89,7 +89,7 @@ describe('modais de operação', () => {
       <WithdrawModal
         isOpen
         onClose={jest.fn()}
-        vehicle={veiculo({ id: 2, tag: 'TN-02', km: 2500 })}
+        vehicle={veiculo({ id: 2, tag: 'TN02', km: 2500 })}
         currentLang="pt"
         drivers={['Ana']}
         checklistFields={checklist}
@@ -162,7 +162,7 @@ describe('modais de operação', () => {
     fireEvent.change(screen.getByLabelText(/^Observações/), { target: { value: 'barulho' } });
 
     rerender(<ServiceModal isOpen={false} vehicle={veiculo()} {...props} />);
-    rerender(<ServiceModal isOpen vehicle={veiculo({ id: 8, tag: 'TN-08', km: 80 })} {...props} />);
+    rerender(<ServiceModal isOpen vehicle={veiculo({ id: 8, tag: 'TN08', km: 80 })} {...props} />);
 
     expect(screen.getByLabelText(/Nome do Motorista/)).toHaveValue('');
     expect(screen.getByLabelText(/^Observações/)).toHaveValue('');

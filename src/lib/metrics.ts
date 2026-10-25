@@ -1,5 +1,6 @@
 import { Vehicle, HistoryItem } from '@/types';
 import { parseDateTime } from '@/lib/helpers';
+import { tagCanonica } from '@/lib/tag';
 
 export interface UsageRankingItem {
   id: string | number;
@@ -75,8 +76,8 @@ export function calculateUsageRanking(
     const itemDate = parseDateTime(item.date);
     if (isNaN(itemDate.getTime()) || itemDate < threshold) return;
 
-    const match = item.vehicle.match(/^(TN-\d+)/i);
-    const tag = match ? match[1].toUpperCase() : item.vehicle;
+    const match = item.vehicle.match(/^([A-Za-z]+-?\d+)/);
+    const tag = match ? tagCanonica(match[1]) : item.vehicle;
 
     if (!map[tag]) {
       map[tag] = { withdrawals: 0, km: 0, activeMinutes: 0, vehicle: null };
@@ -250,8 +251,8 @@ export function extractObservationsTimeline(
 
   history.forEach((h, idx) => {
     if (h.extra && h.extra.trim() && h.extra !== '-') {
-      const match = h.vehicle.match(/^(TN-\d+)/i);
-      const tag = match ? match[1].toUpperCase() : h.vehicle;
+      const match = h.vehicle.match(/^([A-Za-z]+-?\d+)/);
+      const tag = match ? tagCanonica(match[1]) : h.vehicle;
       logs.push({
         id: `h-obs-${idx}`,
         date: h.date,
